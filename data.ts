@@ -9,7 +9,7 @@ interface Brand {
     emails: string[];
     url: string;
     courier: Courier | null;
-    merchant_id: string;
+    merchant_id?: string;
 }
 
 export const brands: Brand[] = [
@@ -17,7 +17,7 @@ export const brands: Brand[] = [
         name: "Rahi Khan",
         emails: ["beyourahi@gmail.com", "rahikhan360@gmail.com"],
         url: "https://beyourahi.com",
-        courier: Courier.SteadFast,
+        courier: Courier.Pathao,
         merchant_id: "69420"
     },
     {
@@ -40,6 +40,12 @@ export const brands: Brand[] = [
         url: "https://aetheriaselfcare.com",
         courier: Courier.SteadFast,
         merchant_id: "1436762"
+    },
+    {
+        name: "DOHORA",
+        emails: ["dohoras3@gmail.com"],
+        url: "https://dohoralifestyle.com",
+        courier: Courier.Pathao
     }
 ];
 

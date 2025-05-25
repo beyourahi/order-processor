@@ -41,7 +41,7 @@ export const OrderProcessor = () => {
                 const processedOrders = CourierService.processOrders(currentUser.courier, orderData, {
                     name: currentUser.name,
                     phone: currentUser.phone || "",
-                    merchant_id: currentUser.merchant_id
+                    merchant_id: currentUser.merchant_id || ""
                 });
 
                 const worksheet = XLSX.utils.json_to_sheet(processedOrders);
