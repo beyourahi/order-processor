@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { cn, prepareOrderData } from "lib";
+import { cn } from "lib";
 import { useContext, useState } from "react";
 import { Upload } from "./upload";
 import { Download } from "./download";
@@ -33,12 +33,11 @@ export const OrderProcessor = () => {
             disabled={courierService === "" || current_user()?.courier !== courierService}
             onUploadAccepted={(res: any) => {
                 const rawData = res.data;
-                const orderData = prepareOrderData(rawData);
                 const currentUser = current_user();
 
                 if (!currentUser?.courier) return;
 
-                const processedOrders = CourierService.processOrders(currentUser.courier, orderData, {
+                const processedOrders = CourierService.processOrders(currentUser.courier, rawData, {
                     name: currentUser.name,
                     phone: currentUser.phone || "",
                     merchant_id: currentUser.merchant_id || ""

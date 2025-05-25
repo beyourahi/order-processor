@@ -10,20 +10,13 @@ interface SteadFastOrder {
 }
 
 interface PathaoOrder {
-    "Item Type": string;
-    "Store Name": string;
-    "Merchant Order Id": string;
-    "Recipient Name": string;
-    "Recipient Phone": string;
-    "Recipient City": string;
-    "Recipient Zone": string;
-    "Recipient Area": string;
-    "Recipient Address": string;
-    "Amount To Collect": string;
-    "Item Quantity": string;
-    "Item Weight": string;
-    "Item Description": string;
-    "Special Instruction": string;
+    "Order No": string;
+    Name: string;
+    Product: string;
+    Price: string;
+    Address: string;
+    City: string;
+    "Phone No": string;
 }
 
 interface CourierProcessor<T> {

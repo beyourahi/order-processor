@@ -34,7 +34,15 @@ export const extractInvoices = (rawData: string[][]): Map<string, string> => {
     return invoices;
 };
 
-export const prepareOrderData = (rawData: string[][]): string[][] => {
+export const prepareSteadFastOrderData = (rawData: string[][]): string[][] => {
     const indexes = [34, 36, 39, 43, 11, 44];
     return removeDuplicatesAndExtractIndexes(rawData, indexes).slice(1, -1);
+};
+
+export const preparePathaoOrderData = (rawData: string[][]): string[][] => {
+    const indexes = [0, 34, 17, 36, 39, 11, 43];
+    return rawData
+        .slice(1)
+        .filter(row => row[0]?.startsWith("#"))
+        .map(row => indexes.map(index => row[index]));
 };
