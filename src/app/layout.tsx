@@ -1,9 +1,10 @@
 import "./globals.css";
+import "../tailwind.css";
 import type { Metadata } from "next";
 import { PropsWithChildren } from "react";
 import { GeistSans } from "geist/font/sans";
 import { Providers } from "./providers";
-import { Footer } from "components/footer";
+import { Footer } from "../components/footer";
 
 export const metadata: Metadata = {
     title: "Shopify Order Processor",

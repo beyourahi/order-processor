@@ -1,13 +1,13 @@
 "use client";
 
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { CourierPicker } from "components/courier-picker";
-import { allowedEmails } from "data";
-import { NotAuthorized } from "components/not-authorized";
-import { OrderProcessor } from "components/order-processor";
-import { Heading } from "components/heading";
-import { LoadingSpinner } from "components/loading-spinner";
-import User from "components/user";
+import { allowedEmails } from "../config/brands";
+import { CourierPicker } from "../components/courier-picker";
+import { NotAuthorized } from "../components/not-authorized";
+import { OrderProcessor } from "../components/order-processor";
+import { Heading } from "../components/heading";
+import { LoadingSpinner } from "../components/loading-spinner";
+import User from "../components/user";
 
 const Page = () => {
     const { user, isLoading } = useKindeBrowserClient();

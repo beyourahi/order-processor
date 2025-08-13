@@ -1,0 +1,41 @@
+import type { Brand } from "../types";
+import { Courier } from "../types";
+
+export const brands: Brand[] = [
+  {
+    name: "Rahi Khan",
+    emails: ["beyourahi@gmail.com", "rahikhan360@gmail.com"],
+    url: "https://beyourahi.com",
+    courier: Courier.Pathao,
+    merchant_id: "69420"
+  },
+  {
+    name: "ENSCENTED",
+    phone: "01948880753",
+    emails: [
+      "enscented.bd@gmail.com",
+      "enscentedfragrance@gmail.com",
+      "tasnimulhossain1410@gmail.com",
+      "enscentedexecutives@gmail.com"
+    ],
+    url: "https://enscented.shop",
+    courier: Courier.SteadFast,
+    merchant_id: "330097"
+  },
+  {
+    name: "AETHERIA",
+    phone: "01948880753",
+    emails: ["aetheriaselfcare@gmail.com"],
+    url: "https://aetheriaselfcare.com",
+    courier: Courier.SteadFast,
+    merchant_id: "1436762"
+  },
+  {
+    name: "DOHORA",
+    emails: ["dohoras3@gmail.com"],
+    url: "https://dohoralifestyle.com",
+    courier: Courier.Pathao
+  }
+];
+
+export const allowedEmails = brands.flatMap(brand => brand.emails);
