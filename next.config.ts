@@ -2,20 +2,20 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     // Performance optimizations
-    images: { 
+    images: {
         formats: ["image/avif", "image/webp"],
         dangerouslyAllowSVG: false,
         contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
         remotePatterns: []
     },
-    
+
     // Experimental features for Next.js 15
     experimental: {
         reactCompiler: true,
         optimizePackageImports: ["@radix-ui/react-icons", "@radix-ui/react-dropdown-menu", "@radix-ui/react-slot"],
         scrollRestoration: true
     },
-    
+
     // Turbopack configuration (stable in Next.js 15)
     turbopack: {
         rules: {
@@ -25,12 +25,12 @@ const nextConfig: NextConfig = {
             }
         }
     },
-    
+
     // Compiler optimizations
     compiler: {
         removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false
     },
-    
+
     // Security headers
     async headers() {
         return [
@@ -65,16 +65,16 @@ const nextConfig: NextConfig = {
             }
         ];
     },
-    
+
     // Optimization settings
     poweredByHeader: false,
     compress: true,
-    
+
     // Environment variables
     env: {
         CUSTOM_KEY: process.env.NODE_ENV
     },
-    
+
     // Bundle analyzer (for development)
     ...(process.env.ANALYZE === "true" && {
         webpack: (config, { dev, isServer }) => {
@@ -91,12 +91,12 @@ const nextConfig: NextConfig = {
             return config;
         }
     }),
-    
+
     // Redirects and rewrites
     async redirects() {
         return [];
     },
-    
+
     async rewrites() {
         return [];
     }

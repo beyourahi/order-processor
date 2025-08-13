@@ -1,8 +1,13 @@
 import Image from "next/image";
-import { cn } from "../lib/utils";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { useCurrentUser } from "../lib/hooks/useCurrentUser";
 import { useAppContext } from "../lib/context/AppContext";
 import upload from "../../public/upload.gif";
+
+const cn = (...inputs: ClassValue[]): string => {
+    return twMerge(clsx(inputs));
+};
 
 export function Upload() {
     const { courierService } = useAppContext();
@@ -21,10 +26,8 @@ export function Upload() {
         >
             <Image src={upload} alt="Upload Gif" />
 
-            <span className="whitespace-nowrap text-center text-sm font-medium lg:text-base 2xl:text-lg">
-                {isDisabled 
-                    ? "Select Courier Service"
-                    : "Drop file here or Click to upload"}
+            <span className="text-center text-sm font-medium whitespace-nowrap lg:text-base 2xl:text-lg">
+                {isDisabled ? "Select Courier Service" : "Drop file here or Click to upload"}
             </span>
         </div>
     );

@@ -1,8 +1,13 @@
 import Image from "next/image";
-import { cn } from "../lib/utils";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { useAppContext } from "../lib/context/AppContext";
-import { COURIER_OPTIONS } from "../constants";
+import { COURIER_OPTIONS } from "../config";
 import { Button } from "./ui/button";
+
+const cn = (...inputs: ClassValue[]): string => {
+    return twMerge(clsx(inputs));
+};
 
 export function CourierPicker() {
     const { courierService, setCourierService } = useAppContext();
