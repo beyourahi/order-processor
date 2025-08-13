@@ -1,18 +1,13 @@
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { brands } from "data";
+import { useCurrentUser } from "../lib/hooks/useCurrentUser";
 
-const User = () => {
+function User() {
     const { user } = useKindeBrowserClient();
+    const currentUser = useCurrentUser();
 
-    const current_user = () => {
-        for (const brand of brands) {
-            if (brand.emails.includes(user?.email!)) {
-                return { name: brand.name, url: brand.url };
-            }
-        }
-    };
+    if (!currentUser) return null;
 
     return (
         <div className="flex w-full flex-col gap-8 text-zinc-400 sm:max-w-xl sm:items-center sm:gap-16 md:flex-row md:justify-between lg:max-w-4xl 2xl:max-w-6xl">
@@ -20,8 +15,8 @@ const User = () => {
                 <span>
                     Name:{" "}
                     <span className="sleek font-bold text-zinc-300 active:text-zinc-400 xl:hover:text-zinc-400">
-                        <Link href={current_user()?.url || "#"} target="_blank">
-                            <span>{current_user()?.name!}</span>
+                        <Link href={currentUser.url || "#"} target="_blank">
+                            <span>{currentUser.name}</span>
                         </Link>
                     </span>
                 </span>
@@ -29,8 +24,8 @@ const User = () => {
                 <span>
                     E-mail:{" "}
                     <span className="sleek font-bold text-zinc-300 active:text-zinc-400 xl:hover:text-zinc-400">
-                        <Link href={current_user()?.url || "#"} target="_blank">
-                            <span>{user?.email!}</span>
+                        <Link href={currentUser.url || "#"} target="_blank">
+                            <span>{user?.email}</span>
                         </Link>
                     </span>
                 </span>
@@ -41,6 +36,6 @@ const User = () => {
             </LogoutLink>
         </div>
     );
-};
+}
 
 export default User;

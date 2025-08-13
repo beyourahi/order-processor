@@ -1,28 +1,15 @@
-import { useContext } from "react";
 import Image from "next/image";
-import { cn } from "lib";
-import pathao from "public/pathao.png";
-import steadFast from "public/steadfast.png";
-import redx from "public/redx.png";
-import sheba from "public/sheba.jpg";
-import ecourier from "public/ecourier.webp";
-import dhl from "public/dhl.png";
-import fedex from "public/fedex.jpeg";
-import { Context } from "app/providers";
+import { cn } from "../lib/utils";
+import { useAppContext } from "../lib/context/AppContext";
+import { COURIER_OPTIONS } from "../constants";
 import { Button } from "./ui/button";
 
-const COURIER_OPTIONS = [
-    { value: "Pathao", label: "Pathao", logo: pathao },
-    { value: "SteadFast", label: "SteadFast", logo: steadFast },
-    { value: "REDX", label: "REDX", logo: redx, coming_soon: true },
-    { value: "Sheba", label: "Sheba", logo: sheba, coming_soon: true },
-    { value: "eCourier", label: "eCourier", logo: ecourier, coming_soon: true },
-    { value: "FedX", label: "FedX", logo: fedex, coming_soon: true },
-    { value: "DHL", label: "DHL", logo: dhl, coming_soon: true }
-];
+export function CourierPicker() {
+    const { courierService, setCourierService } = useAppContext();
 
-export const CourierPicker = () => {
-    const { courierService, setCourierService } = useContext(Context);
+    const handleCourierSelect = (value: string) => {
+        setCourierService(value);
+    };
 
     return (
         <div className="items flex h-80 w-full flex-col gap-4 rounded-xl bg-white/10 p-2 text-left text-white drop-shadow-xl lg:w-1/2">
@@ -32,7 +19,7 @@ export const CourierPicker = () => {
                         disabled={coming_soon}
                         key={value}
                         size="lg"
-                        onClick={() => setCourierService(value)}
+                        onClick={() => handleCourierSelect(value)}
                         className={cn(
                             "sleek m-2 cursor-pointer justify-start gap-4 rounded-[0.7rem] py-7 pl-4 font-semibold shadow-none",
                             courierService === value
@@ -52,4 +39,4 @@ export const CourierPicker = () => {
             </div>
         </div>
     );
-};
+}

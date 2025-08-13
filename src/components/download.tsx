@@ -1,12 +1,15 @@
 import { formatFileSize } from "react-papaparse";
-import { cn } from "lib";
-import { Context } from "app/providers";
-import { useContext } from "react";
 import Image from "next/image";
-import download from "public/download.gif";
+import { cn } from "../lib/utils";
+import { useAppContext } from "../lib/context/AppContext";
+import download from "../../public/download.gif";
 
-export const Download = ({ acceptedFile }: { acceptedFile: any }) => {
-    const { courierService } = useContext(Context);
+interface DownloadProps {
+  acceptedFile: File;
+}
+
+export function Download({ acceptedFile }: DownloadProps) {
+    const { courierService } = useAppContext();
 
     return (
         <div
@@ -15,7 +18,7 @@ export const Download = ({ acceptedFile }: { acceptedFile: any }) => {
                 courierService !== "" && "cursor-pointer"
             )}
         >
-            <Image src={download} alt="Upload Gif" />
+            <Image src={download} alt="Download Gif" />
 
             <span className="flex flex-col items-start">
                 <span className="text-lg font-semibold">{acceptedFile.name}</span>
@@ -23,4 +26,4 @@ export const Download = ({ acceptedFile }: { acceptedFile: any }) => {
             </span>
         </div>
     );
-};
+}

@@ -1,0 +1,26 @@
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { brands } from "../../config/brands";
+import type { CurrentUser } from "../../types";
+
+/**
+ * Custom hook to get current user information based on email
+ */
+export const useCurrentUser = (): CurrentUser | undefined => {
+  const { user } = useKindeBrowserClient();
+
+  if (!user?.email) return undefined;
+
+  const brand = brands.find(brand => 
+    brand.emails.includes(user.email!)
+  );
+
+  if (!brand) return undefined;
+
+  return {
+    name: brand.name,
+    phone: brand.phone,
+    courier: brand.courier,
+    merchant_id: brand.merchant_id,
+    url: brand.url
+  };
+};
