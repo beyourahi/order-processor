@@ -1,6 +1,7 @@
 "use client";
 
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
+import type { PropsWithChildren } from "react";
 import { useCSVReader } from "react-papaparse";
 import type { AppContextType } from "../../types";
 
