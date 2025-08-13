@@ -2,8 +2,8 @@ import { formatFileSize } from "react-papaparse";
 import Image from "next/image";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { useAppContext } from "../lib/context/AppContext";
-import download from "../../public/download.gif";
+import { useAppContext } from "@/lib/context/AppContext";
+import download from "@/public/download.gif";
 
 const cn = (...inputs: ClassValue[]): string => {
     return twMerge(clsx(inputs));

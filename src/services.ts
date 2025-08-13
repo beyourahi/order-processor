@@ -7,7 +7,7 @@ import {
     type SteadFastOrder,
     STEADFAST_INDEXES,
     PATHAO_INDEXES
-} from "./config";
+} from "@/config";
 
 // ================== DATA PROCESSING UTILITIES ==================
 

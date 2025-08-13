@@ -1,10 +1,10 @@
-import pathao from "../public/pathao.png";
-import steadFast from "../public/steadfast.png";
-import redx from "../public/redx.png";
-import sheba from "../public/sheba.jpg";
-import ecourier from "../public/ecourier.webp";
-import dhl from "../public/dhl.png";
-import fedex from "../public/fedex.jpeg";
+import pathao from "@/public/pathao.png";
+import steadFast from "@/public/steadfast.png";
+import redx from "@/public/redx.png";
+import sheba from "@/public/sheba.jpg";
+import ecourier from "@/public/ecourier.webp";
+import dhl from "@/public/dhl.png";
+import fedex from "@/public/fedex.jpeg";
 
 // ================== TYPES ==================
 

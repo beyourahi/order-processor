@@ -1,5 +1,5 @@
 "use client";
 
-import { NotFound } from "./pages";
+import { NotFound } from "@/app/pages";
 
 export default NotFound;

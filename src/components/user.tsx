@@ -1,7 +1,7 @@
 import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { useCurrentUser } from "../lib/hooks/useCurrentUser";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 
 function User() {
     const { user } = useKindeBrowserClient();
