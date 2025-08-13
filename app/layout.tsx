@@ -14,7 +14,7 @@ const RootLayout = ({ children }: PropsWithChildren) => (
     <html lang="en" className="scroll-smooth bg-[#0F0F0F] text-white" suppressHydrationWarning>
         <body>
             <Providers>
-                <main className={`relative flex h-[100dvh] flex-col antialiased ${GeistSans.className}`}>
+                <main className={`relative flex h-dvh flex-col antialiased ${GeistSans.className}`}>
                     {children}
                     <Footer />
                 </main>

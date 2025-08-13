@@ -14,7 +14,7 @@ const Page = () => {
     const isGranted = allowedEmails.includes(user?.email || "");
 
     return (
-        <div className="flex w-full flex-grow flex-col items-center justify-center gap-20 px-4 pt-4 xl:pt-8">
+        <div className="flex w-full grow flex-col items-center justify-center gap-20 px-4 pt-4 xl:pt-8">
             <Heading />
 
             {isLoading ? (

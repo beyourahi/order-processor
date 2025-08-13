@@ -36,7 +36,7 @@ const User = () => {
                 </span>
             </div>
 
-            <LogoutLink className="sleek rounded-[0.5rem] bg-red-500 px-12 py-3 text-sm font-bold uppercase text-white active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
+            <LogoutLink className="sleek rounded-lg bg-red-500 px-12 py-3 text-sm font-bold uppercase text-white active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
                 Log Out
             </LogoutLink>
         </div>
