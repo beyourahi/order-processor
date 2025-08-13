@@ -5,13 +5,13 @@
         "target": "ES2022",
         "module": "esnext",
         "moduleResolution": "bundler",
-        
+
         // Strict Type Checking (Enhanced for TS 5.9)
         "strict": true,
         "noUncheckedIndexedAccess": true,
         "exactOptionalPropertyTypes": true,
         "noImplicitOverride": true,
-        
+
         // Module Resolution & Interop
         "allowJs": true,
         "skipLibCheck": true,
@@ -19,35 +19,35 @@
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        
+
         // Isolation & Performance
         "isolatedModules": true,
         "verbatimModuleSyntax": true,
         "moduleDetection": "force",
-        
+
         // Output Configuration
         "noEmit": true,
         "incremental": true,
         "sourceMap": true,
-        
+
         // JSX Configuration
         "jsx": "preserve",
         "jsxImportSource": "react",
-        
+
         // Next.js Plugin
         "plugins": [
             {
                 "name": "next"
             }
         ],
-        
+
         // Path Configuration
         "baseUrl": ".",
         "paths": {
             "*": ["./*"],
             "@/*": ["./src/*"]
         },
-        
+
         // Type Loading (Empty to prevent auto-loading unnecessary types)
         "types": []
     },

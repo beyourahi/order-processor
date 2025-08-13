@@ -1,12 +1,22 @@
 import "./globals.css";
 import "../tailwind.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { PropsWithChildren } from "react";
 import { GeistSans } from "geist/font/sans";
 import { Providers } from "./providers";
-import { Footer } from "../components/footer";
+import { Footer } from "../components/ui-elements";
 
-export { viewport } from "./viewport";
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    themeColor: [
+        { media: "(prefers-color-scheme: light)", color: "#0F0F0F" },
+        { media: "(prefers-color-scheme: dark)", color: "#0F0F0F" }
+    ],
+    colorScheme: "dark"
+};
 
 export const metadata: Metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
@@ -14,8 +24,18 @@ export const metadata: Metadata = {
         template: "%s | Shopify Order Processor",
         default: "Shopify Order Processor - Turn Chaos into Orders"
     },
-    description: "Professional order processing tool for Shopify merchants. Convert CSV files to courier-ready formats for Pathao, SteadFast, and other delivery services. Streamline your e-commerce fulfillment workflow.",
-    keywords: ["Shopify", "Order Processing", "CSV Converter", "Pathao", "SteadFast", "E-commerce", "Fulfillment", "Delivery"],
+    description:
+        "Professional order processing tool for Shopify merchants. Convert CSV files to courier-ready formats for Pathao, SteadFast, and other delivery services. Streamline your e-commerce fulfillment workflow.",
+    keywords: [
+        "Shopify",
+        "Order Processing",
+        "CSV Converter",
+        "Pathao",
+        "SteadFast",
+        "E-commerce",
+        "Fulfillment",
+        "Delivery"
+    ],
     authors: [{ name: "beyourahi", url: "https://beyourahi.com" }],
     creator: "beyourahi",
     publisher: "beyourahi",
@@ -37,7 +57,8 @@ export const metadata: Metadata = {
         url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
         siteName: "Shopify Order Processor",
         title: "Shopify Order Processor - Turn Chaos into Orders",
-        description: "Professional order processing tool for Shopify merchants. Convert CSV files to courier-ready formats.",
+        description:
+            "Professional order processing tool for Shopify merchants. Convert CSV files to courier-ready formats.",
         images: [
             {
                 url: "/favicon-32x32.png",

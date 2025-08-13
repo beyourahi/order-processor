@@ -31,7 +31,7 @@ function User() {
                 </span>
             </div>
 
-            <LogoutLink className="sleek rounded-xl bg-red-500 px-12 py-3 text-sm font-bold uppercase text-white active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
+            <LogoutLink className="sleek rounded-xl bg-red-500 px-12 py-3 text-sm font-bold text-white uppercase active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
                 Log Out
             </LogoutLink>
         </div>
