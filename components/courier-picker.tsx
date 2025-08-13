@@ -36,7 +36,7 @@ export const CourierPicker = () => {
                         className={cn(
                             "sleek m-2 cursor-pointer justify-start gap-4 rounded-[0.7rem] py-7 pl-4 font-semibold shadow-none",
                             courierService === value
-                                ? "!bg-green-400/30 ring ring-green-400 active:!bg-green-400/30 xl:hover:!bg-green-400/30"
+                                ? "!bg-green-400/30 ring-3 ring-green-400 active:!bg-green-400/30 xl:hover:!bg-green-400/30"
                                 : "bg-white/10 active:scale-95 active:!bg-green-400/20 xl:hover:!bg-green-400/20",
                             coming_soon && "cursor-not-allowed bg-white/5 opacity-50"
                         )}
