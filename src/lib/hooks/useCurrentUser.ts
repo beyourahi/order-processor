@@ -18,9 +18,9 @@ export const useCurrentUser = (): CurrentUser | undefined => {
 
   return {
     name: brand.name,
-    phone: brand.phone,
+    ...(brand.phone !== undefined && { phone: brand.phone }),
     courier: brand.courier,
-    merchant_id: brand.merchant_id,
+    ...(brand.merchant_id !== undefined && { merchant_id: brand.merchant_id }),
     url: brand.url
   };
 };

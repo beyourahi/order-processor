@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { allowedEmails } from "../config/brands";
 import { CourierPicker } from "../components/courier-picker";
@@ -22,11 +23,33 @@ const Page = () => {
             ) : isGranted ? (
                 <div className="flex w-full flex-col items-center gap-20 text-center">
                     <div className="flex w-full max-w-xl flex-col-reverse items-center justify-center gap-12 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl">
-                        <OrderProcessor />
-                        <CourierPicker />
+                        <Suspense fallback={
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="animate-pulse bg-white/10 rounded-lg h-48 w-96"></div>
+                                <p className="text-sm text-zinc-400">Loading order processor...</p>
+                            </div>
+                        }>
+                            <OrderProcessor />
+                        </Suspense>
+                        
+                        <Suspense fallback={
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="animate-pulse bg-white/10 rounded-lg h-48 w-80"></div>
+                                <p className="text-sm text-zinc-400">Loading courier options...</p>
+                            </div>
+                        }>
+                            <CourierPicker />
+                        </Suspense>
                     </div>
 
-                    <User />
+                    <Suspense fallback={
+                        <div className="flex items-center gap-2">
+                            <div className="animate-pulse bg-white/10 rounded-full h-8 w-8"></div>
+                            <div className="animate-pulse bg-white/10 rounded h-4 w-32"></div>
+                        </div>
+                    }>
+                        <User />
+                    </Suspense>
                 </div>
             ) : (
                 <NotAuthorized />
