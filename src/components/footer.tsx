@@ -1,12 +1,8 @@
 import Link from "next/link";
 
 export const Footer = () => {
-    const year = new Date().getFullYear();
-
     return (
-        <div className="flex flex-col items-center justify-center gap-6 px-4 pb-6 pt-12 text-center text-sm text-zinc-400 sm:flex-row sm:justify-between xl:px-8 xl:pb-6 xl:pt-2">
-            <p>Copyright &copy; {year}</p>
-
+        <div className="flex items-center justify-center px-4 pb-6 pt-12 text-center text-sm text-zinc-400 xl:px-8 xl:pb-6 xl:pt-2">
             <p>
                 <Link
                     href="https://beyourahi.com"

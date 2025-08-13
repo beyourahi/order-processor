@@ -11,7 +11,7 @@ function User() {
 
     return (
         <div className="flex w-full flex-col gap-8 text-zinc-400 sm:max-w-xl sm:items-center sm:gap-16 md:flex-row md:justify-between lg:max-w-4xl 2xl:max-w-6xl">
-            <div className="flex flex-col items-start gap-2">
+            <div className="flex flex-col items-start gap-2 text-sm">
                 <span>
                     Name:{" "}
                     <span className="sleek font-bold text-zinc-300 active:text-zinc-400 xl:hover:text-zinc-400">
