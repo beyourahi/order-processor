@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "../tailwind.css";
+@reference "../tailwind.css";
 
 .sleek {
     @apply transform-gpu transition-all duration-200 ease-in-out;
