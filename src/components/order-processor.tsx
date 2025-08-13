@@ -1,12 +1,12 @@
 import * as XLSX from "xlsx";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { useCurrentUser } from "../lib/hooks/useCurrentUser";
-import { useAppContext } from "../lib/context/AppContext";
-import { CourierService } from "../services";
-import { FILE_PREFIX, FILE_EXTENSION, type CSVReaderProps } from "../config";
-import { Upload } from "./upload";
-import { Download } from "./download";
+import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
+import { useAppContext } from "@/lib/context/AppContext";
+import { CourierService } from "@/services";
+import { FILE_PREFIX, FILE_EXTENSION, type CSVReaderProps } from "@/config";
+import { Upload } from "@/components/upload";
+import { Download } from "@/components/download";
 
 const cn = (...inputs: ClassValue[]): string => {
     return twMerge(clsx(inputs));

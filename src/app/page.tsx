@@ -2,11 +2,11 @@
 
 import { Suspense } from "react";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { allowedEmails } from "../config";
-import { CourierPicker } from "../components/courier-picker";
-import { OrderProcessor } from "../components/order-processor";
-import { Heading, LoadingSpinner, NotAuthorized } from "../components/ui-elements";
-import User from "../components/user";
+import { allowedEmails } from "@/config";
+import { CourierPicker } from "@/components/courier-picker";
+import { OrderProcessor } from "@/components/order-processor";
+import { Heading, LoadingSpinner, NotAuthorized } from "@/components/ui-elements";
+import User from "@/components/user";
 
 const Page = () => {
     const { user, isLoading } = useKindeBrowserClient();

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "../components/ui/button";
-import { LoadingSpinner } from "../components/ui-elements";
+import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui-elements";
 
 // ================== ERROR PAGE ==================
 

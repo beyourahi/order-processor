@@ -45,7 +45,13 @@
         "baseUrl": ".",
         "paths": {
             "*": ["./*"],
-            "@/*": ["./src/*"]
+            "@/*": ["./src/*"],
+            "@/components/*": ["./src/components/*"],
+            "@/lib/*": ["./src/lib/*"],
+            "@/app/*": ["./src/app/*"],
+            "@/public/*": ["./public/*"],
+            "@/config": ["./src/config"],
+            "@/services": ["./src/services"]
         },
 
         // Type Loading (Empty to prevent auto-loading unnecessary types)

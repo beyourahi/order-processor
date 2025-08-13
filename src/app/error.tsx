@@ -1,5 +1,5 @@
 "use client";
 
-import { Error } from "./pages";
+import { Error } from "@/app/pages";
 
 export default Error;

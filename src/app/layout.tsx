@@ -3,8 +3,8 @@ import "../tailwind.css";
 import type { Metadata, Viewport } from "next";
 import type { PropsWithChildren } from "react";
 import { GeistSans } from "geist/font/sans";
-import { Providers } from "./providers";
-import { Footer } from "../components/ui-elements";
+import { Providers } from "@/app/providers";
+import { Footer } from "@/components/ui-elements";
 
 export const viewport: Viewport = {
     width: "device-width",

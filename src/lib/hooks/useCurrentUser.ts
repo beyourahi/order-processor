@@ -1,5 +1,5 @@
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { brands, type CurrentUser } from "../../config";
+import { brands, type CurrentUser } from "@/config";
 
 /**
  * Custom hook to get current user information based on email

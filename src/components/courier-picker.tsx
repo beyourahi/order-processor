@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { useAppContext } from "../lib/context/AppContext";
-import { COURIER_OPTIONS } from "../config";
-import { Button } from "./ui/button";
+import { useAppContext } from "@/lib/context/AppContext";
+import { COURIER_OPTIONS } from "@/config";
+import { Button } from "@/components/ui/button";
 
 const cn = (...inputs: ClassValue[]): string => {
     return twMerge(clsx(inputs));
