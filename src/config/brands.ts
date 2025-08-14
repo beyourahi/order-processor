@@ -37,6 +37,14 @@ export const brands: Brand[] = [
         url: "https://aetheriaselfcare.com",
         courier: Courier.SteadFast,
         merchant_id: "1436762"
+    },
+    {
+        name: "Corvien",
+        phone: "01312592710",
+        emails: ["corvienco@gmail.com", "arifulashfi321@gmail.com"],
+        url: "https://corvien.co",
+        courier: Courier.SteadFast,
+        merchant_id: "1618727"
     }
 ];
 
