@@ -95,12 +95,14 @@ class SteadFastProcessor implements CourierProcessor<SteadFastOrder> {
         return data.map(row => ({
             Invoice: `#${user.merchant_id}${row[0] || ""}`,
             Name: user.name,
-            "Contact Name": row[0] || "",
-            "Contact Phone": row[5] || "",
             Address: row[2] || "",
             Phone: user.phone,
             Amount: row[3] || "",
-            Note: row[4] || ""
+            Note: row[4] || "",
+            Lot: "",
+            "Delivery Type": "Home",
+            "Contact Name": row[0] || "",
+            "Contact Phone": row[5] || ""
         }));
     }
 }
