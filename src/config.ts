@@ -6,84 +6,15 @@ import ecourier from "@/public/ecourier.webp";
 import dhl from "@/public/dhl.png";
 import fedex from "@/public/fedex.jpeg";
 
-// ================== TYPES ==================
+import {
+    Courier,
+    type Brand,
+    type CourierOption,
+    type AppConfig
+} from "@/types";
 
-export interface SteadFastOrder {
-    Invoice: string;
-    Name: string;
-    Address: string;
-    Phone: string;
-    Amount: string;
-    Note: string;
-    Lot: string;
-    "Delivery Type": string;
-    "Contact Name": string;
-    "Contact Phone": string;
-}
-
-export interface PathaoOrder {
-    "Order No": string;
-    Name: string;
-    Product: string;
-    Price: string;
-    Address: string;
-    City: string;
-    "Phone No": string;
-}
-
-export type OrderType = PathaoOrder | SteadFastOrder;
-
-export interface CourierProcessor<T> {
-    processOrders(data: string[][], user: UserInfo): T[];
-}
-
-export interface UserInfo {
-    name: string;
-    phone: string;
-    merchant_id: string;
-}
-
-export interface CurrentUser {
-    name: string;
-    phone?: string;
-    courier: Courier | null;
-    merchant_id?: string;
-    url?: string;
-}
-
-export enum Courier {
-    SteadFast = "SteadFast",
-    Pathao = "Pathao"
-}
-
-export interface Brand {
-    name: string;
-    phone?: string;
-    emails: string[];
-    url: string;
-    courier: Courier | null;
-    merchant_id?: string;
-}
-
-export interface CourierOption {
-    value: string;
-    label: string;
-    logo: any;
-    coming_soon?: boolean;
-}
-
-export interface AppContextType {
-    courierService: string;
-    setCourierService: (courier: string) => void;
-    CSVReader: any;
-    zoneHover: boolean;
-    setZoneHover: (hover: boolean) => void;
-}
-
-export interface CSVReaderProps {
-    getRootProps: () => Record<string, any>;
-    acceptedFile: File | null;
-}
+// Re-export types for backward compatibility
+export * from "@/types";
 
 // ================== CONSTANTS ==================
 
@@ -97,7 +28,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
     { value: "DHL", label: "DHL", logo: dhl, coming_soon: true }
 ];
 
-// Data processing constants
+// Data processing constants (deprecated - use from types.ts instead)
 export const STEADFAST_INDEXES = [34, 36, 39, 43, 11, 44];
 export const PATHAO_INDEXES = [0, 34, 17, 36, 39, 11, 43];
 
@@ -112,7 +43,7 @@ export const brands: Brand[] = [
         name: "Rahi Khan",
         emails: ["beyourahi@gmail.com", "rahikhan360@gmail.com"],
         url: "https://beyourahi.com",
-        courier: Courier.Pathao,
+        courier: Courier.SteadFast,
         merchant_id: "69420"
     },
     {
@@ -131,7 +62,7 @@ export const brands: Brand[] = [
     {
         name: "AETHERIA",
         phone: "01948880753",
-        emails: ["aetheriaselfcare@gmail.com"],
+        emails: ["aetheriaselfcare@gmail.com", "team@aetheriaselfcare.com"],
         url: "https://aetheriaselfcare.com",
         courier: Courier.SteadFast,
         merchant_id: "1436762"
@@ -145,3 +76,20 @@ export const brands: Brand[] = [
 ];
 
 export const allowedEmails = brands.flatMap(brand => brand.emails);
+
+// ================== APP CONFIG ==================
+
+export const appConfig: AppConfig = {
+    name: "Order Processor",
+    description: "Process and format orders for multiple courier services",
+    url: "https://order-processor.vercel.app",
+    repository: {
+        url: "https://github.com/beyourahi/order-processor",
+        type: "git"
+    },
+    author: {
+        name: "Rahi Khan",
+        email: "beyourahi@gmail.com",
+        url: "https://beyourahi.com"
+    }
+};
