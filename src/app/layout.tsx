@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import type { PropsWithChildren } from "react";
 import { GeistSans } from "geist/font/sans";
 import { Providers } from "@/app/providers";
-import { Footer } from "@/components/ui-elements";
+import { Footer } from "@/components/ui/footer";
 
 export const viewport: Viewport = {
     width: "device-width",
