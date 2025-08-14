@@ -3,15 +3,12 @@ import Image from "next/image";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useAppContext } from "@/lib/context/AppContext";
+import type { DownloadProps } from "@/types";
 import download from "@/public/download.gif";
 
 const cn = (...inputs: ClassValue[]): string => {
     return twMerge(clsx(inputs));
 };
-
-interface DownloadProps {
-    acceptedFile: File;
-}
 
 export function Download({ acceptedFile }: DownloadProps) {
     const { courierService } = useAppContext();

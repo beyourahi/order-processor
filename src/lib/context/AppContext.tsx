@@ -3,7 +3,7 @@
 import { createContext, useContext, useState } from "react";
 import type { PropsWithChildren } from "react";
 import { useCSVReader } from "react-papaparse";
-import type { AppContextType } from "@/config";
+import type { AppContextType } from "@/types";
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 

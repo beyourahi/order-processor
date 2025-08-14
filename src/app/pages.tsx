@@ -3,13 +3,9 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui-elements";
+import type { ErrorProps } from "@/types";
 
 // ================== ERROR PAGE ==================
-
-interface ErrorProps {
-    error: Error & { digest?: string };
-    reset: () => void;
-}
 
 export function Error({ error, reset }: ErrorProps) {
     useEffect(() => {

@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useAppContext } from "@/lib/context/AppContext";
 import { CourierService } from "@/services";
-import { FILE_PREFIX, FILE_EXTENSION, type CSVReaderProps } from "@/config";
+import { FILE_PREFIX, FILE_EXTENSION } from "@/config";\nimport type { CSVReaderProps } from "@/types";
 import { Upload } from "@/components/upload";
 import { Download } from "@/components/download";
 
