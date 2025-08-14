@@ -1,13 +1,8 @@
 import Image from "next/image";
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { useCurrentUser } from "@/lib/hooks/useCurrentUser";
 import { useAppContext } from "@/lib/context/AppContext";
+import { cn } from "@/lib/utils";
 import upload from "@/public/upload.gif";
-
-const cn = (...inputs: ClassValue[]): string => {
-    return twMerge(clsx(inputs));
-};
 
 export function Upload() {
     const { courierService } = useAppContext();

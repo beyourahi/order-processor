@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LoadingSpinner } from "@/components/ui-elements";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { ErrorProps } from "@/types";
 
 // ================== ERROR PAGE ==================
