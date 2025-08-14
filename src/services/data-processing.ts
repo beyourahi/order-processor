@@ -3,7 +3,7 @@
  * Contains utility functions for cleaning, filtering, and preparing CSV data
  */
 
-import { STEADFAST_INDEXES_ARRAY, PATHAO_INDEXES_ARRAY } from "@/constants";
+import { STEADFAST_INDEXES_ARRAY, PATHAO_INDEXES_ARRAY, SHOPIFY_STEADFAST_INDEXES_ARRAY } from "@/constants";
 
 // ================== DATA PROCESSING UTILITIES ==================
 
@@ -81,4 +81,36 @@ export const preparePathaoOrderData = (rawData: string[][]): string[][] => {
         .filter(row => row?.[0]?.startsWith("#"))
         // Map each row to extract only the columns Pathao needs
         .map(row => PATHAO_INDEXES_ARRAY.map(index => row[index] || ""));
+};
+
+/**
+ * Prepare data for SteadFast courier processing from Shopify export
+ * Handles multi-line orders and consolidates customer information
+ */
+export const prepareShopifySteadFastOrderData = (rawData: string[][]): string[][] => {
+    if (rawData.length <= 1) return []; // Need at least header + data
+
+    const orderMap = new Map<string, string[]>();
+    
+    // Process each row and consolidate orders
+    for (let i = 1; i < rawData.length; i++) {
+        const row = rawData[i];
+        if (!row) continue;
+        
+        const orderNumber = row[0]; // Order number like #13826
+        
+        // Skip rows without order numbers or with empty shipping info
+        if (!orderNumber?.startsWith("#") || !row[34]) continue;
+        
+        // For Shopify exports, we only need the first occurrence of each order
+        // since customer info is the same across all line items
+        if (!orderMap.has(orderNumber)) {
+            // Extract: [name, address, phone, amount, notes]
+            const extractedData = SHOPIFY_STEADFAST_INDEXES_ARRAY.map(index => row[index] || "");
+            orderMap.set(orderNumber, extractedData);
+        }
+    }
+    
+    // Convert map values to array
+    return Array.from(orderMap.values());
 };

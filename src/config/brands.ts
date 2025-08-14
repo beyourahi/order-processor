@@ -18,7 +18,7 @@ export const brands: Brand[] = [
         merchant_id: "69420"
     },
     {
-        name: "ENSCENTED",
+        name: "EnScented",
         phone: "01948880753",
         emails: [
             "enscented.bd@gmail.com",
@@ -31,18 +31,12 @@ export const brands: Brand[] = [
         merchant_id: "330097"
     },
     {
-        name: "AETHERIA",
+        name: "Aetheria",
         phone: "01948880753",
         emails: ["aetheriaselfcare@gmail.com", "team@aetheriaselfcare.com"],
         url: "https://aetheriaselfcare.com",
         courier: Courier.SteadFast,
         merchant_id: "1436762"
-    },
-    {
-        name: "DOHORA",
-        emails: ["dohoras3@gmail.com"],
-        url: "https://dohoralifestyle.com",
-        courier: Courier.Pathao
     }
 ];
 

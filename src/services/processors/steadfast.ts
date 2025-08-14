@@ -12,26 +12,26 @@ import type { CourierProcessor, SteadFastOrder, UserInfo } from "@/types";
 export class SteadFastProcessor implements CourierProcessor<SteadFastOrder> {
     processOrders(data: string[][], user: UserInfo): SteadFastOrder[] {
         return data.map(row => ({
-            // Generate invoice with merchant ID prefix for SteadFast tracking
-            Invoice: `#${user.merchant_id}${row[0] || ""}`,
-            // Use merchant/brand name for all orders
-            Name: user.name,
-            // Customer delivery address from CSV column 2
-            Address: row[2] || "",
-            // Use merchant phone as pickup contact
-            Phone: user.phone,
-            // Cash on delivery amount from CSV column 3
+            // Always use brand's merchant ID as invoice
+            Invoice: user.merchant_id,
+            // Customer name from input file
+            Name: row[0] || "",
+            // Full customer address from input file
+            Address: row[1] || "",
+            // Customer phone from input file
+            Phone: row[2] || "",
+            // Total checkout amount including delivery charge
             Amount: row[3] || "",
-            // Special delivery instructions from CSV column 4
+            // Customer note from input file
             Note: row[4] || "",
-            // Lot is always empty for standard orders
+            // Lot is always empty
             Lot: "",
-            // SteadFast only supports home delivery for this integration
+            // Delivery Type is always "Home"
             "Delivery Type": "Home",
-            // Customer name from CSV column 0 for delivery contact
-            "Contact Name": row[0] || "",
-            // Customer phone from CSV column 5 for delivery contact
-            "Contact Phone": row[5] || ""
+            // Brand name as contact name
+            "Contact Name": user.name,
+            // Brand phone as contact phone
+            "Contact Phone": user.phone || ""
         }));
     }
 }

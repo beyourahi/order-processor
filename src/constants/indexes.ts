@@ -4,6 +4,20 @@
  */
 
 /**
+ * Column indexes for Shopify export format
+ * Based on the standard Shopify order export CSV structure
+ */
+export const SHOPIFY_EXPORT_INDEXES = {
+    ORDER_NAME: 0,           // Order number (e.g., #13826)
+    EMAIL: 1,                // Customer email
+    TOTAL: 11,               // Total amount including shipping
+    SHIPPING_NAME: 34,       // Customer name for delivery
+    SHIPPING_ADDRESS: 36,    // Customer address for delivery  
+    SHIPPING_PHONE: 43,      // Customer phone for delivery
+    NOTES: 44                // Customer notes/instructions
+} as const;
+
+/**
  * Column indexes for SteadFast CSV data extraction
  */
 export const STEADFAST_INDEXES = {
@@ -29,8 +43,10 @@ export const PATHAO_INDEXES = {
 } as const;
 
 /**
- * Legacy array-based indexes for backward compatibility
- * These will be deprecated in favor of the object-based approach above
+ * Array-based indexes for data extraction
+ * 
+ * SHOPIFY_STEADFAST_INDEXES_ARRAY maps to Shopify export columns for SteadFast:
+ * [34, 36, 43, 11, 44] = [name, address, phone, amount, notes]
  * 
  * STEADFAST_INDEXES_ARRAY maps to CSV columns:
  * [34, 36, 39, 43, 11, 44] = [invoice, name, phone, address, amount, instructions]
@@ -38,6 +54,7 @@ export const PATHAO_INDEXES = {
  * PATHAO_INDEXES_ARRAY maps to CSV columns:
  * [0, 34, 17, 36, 39, 11, 43] = [order_no, name, product, price, address, city, phone]
  */
+export const SHOPIFY_STEADFAST_INDEXES_ARRAY = [34, 36, 43, 11, 44];
 export const STEADFAST_INDEXES_ARRAY = [34, 36, 39, 43, 11, 44];
 export const PATHAO_INDEXES_ARRAY = [0, 34, 17, 36, 39, 11, 43];
 
