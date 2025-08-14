@@ -11,12 +11,14 @@ import fedex from "@/public/fedex.jpeg";
 export interface SteadFastOrder {
     Invoice: string;
     Name: string;
-    "Contact Name": string;
-    "Contact Phone": string;
     Address: string;
     Phone: string;
     Amount: string;
     Note: string;
+    Lot: string;
+    "Delivery Type": string;
+    "Contact Name": string;
+    "Contact Phone": string;
 }
 
 export interface PathaoOrder {
