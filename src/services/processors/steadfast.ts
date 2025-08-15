@@ -6,6 +6,16 @@
 import type { CourierProcessor, SteadFastOrder, UserInfo } from "@/types";
 
 /**
+ * Utility function to remove leading zeros from phone numbers
+ * @param phoneNumber - The phone number string to process
+ * @returns Phone number with leading zeros removed
+ */
+function removeLeadingZeros(phoneNumber: string): string {
+    if (!phoneNumber) return "";
+    return phoneNumber.replace(/^0+/, "");
+}
+
+/**
  * SteadFast processor class
  * Implements the CourierProcessor interface for SteadFast-specific order processing
  */
@@ -18,8 +28,8 @@ export class SteadFastProcessor implements CourierProcessor<SteadFastOrder> {
             Name: row[0] || "",
             // Full customer address from input file
             Address: row[1] || "",
-            // Customer phone from input file
-            Phone: row[2] || "",
+            // Customer phone from input file (with leading zeros removed)
+            Phone: removeLeadingZeros(row[2] || ""),
             // Total checkout amount including delivery charge
             Amount: row[3] || "",
             // Customer note from input file
