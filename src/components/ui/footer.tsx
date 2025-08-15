@@ -11,7 +11,7 @@ export const Footer = () => {
             <p>
                 <Link href="https://beyourahi.com" target="_blank" className="group sleek">
                     Designed by{" "}
-                    <span className="underline-offset-4 group-hover:text-white group-hover:underline">@beyourahi</span>
+                    <span className="underline-offset-4 group-hover:text-white group-hover:underline">Rahi Khan</span>
                 </Link>
             </p>
         </div>

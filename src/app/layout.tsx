@@ -36,9 +36,9 @@ export const metadata: Metadata = {
         "Fulfillment",
         "Delivery"
     ],
-    authors: [{ name: "beyourahi", url: "https://beyourahi.com" }],
-    creator: "beyourahi",
-    publisher: "beyourahi",
+    authors: [{ name: "Rahi Khan", url: "https://beyourahi.com" }],
+    creator: "Rahi Khan",
+    publisher: "Rahi Khan",
     applicationName: "Shopify Order Processor",
     generator: "Next.js",
     referrer: "origin-when-cross-origin",
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
         card: "summary",
         title: "Shopify Order Processor",
         description: "Turn Chaos into Orders - Professional order processing for Shopify",
-        creator: "@beyourahi"
+        creator: "Rahi Khan"
     },
     manifest: "/manifest.json",
     other: {
