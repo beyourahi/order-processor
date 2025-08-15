@@ -19,7 +19,7 @@ export const brands: Brand[] = [
     },
     {
         name: "EnScented",
-        phone: "01948880753",
+        phone: "1948880753",
         emails: [
             "enscented.bd@gmail.com",
             "enscentedfragrance@gmail.com",
@@ -32,7 +32,7 @@ export const brands: Brand[] = [
     },
     {
         name: "Aetheria",
-        phone: "01948880753",
+        phone: "1948880753",
         emails: ["aetheriaselfcare@gmail.com", "team@aetheriaselfcare.com"],
         url: "https://aetheriaselfcare.com",
         courier: Courier.SteadFast,
@@ -40,7 +40,7 @@ export const brands: Brand[] = [
     },
     {
         name: "Corvien",
-        phone: "01312592710",
+        phone: "1312592710",
         emails: ["corvienco@gmail.com", "arifulashfi321@gmail.com"],
         url: "https://corvien.co",
         courier: Courier.SteadFast,
