@@ -73,7 +73,6 @@ export interface CourierOption {
     value: string;
     label: string;
     logo: any;
-    coming_soon?: boolean;
 }
 
 // ==================== Type Guards ====================
