@@ -8,6 +8,25 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | Use `get-documentation` for SvelteKit `$lib` alias and module resolution patterns |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- get-documentation: "modules", "$lib"
+- get-documentation: "imports", "aliases"
+```
+
+**Note**: This prompt involves pure TypeScript files with minimal framework-specific code. The main change is updating import paths from `@/` to `$lib/`.
+
+---
+
 ## Objective
 
 Migrate configuration files and constants from the Next.js project. These are pure TypeScript and require only path updates.

@@ -8,6 +8,35 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **better-auth** | **PRIMARY** - Use `search` or `chat` for session handling, protected routes, signOut, signIn social, and auth guards |
+| **svelte** | Use `get-documentation` for SvelteKit redirect, server load guards, and `$effect` |
+
+### Recommended MCP Queries
+```
+better-auth MCP:
+- search: "protected routes SvelteKit"
+- search: "signOut redirect"
+- search: "signIn social callbackURL"
+- search: "session cookies"
+- chat: Ask about email allowlist patterns and authorization checks
+
+svelte MCP:
+- get-documentation: "redirect"
+- get-documentation: "page server load"
+- get-documentation: "$effect"
+- svelte-autofixer: Validate auth-related components
+```
+
+**Critical**: This prompt finalizes authentication. Test all auth flows thoroughly. Use the better-auth MCP to verify correct session handling patterns.
+
+---
+
 ## Objective
 
 Finalize authentication flows including protected routes, email allowlist validation, and session handling. This ensures the auth experience matches the original Kinde implementation.

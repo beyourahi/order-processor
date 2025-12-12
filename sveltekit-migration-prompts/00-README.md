@@ -21,6 +21,39 @@ This directory contains sequential prompts for migrating the order-processor app
 
 ---
 
+## MCP Servers for AI Assistance
+
+When executing these prompts with Claude Code or similar AI assistants, leverage these MCP (Model Context Protocol) servers for accurate, up-to-date documentation:
+
+### Required MCP Servers
+
+| MCP Server | Purpose | Used In Prompts |
+|------------|---------|-----------------|
+| **svelte** | Official Svelte 5 and SvelteKit documentation, component validation, runes syntax | 01, 03, 04, 09, 10, 11, 12, 14 |
+| **better-auth** | Better Auth framework documentation and patterns | 05, 06, 11, 13 |
+| **cloudflare-docs** | Cloudflare Workers, D1, Pages, deployment configuration | 02, 05, 17 |
+| **context7** | General library documentation lookup (xlsx, papaparse, tailwind, etc.) | All prompts as needed |
+
+### How to Use MCP Servers
+
+When working on a prompt, instruct the AI to:
+
+1. **For Svelte/SvelteKit questions**: Use the `svelte` MCP to fetch official documentation and validate component syntax
+2. **For Better Auth setup**: Use the `better-auth` MCP to get correct API usage and D1 adapter configuration
+3. **For Cloudflare deployment**: Use the `cloudflare-docs` MCP to get correct wrangler configuration and D1 bindings
+4. **For library-specific questions**: Use the `context7` MCP with `resolve-library-id` then `get-library-docs`
+
+### Example AI Instructions
+
+```
+Before implementing this prompt, use the svelte MCP to:
+1. List available documentation sections with `list-sections`
+2. Fetch relevant sections for Svelte 5 runes and SvelteKit routing
+3. Validate any Svelte component code with `svelte-autofixer`
+```
+
+---
+
 ## Execution Order
 
 Execute these prompts **sequentially**. Each prompt depends on the previous ones being completed.

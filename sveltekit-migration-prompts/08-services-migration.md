@@ -8,6 +8,24 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | Use `get-documentation` for SvelteKit `$lib` module resolution |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- get-documentation: "modules", "$lib"
+```
+
+**Note**: This prompt involves pure TypeScript business logic. The services are framework-agnostic and require only import path updates from `@/` to `$lib/`.
+
+---
+
 ## Objective
 
 Migrate the business logic services from Next.js. These are pure TypeScript and require only import path updates.

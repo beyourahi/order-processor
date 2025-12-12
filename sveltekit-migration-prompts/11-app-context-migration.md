@@ -8,6 +8,31 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte stores (`writable`, `derived`), store contracts, and `$` prefix subscription |
+| **better-auth** | Use `search` for session handling and auth hooks patterns |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- list-sections → get-documentation: "stores", "writable"
+- get-documentation: "derived stores"
+- get-documentation: "$state" (Svelte 5 alternative to stores)
+
+better-auth MCP:
+- search: "session locals SvelteKit"
+- search: "getSession server"
+```
+
+**Note**: This prompt replaces React Context with Svelte stores. Svelte 5 also offers `$state` runes as an alternative to traditional stores for component-level state.
+
+---
+
 ## Objective
 
 Replace React Context with Svelte stores. Migrate the `useCurrentUser` hook to work with Better Auth and brand configuration.

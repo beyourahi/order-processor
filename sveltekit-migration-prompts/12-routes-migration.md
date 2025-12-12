@@ -8,6 +8,35 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | **PRIMARY** - Use `get-documentation` for SvelteKit routing, layouts, `+page.svelte`, `+layout.svelte`, `+error.svelte`, load functions, and `$app/navigation` |
+| **better-auth** | Use `search` for auth client `useSession` and client-side auth patterns |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- list-sections → get-documentation: "routing", "layouts"
+- get-documentation: "+page.svelte", "+layout.svelte"
+- get-documentation: "load", "page data"
+- get-documentation: "$app/navigation", "goto"
+- get-documentation: "$app/state", "page"
+- get-documentation: "error pages"
+- svelte-autofixer: Validate all route components
+
+better-auth MCP:
+- search: "useSession client"
+- search: "signIn social Google"
+```
+
+**Important**: SvelteKit routing uses file-based conventions. Validate all route components with `svelte-autofixer`.
+
+---
+
 ## Objective
 
 Create the SvelteKit routes that mirror the Next.js page structure. This includes the main page, layouts, and error handling.

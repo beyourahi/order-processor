@@ -8,6 +8,28 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **better-auth** | Use `search` for Better Auth type definitions (User, Session types) |
+| **svelte** | Use `get-documentation` for SvelteKit `app.d.ts` type declaration patterns |
+
+### Recommended MCP Queries
+```
+better-auth MCP:
+- search: "TypeScript types User Session"
+- search: "type definitions"
+
+svelte MCP:
+- get-documentation: "types", "app.d.ts"
+- get-documentation: "typescript"
+```
+
+---
+
 ## Objective
 
 Migrate TypeScript type definitions from the Next.js project to the SvelteKit structure. Most types remain unchanged as they are pure TypeScript.

@@ -8,6 +8,31 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **context7** | **PRIMARY** - Use `resolve-library-id` → `get-library-docs` for papaparse CSV parsing API and xlsx Excel generation |
+| **svelte** | Use `get-documentation` for Svelte 5 async patterns and `$state` for processing states |
+
+### Recommended MCP Queries
+```
+context7 MCP:
+- resolve-library-id: "papaparse" → get-library-docs for parse() API, complete callback
+- resolve-library-id: "xlsx" → get-library-docs for utils.json_to_sheet, writeFile
+- resolve-library-id: "xlsx" → get-library-docs topic: "workbook"
+
+svelte MCP:
+- get-documentation: "async", "promises"
+- svelte-autofixer: Validate OrderProcessor component updates
+```
+
+**Note**: This prompt verifies the CSV/Excel pipeline. The libraries work the same as in React, but without react-papaparse wrapper.
+
+---
+
 ## Objective
 
 Verify and finalize the CSV parsing (Papa Parse) and Excel generation (xlsx) integration. Test the complete file processing pipeline.

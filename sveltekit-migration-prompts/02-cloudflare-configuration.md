@@ -8,6 +8,31 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **cloudflare-docs** | **PRIMARY** - Use `search_cloudflare_documentation` for D1 database setup, wrangler configuration, Workers bindings, and adapter-cloudflare options |
+| **svelte** | Use `get-documentation` for SvelteKit adapter configuration and platform types |
+
+### Recommended MCP Queries
+```
+cloudflare-docs MCP:
+- search: "D1 database binding wrangler"
+- search: "Workers adapter SvelteKit"
+- search: "wrangler.jsonc configuration"
+- search: "D1 create database CLI"
+- search: "Workers environment variables secrets"
+
+svelte MCP:
+- get-documentation: "adapters", "cloudflare"
+- get-documentation: "environment variables"
+```
+
+---
+
 ## Objective
 
 Configure Cloudflare Workers deployment with D1 database binding for Better Auth session storage.

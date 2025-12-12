@@ -8,6 +8,30 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte 5 component patterns, `$props()`, `$state()` runes, and validate with `svelte-autofixer` |
+| **better-auth** | Use `search` for auth client signOut patterns |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- list-sections → get-documentation: "$props", "$state", "components"
+- get-documentation: "class directive", "conditional classes"
+- svelte-autofixer: Validate all .svelte components before finalizing
+
+better-auth MCP:
+- search: "signOut client"
+```
+
+**Important**: After writing each Svelte component, use `svelte-autofixer` to validate Svelte 5 syntax. Components must be visually identical to the React originals.
+
+---
+
 ## Objective
 
 Migrate the UI components (Button already done in 04, now: LoadingSpinner, Heading, Footer, NotAuthorized) from React to Svelte 5. These must be visually identical to the original.

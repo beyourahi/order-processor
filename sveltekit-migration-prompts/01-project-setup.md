@@ -8,6 +8,27 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | Use `list-sections` then `get-documentation` for SvelteKit project structure, `svelte.config.js` options, and path alias configuration |
+| **context7** | Use `resolve-library-id` → `get-library-docs` for Vite, ESLint, and Prettier configuration options |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- get-documentation: "project structure", "configuration"
+
+context7 MCP:
+- resolve-library-id: "vite" → get-library-docs for vite.config.ts options
+- resolve-library-id: "eslint" → get-library-docs for flat config format
+```
+
+---
+
 ## Objective
 
 Initialize a new SvelteKit project structure within the existing repository, preparing for the migration from Next.js.

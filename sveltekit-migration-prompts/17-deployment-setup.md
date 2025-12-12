@@ -8,6 +8,34 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **cloudflare-docs** | **PRIMARY** - Use `search_cloudflare_documentation` for wrangler deploy, Workers secrets, D1 production setup, custom domains, and observability |
+| **svelte** | Use `get-documentation` for SvelteKit build configuration and adapter options |
+
+### Recommended MCP Queries
+```
+cloudflare-docs MCP:
+- search: "wrangler deploy Workers"
+- search: "wrangler secret put"
+- search: "D1 production database"
+- search: "Workers custom domain"
+- search: "Workers observability logs"
+- search: "wrangler tail logs"
+
+svelte MCP:
+- get-documentation: "building", "adapter-cloudflare"
+- get-documentation: "environment variables production"
+```
+
+**Critical**: Production deployment requires correct secrets configuration. Use `cloudflare-docs` MCP to verify wrangler commands and environment setup.
+
+---
+
 ## Objective
 
 Configure production deployment to Cloudflare Workers/Pages with proper environment variables, secrets, and build configuration.

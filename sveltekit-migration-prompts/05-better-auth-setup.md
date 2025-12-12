@@ -11,6 +11,40 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **better-auth** | **PRIMARY** - Use `search` or `chat` for Better Auth setup, D1 adapter, Google OAuth, SvelteKit integration, and hooks configuration |
+| **cloudflare-docs** | Use `search_cloudflare_documentation` for D1 database operations, SQL schema, and Workers environment |
+| **svelte** | Use `get-documentation` for hooks.server.ts patterns and server-side data loading |
+
+### Recommended MCP Queries
+```
+better-auth MCP:
+- search: "SvelteKit integration"
+- search: "D1 adapter Cloudflare"
+- search: "Google OAuth provider setup"
+- search: "svelteKitHandler hooks"
+- search: "auth client createAuthClient"
+- chat: Ask about session handling and cookie configuration
+
+cloudflare-docs MCP:
+- search: "D1 database schema SQL"
+- search: "D1 execute migration"
+- search: "D1 local development"
+
+svelte MCP:
+- get-documentation: "hooks", "server hooks"
+- get-documentation: "load functions", "locals"
+```
+
+**Critical**: Better Auth documentation is essential for correct auth setup. Always verify API usage against the better-auth MCP before implementing.
+
+---
+
 ## Objective
 
 Set up Better Auth with Cloudflare D1 database and Google OAuth. This replaces Kinde Auth while maintaining the same authentication flow from the user's perspective.

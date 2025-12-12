@@ -8,6 +8,36 @@
 
 ---
 
+## MCP Servers to Use
+
+For final testing and verification, these MCP servers may be helpful for troubleshooting:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | Use `get-documentation` for debugging Svelte components and `svelte-autofixer` to validate any fixes |
+| **better-auth** | Use `search` or `chat` to troubleshoot any authentication issues |
+| **cloudflare-docs** | Use `search_cloudflare_documentation` for production debugging, logs, and D1 queries |
+| **context7** | Use for any library-specific issues (papaparse, xlsx) |
+
+### Troubleshooting MCP Queries
+```
+If auth issues:
+- better-auth MCP: search "troubleshooting session"
+- better-auth MCP: chat "Why might session not persist after OAuth?"
+
+If deployment issues:
+- cloudflare-docs MCP: search "Workers debugging"
+- cloudflare-docs MCP: search "wrangler tail"
+
+If component issues:
+- svelte MCP: svelte-autofixer on problematic component
+- svelte MCP: get-documentation for specific feature
+```
+
+**Note**: This is the final testing prompt. MCP servers are for troubleshooting specific issues that arise during verification.
+
+---
+
 ## Objective
 
 Perform comprehensive testing of the migrated application to ensure all functionality works correctly. This is the final verification before considering the migration complete.

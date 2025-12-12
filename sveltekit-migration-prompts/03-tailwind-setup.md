@@ -9,6 +9,28 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **context7** | Use `resolve-library-id` → `get-library-docs` for Tailwind CSS v4 configuration, `@theme` syntax, and `@tailwindcss/vite` plugin |
+| **svelte** | Use `get-documentation` for SvelteKit styling integration and CSS handling |
+
+### Recommended MCP Queries
+```
+context7 MCP:
+- resolve-library-id: "tailwindcss" → get-library-docs for v4 @theme syntax
+- resolve-library-id: "tailwindcss" → get-library-docs topic: "vite plugin"
+- resolve-library-id: "tailwindcss" → get-library-docs topic: "dark mode"
+
+svelte MCP:
+- get-documentation: "styling", "css"
+```
+
+---
+
 ## Objective
 
 Configure Tailwind CSS 4 with the exact same theme tokens and custom styles as the original Next.js application. This is critical for maintaining visual fidelity.

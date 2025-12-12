@@ -10,6 +10,31 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte 5 component patterns, `$props()` rune, and validate components with `svelte-autofixer` |
+| **context7** | Use `resolve-library-id` → `get-library-docs` for bits-ui and class-variance-authority (cva) |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- list-sections → get-documentation: "$props", "components"
+- get-documentation: "snippet", "children"
+- svelte-autofixer: Validate all .svelte component code before finalizing
+
+context7 MCP:
+- resolve-library-id: "bits-ui" → get-library-docs for Svelte UI primitives
+- resolve-library-id: "class-variance-authority" → get-library-docs for variant patterns
+```
+
+**Important**: After writing any Svelte component, use the `svelte-autofixer` tool to validate the syntax is correct for Svelte 5.
+
+---
+
 ## Objective
 
 Set up shadcn/svelte with bits-ui and migrate the Button component with CVA variants. The Button must be visually identical to the original Radix UI implementation.

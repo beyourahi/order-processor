@@ -8,6 +8,25 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | Use `get-documentation` for SvelteKit static assets, `%sveltekit.assets%`, and image handling |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- get-documentation: "static assets", "images"
+- get-documentation: "assets", "preload"
+```
+
+**Note**: This prompt involves moving files from `public/` to `static/` and updating image references. SvelteKit serves static assets at the root path automatically.
+
+---
+
 ## Objective
 
 Migrate static assets from the Next.js `public/` directory to SvelteKit's `static/` directory. Update all asset references throughout the codebase.

@@ -8,6 +8,30 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | Use `get-documentation` for Svelte component styling patterns, class directives, and CSS scoping |
+| **context7** | Use `resolve-library-id` → `get-library-docs` for Tailwind CSS class utilities if styling issues arise |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- get-documentation: "styling", "scoped styles"
+- get-documentation: "class directive"
+- svelte-autofixer: Validate any components with styling issues
+
+context7 MCP:
+- resolve-library-id: "tailwindcss" → get-library-docs for specific utility classes
+```
+
+**Note**: This is a visual verification prompt. Use MCP servers only if you encounter specific styling discrepancies that need resolution.
+
+---
+
 ## Objective
 
 Perform comprehensive visual verification to ensure the SvelteKit app looks identical to the original Next.js app. This is a critical requirement of the migration.

@@ -8,6 +8,37 @@
 
 ---
 
+## MCP Servers to Use
+
+Before implementing this prompt, use these MCP servers for accurate documentation:
+
+| MCP Server | Usage |
+|------------|-------|
+| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte 5 `$props()`, `$state()`, `$derived()` runes, event handling, and validate with `svelte-autofixer` |
+| **context7** | Use `resolve-library-id` → `get-library-docs` for papaparse and xlsx libraries |
+| **better-auth** | Use `search` for auth client patterns used in User component |
+
+### Recommended MCP Queries
+```
+svelte MCP:
+- list-sections → get-documentation: "$props", "$state", "$derived"
+- get-documentation: "event handling", "onclick"
+- get-documentation: "bind:this"
+- svelte-autofixer: Validate all .svelte components
+
+context7 MCP:
+- resolve-library-id: "papaparse" → get-library-docs for CSV parsing
+- resolve-library-id: "xlsx" → get-library-docs for Excel generation
+
+better-auth MCP:
+- search: "signOut client"
+- search: "useSession"
+```
+
+**Important**: These are the core feature components. Validate each component with `svelte-autofixer` after writing.
+
+---
+
 ## Objective
 
 Migrate the main feature components: OrderProcessor, Upload, Download, CourierPicker, and User. These components contain the core application logic.
