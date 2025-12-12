@@ -13,18 +13,18 @@ import type { CourierProcessor, SteadFastOrder, UserInfo } from "@/types";
  */
 function normalizePhoneNumber(phoneNumber: string): string {
     if (!phoneNumber) return "";
-    
+
     // Remove spaces and any non-digit characters except +
     let cleaned = phoneNumber.replace(/[^\d+]/g, "");
-    
+
     // Remove +880 country code
     if (cleaned.startsWith("+880")) {
         cleaned = cleaned.substring(4);
     }
-    
+
     // Remove leading zeros
     cleaned = cleaned.replace(/^0+/, "");
-    
+
     // Return the cleaned number (should start with 1 for Bangladesh mobile)
     return cleaned;
 }

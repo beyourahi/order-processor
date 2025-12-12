@@ -82,12 +82,12 @@ export interface CourierOption {
  * Type guard to check if an order is a Pathao order
  */
 export function isPathaoOrder(order: OrderType): order is PathaoOrder {
-    return 'Order No' in order && 'Phone No' in order;
+    return "Order No" in order && "Phone No" in order;
 }
 
 /**
  * Type guard to check if an order is a SteadFast order
  */
 export function isSteadFastOrder(order: OrderType): order is SteadFastOrder {
-    return 'Invoice' in order && 'Contact Phone' in order;
+    return "Invoice" in order && "Contact Phone" in order;
 }

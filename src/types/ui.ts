@@ -52,14 +52,10 @@ export interface ErrorProps {
  * Extended properties for custom button components
  */
 export interface ButtonProps
-    extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-        VariantProps<typeof buttonVariants> {
+    extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
     asChild?: boolean;
 }
 
 // ==================== Re-exports for External Types ====================
 
-export type { 
-    VariantProps,
-    PropsWithChildren
-};
+export type { VariantProps, PropsWithChildren };

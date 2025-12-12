@@ -6,7 +6,7 @@
 // Courier-related types
 export * from "./courier";
 
-// User and brand types  
+// User and brand types
 export * from "./user";
 
 // UI component types

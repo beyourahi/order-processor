@@ -45,13 +45,10 @@ export type RequireFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 /**
  * Extracts the type of array elements
  */
-export type ArrayElement<ArrayType extends readonly unknown[]> = 
-    ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[]
+    ? ElementType
+    : never;
 
 // ==================== Re-exports for External Types ====================
 
-export type { 
-    ClassValue,
-    NextRequest,
-    NextConfig
-};
+export type { ClassValue, NextRequest, NextConfig };

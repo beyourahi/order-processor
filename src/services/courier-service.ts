@@ -24,16 +24,18 @@ export class CourierService {
      */
     private static isShopifyExport(rawData: string[][]): boolean {
         if (rawData.length === 0) return false;
-        
+
         const header = rawData[0];
         if (!header) return false;
-        
+
         // Check for distinctive Shopify export columns
-        return header.includes("Name") && 
-               header.includes("Email") && 
-               header.includes("Shipping Name") && 
-               header.includes("Billing Name") &&
-               header.includes("Financial Status");
+        return (
+            header.includes("Name") &&
+            header.includes("Email") &&
+            header.includes("Shipping Name") &&
+            header.includes("Billing Name") &&
+            header.includes("Financial Status")
+        );
     }
 
     /**
@@ -50,10 +52,10 @@ export class CourierService {
         }
 
         let preparedData: string[][];
-        
+
         if (courierType === Courier.SteadFast) {
             // Check if it's a Shopify export and use appropriate processing
-            preparedData = this.isShopifyExport(rawData) 
+            preparedData = this.isShopifyExport(rawData)
                 ? prepareShopifySteadFastOrderData(rawData)
                 : prepareSteadFastOrderData(rawData);
         } else {

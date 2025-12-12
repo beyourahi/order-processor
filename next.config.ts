@@ -9,14 +9,16 @@ const nextConfig: NextConfig = {
         remotePatterns: []
     },
 
-    // Experimental features for Next.js 15
+    // React Compiler (stable in Next.js 16)
+    reactCompiler: true,
+
+    // Experimental features
     experimental: {
-        reactCompiler: true,
         optimizePackageImports: ["@radix-ui/react-icons", "@radix-ui/react-dropdown-menu", "@radix-ui/react-slot"],
         scrollRestoration: true
     },
 
-    // Turbopack configuration (stable in Next.js 15)
+    // Turbopack configuration (default in Next.js 16)
     turbopack: {
         rules: {
             "*.svg": {

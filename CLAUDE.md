@@ -4,155 +4,212 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Next.js 15 application for processing and formatting order data for multiple courier services (Pathao and SteadFast). Authorized users upload CSV files and download courier-specific Excel formats.
+Next.js 16 application for processing Shopify order exports into courier-specific Excel formats (Pathao and SteadFast). Authorized users upload CSV files and download courier-ready files.
 
-## Technology Stack
-
-- **Framework**: Next.js 15.1.3 (App Router)
-- **Runtime**: React 19.0.0
-- **Language**: TypeScript 5.9.x with strict mode
-- **Build System**: Turbopack (dev), Webpack (production)
-- **Styling**: Tailwind CSS v4.0.0-beta.4
-- **Authentication**: Kinde Auth (`@kinde-oss/kinde-auth-nextjs`)
-- **Data Processing**: `xlsx`, `react-papaparse`
-- **UI Components**: Radix UI primitives
-- **Package Manager**: npm/bun compatible
-
-## Development Commands
+## Commands
 
 ```bash
-npm run dev        # Start development server with Turbopack
-npm run build      # Build production bundle
+npm run dev        # Development server with Turbopack (default in Next.js 16)
+npm run build      # Production build
 npm start          # Start production server
-npm run lint       # Run ESLint checks
+npm run lint       # ESLint checks
 ```
 
-## Project Structure
+## Tech Stack
+
+- **Framework**: Next.js 16.0.10 (App Router) with React Compiler
+- **Runtime**: React 19.2.3
+- **Language**: TypeScript 5.9.3 (strict mode)
+- **Styling**: Tailwind CSS 4.1.18 with PostCSS
+- **Authentication**: Kinde Auth (`@kinde-oss/kinde-auth-nextjs`)
+- **Data Processing**: `xlsx`, `react-papaparse`
+- **UI Components**: Radix UI primitives + class-variance-authority
+- **Linting**: ESLint 9.x + Prettier with Tailwind plugin
+
+## Architecture
+
+### Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx         # Root layout with providers
-│   ├── page.tsx           # Home page
-│   ├── process/page.tsx   # Order processing page
-│   └── fonts/             # Font files (Geist family)
-├── components/            # React components
-│   ├── ui/               # Reusable UI components (Radix-based)
-│   ├── order-processor.tsx # Main file upload/processing component
-│   ├── footer.tsx        # Footer component
-│   └── header.tsx        # Header with navigation
-├── lib/                   # Utility functions
-│   ├── context/          # React context definitions
-│   └── hooks/            # Custom React hooks
-├── config.ts            # Application configuration and constants
-├── services.ts          # Service orchestrator, processors, and utilities
-├── types.ts             # All TypeScript types, interfaces, and enums
-└── tailwind.css         # Global Tailwind CSS styles
+├── app/                          # Next.js App Router
+│   ├── api/auth/[kindeAuth]/    # Kinde auth route
+│   ├── layout.tsx               # Root layout with providers
+│   ├── page.tsx                 # Home page
+│   ├── pages.tsx                # Process page component
+│   ├── providers.tsx            # Context providers
+│   ├── error.tsx                # Error boundary
+│   ├── loading.tsx              # Loading state
+│   └── not-found.tsx            # 404 page
+├── components/                   # React components
+│   ├── ui/                      # Reusable UI (Button, Footer, etc.)
+│   ├── order-processor.tsx      # Main processing component
+│   ├── upload.tsx               # CSV upload component
+│   ├── download.tsx             # Excel download component
+│   └── courier-picker.tsx       # Courier selection dropdown
+├── config/                       # Application configuration
+│   ├── index.ts                 # Re-exports all config
+│   ├── app.ts                   # App metadata
+│   ├── brands.ts                # Authorized brands/emails
+│   └── couriers.ts              # Courier options with logos
+├── constants/                    # Static constants
+│   ├── index.ts                 # Re-exports all constants
+│   ├── files.ts                 # File-related constants
+│   └── indexes.ts               # CSV column indexes
+├── services/                     # Business logic
+│   ├── index.ts                 # Re-exports all services
+│   ├── courier-service.ts       # Main orchestrator
+│   ├── data-processing.ts       # CSV preparation utilities
+│   └── processors/              # Courier-specific processors
+│       ├── index.ts             # Re-exports processors
+│       ├── pathao.ts
+│       └── steadfast.ts
+├── types/                        # TypeScript definitions
+│   ├── index.ts                 # Re-exports all types
+│   ├── courier.ts               # Order types, CourierProcessor interface
+│   ├── user.ts                  # User/Brand interfaces
+│   ├── ui.ts                    # Component prop types
+│   └── config.ts                # Config types
+└── lib/
+    ├── utils.ts                 # cn() helper for Tailwind
+    ├── context/                 # React context
+    │   └── AppContext.tsx       # Global app state
+    └── hooks/                   # Custom hooks
+        └── useCurrentUser.ts    # User authentication hook
 ```
-
-## Architecture Details
-
-### Authentication & Authorization
-
-- **Provider**: Kinde Auth with server-side and client-side support
-- **Authorization**: Email-based allowlist system in `config.ts`
-- **Protected Routes**: `/process` requires authentication
-- **Session Management**: Server-side session validation
 
 ### Data Processing Pipeline
 
-1. **Upload Stage**: CSV files parsed using `react-papaparse`
-2. **Preparation Stage**: Data cleaned and validated in `services.ts`
-   - `prepareSteadFastOrderData()`: Extracts columns, removes duplicates
-   - `preparePathaoOrderData()`: Filters and maps to Pathao format
-3. **Processing Stage**: `CourierService` class orchestrates processing
-4. **Export Stage**: Excel files generated with `xlsx` library
+1. **Upload**: CSV parsed via `react-papaparse`
+2. **Detection**: `CourierService.isShopifyExport()` auto-detects Shopify format
+3. **Preparation**: Data cleaned and columns extracted
+   - `prepareSteadFastOrderData()` - Standard CSV format
+   - `prepareShopifySteadFastOrderData()` - Shopify export format
+   - `preparePathaoOrderData()` - Pathao format
+4. **Processing**: Processor transforms to courier schema
+5. **Export**: Excel file generated with `xlsx` library
 
 ### Service Architecture
 
-All services and processors are consolidated in `services.ts`:
-
 ```typescript
-// Utility functions
-removeDuplicatesAndExtractIndexes(data, indexes)
-extractInvoices(rawData)
-prepareSteadFastOrderData(rawData)
-preparePathaoOrderData(rawData)
+// Main orchestrator - routes to appropriate processor
+CourierService.processOrders(courierType, rawData, user)
 
-// Processor implementations
-CourierProcessor<T> interface
-├── PathaoProcessor
-│   └── process(preparedData): PathaoOrder[]
-└── SteadFastProcessor
-    └── process(preparedData): SteadFastOrder[]
+// Courier processors implement generic interface
+interface CourierProcessor<T> {
+    processOrders(data: string[][], user: UserInfo): T[];
+}
 
-// Main service orchestrator
-CourierService
-├── processOrders(brand, rawData)
-├── Routes to appropriate processor
-└── Returns processed Excel buffer
+// Processors
+├── SteadFastProcessor → SteadFastOrder[]
+└── PathaoProcessor → PathaoOrder[]
 ```
 
-### Key Configuration Files
+### Constants Architecture
 
-**config.ts**
-- Application metadata (name, description, URL)
-- Repository information
-- Author details
-- Used for meta tags and app configuration
+```typescript
+// constants/indexes.ts - CSV column mappings
+export const SHOPIFY_EXPORT_INDEXES = {
+    ORDER_NAME: 0,      // #13826
+    EMAIL: 1,
+    TOTAL: 11,
+    SHIPPING_NAME: 34,
+    SHIPPING_ADDRESS: 36,
+    SHIPPING_PHONE: 43,
+    NOTES: 44
+} as const;
 
-**Note**: Brand configurations and constants previously in `data.ts` are now integrated into the main application flow
+// Array-based for data extraction
+export const STEADFAST_INDEXES_ARRAY = [34, 36, 39, 43, 11, 44];
+export const PATHAO_INDEXES_ARRAY = [0, 34, 17, 36, 39, 11, 43];
+export const SHOPIFY_STEADFAST_INDEXES_ARRAY = [34, 36, 43, 11, 44];
+```
 
-## TypeScript Configuration
+### Courier Options
 
-### Centralized Type System
-All types, interfaces, and enums are consolidated in `src/types.ts`:
-- **Order Types**: `PathaoOrder`, `SteadFastOrder`, `OrderType`
-- **User Types**: `UserInfo`, `CurrentUser`, `Brand`
-- **UI Types**: `ButtonProps`, `DownloadProps`, `ErrorProps`, `CourierOption`
-- **Application Types**: `AppContextType`, `CSVReaderProps`, `AppConfig`
-- **Processing Types**: `CourierProcessor<T>` generic interface
-- **Utility Types**: `DeepPartial<T>`, `RequireFields<T, K>`, `ArrayElement<T>`
-- **Type Guards**: `isPathaoOrder()`, `isSteadFastOrder()`
-- **Constants**: `STEADFAST_INDEXES`, `PATHAO_INDEXES`
+```typescript
+// config/couriers.ts
+COURIER_OPTIONS = [
+    { value: "Pathao", label: "Pathao", logo: pathao },
+    { value: "SteadFast", label: "SteadFast", logo: steadFast },
+    // Coming soon:
+    { value: "REDX", label: "REDX", coming_soon: true },
+    { value: "Sheba", label: "Sheba", coming_soon: true },
+    { value: "eCourier", label: "eCourier", coming_soon: true },
+    { value: "FedX", label: "FedX", coming_soon: true },
+    { value: "DHL", label: "DHL", coming_soon: true }
+];
+```
 
-### Compiler Options
-- **Target**: ES2022
-- **Module**: ESNext with bundler resolution
-- **Strict Mode**: Enabled with all checks
-- **Path Aliases**:
-  ```json
-  "@/*": ["./src/*"]
-  "@/components/*": ["./src/components/*"]
-  "@/lib/*": ["./src/lib/*"]
-  "@/providers/*": ["./src/providers/*"]
-  "@/types": ["./src/types.ts"]
-  ```
+### Authentication Flow
 
-### Type Safety
-- Strict null checks
-- No implicit any
-- Exact optional property types
-- No unused locals/parameters
-- VerbatimModuleSyntax for type-only imports
+- **Provider**: Kinde Auth (server + client support)
+- **Authorization**: Email allowlist in `config/brands.ts`
+- **Session**: Server-side validation via `getKindeServerSession()`
 
-## Tailwind CSS v4 Configuration
+## Key Types
 
-### Custom Configuration
-- **Theme Extensions**: Custom colors, animations
-- **Important Selector**: `#__next`
-- **Content Paths**: All TypeScript/JavaScript files in src/
-- **Plugin Architecture**: Forms, typography, animate plugins
+### Order Output Schemas
 
-### Design Tokens
-- **Colors**: Tailwind v4 color system with custom semantic tokens
-- **Typography**: Geist font family (Sans and Mono)
-- **Spacing**: Default Tailwind scale
-- **Animations**: Custom animations for UI feedback
+```typescript
+// SteadFast courier format
+interface SteadFastOrder {
+    Invoice: string;           // Merchant ID
+    Name: string;              // Customer name
+    Address: string;           // Full address
+    Phone: string;             // Normalized (starts with 1)
+    Amount: string;            // COD amount
+    Note: string;              // Instructions
+    Lot: string;               // Empty
+    "Delivery Type": string;   // "Home"
+    "Contact Name": string;    // Brand name
+    "Contact Phone": string;   // Brand phone
+}
+
+// Pathao courier format
+interface PathaoOrder {
+    "Order No": string;
+    Name: string;
+    Product: string;
+    Price: string;
+    Address: string;
+    City: string;
+    "Phone No": string;
+}
+```
+
+### Phone Number Normalization (SteadFast)
+
+The SteadFast processor normalizes Bangladesh phone numbers:
+- Removes `+880` country code
+- Strips leading zeros
+- Ensures number starts with `1` (Bangladesh mobile format)
+
+### User/Brand Types
+
+```typescript
+interface Brand {
+    name: string;
+    phone?: string;
+    emails: string[];         // Allowed email addresses
+    url: string;
+    courier: Courier | null;
+    merchant_id?: string;
+}
+```
+
+## Path Aliases
+
+```json
+"@/*": ["./src/*"]
+"@/components/*": ["./src/components/*"]
+"@/lib/*": ["./src/lib/*"]
+"@/app/*": ["./src/app/*"]
+"@/config": ["./src/config"]
+"@/services": ["./src/services"]
+```
 
 ## Environment Variables
-
-Required environment variables for production:
 
 ```env
 # Kinde Auth (Required)
@@ -164,163 +221,108 @@ KINDE_POST_LOGOUT_REDIRECT_URL=
 KINDE_POST_LOGIN_REDIRECT_URL=
 
 # Optional
-NODE_ENV=production
+NEXT_PUBLIC_APP_URL=
+ANALYZE=true  # Enable bundle analyzer
 ```
 
-## Next.js 15 Configuration
+## Configuration Notes
 
-### App Router Features
-- Server Components by default
-- Streaming and Suspense
-- Parallel and intercepted routes support
-- Metadata API for SEO
+### Next.js 16 Features
 
-### Performance Optimizations
-- Turbopack for development (faster HMR)
-- Image optimization with next/image
-- Font optimization with next/font
-- Automatic code splitting
+- **React Compiler**: Enabled (`reactCompiler: true`)
+- **Turbopack**: Default for development
+- **Package Import Optimization**: Radix UI packages optimized
+- **Console Removal**: Production builds remove console.log (except errors)
+- **Image Optimization**: AVIF/WebP formats
 
 ### Security Headers
+
 Configured in `next.config.ts`:
-- Strict Transport Security
-- X-Frame-Options
-- X-Content-Type-Options
-- Referrer Policy
-- Permissions Policy
+- `X-Frame-Options: DENY`
+- `Strict-Transport-Security` with preload
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy` restricting camera/mic/geolocation
+- `X-DNS-Prefetch-Control: on`
 
-## Data Models
+### TypeScript Strict Settings
 
-### RawOrderItem (Input)
+- `noUncheckedIndexedAccess: true`
+- `exactOptionalPropertyTypes: true`
+- `noImplicitOverride: true`
+- `verbatimModuleSyntax: true`
+
+## Utility Functions
+
 ```typescript
-{
-  recipient_name: string
-  recipient_phone: string
-  recipient_address: string
-  recipient_area: string
-  cod_amount: string
-  instructions?: string
-  product_name?: string
-  invoice?: string
-}
+// lib/utils.ts - Tailwind class merging
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export const cn = (...inputs: ClassValue[]): string => {
+    return twMerge(clsx(inputs));
+};
 ```
-
-### PathaoOrder (Output)
-```typescript
-{
-  "Store ID": string
-  "Merchant Order ID": string | null
-  "Recipient Name": string
-  "Recipient Phone": string
-  "Recipient Address": string
-  "Recipient City": string
-  "Recipient Zone": string
-  "Recipient Area": string
-  "Delivery Type": "48"
-  "Actual Product Price": string
-  "Instruction": string
-  "Cash Collection Amount": string
-  "Product Name": string
-}
-```
-
-### SteadFastOrder (Output)
-```typescript
-{
-  invoice: string
-  recipient_name: string
-  recipient_phone: string
-  recipient_address: string
-  cod_amount: number
-  instructions: string
-}
-```
-
-## UI Component System
-
-### Base Components (src/components/ui/)
-- Button, Input, Label, Badge
-- Card, Alert, Avatar
-- Select, Tabs, Toast
-- All built on Radix UI primitives
-
-### Component Patterns
-- Compound components with context
-- Forwardref for all interactive components
-- Consistent variant system using class-variance-authority
-- Accessibility-first approach
-
-## Testing & Quality
-
-### Linting
-- ESLint with Next.js recommended config
-- TypeScript ESLint parser
-- Auto-fix on save in development
-
-### Type Checking
-- Strict TypeScript configuration
-- Build-time type validation
-- IDE integration for real-time feedback
-
-## Deployment Considerations
-
-### Build Output
-- Static files in `.next/static`
-- Server files in `.next/server`
-- Standalone mode available for containerization
-
-### Performance
-- Automatic static optimization
-- ISR (Incremental Static Regeneration) ready
-- Edge runtime compatible
-
-### Monitoring
-- Built-in Next.js analytics support
-- Error boundary implementation
-- Client-side error tracking ready
 
 ## Common Tasks
 
 ### Adding a New Courier Service
-1. Add new courier enum value in `types.ts`
-2. Create processor class in `services.ts`
-3. Implement `CourierProcessor<T>` interface
-4. Update `CourierService` in `services.ts`
-5. Add brand configuration in `config.ts`
+
+1. Add enum value in `types/courier.ts`:
+   ```typescript
+   export enum Courier {
+       SteadFast = "SteadFast",
+       Pathao = "Pathao",
+       NewCourier = "NewCourier"  // Add here
+   }
+   ```
+
+2. Create order interface and type guard in `types/courier.ts`
+
+3. Add column indexes in `constants/indexes.ts`
+
+4. Create processor in `services/processors/newcourier.ts`:
+   ```typescript
+   export class NewCourierProcessor implements CourierProcessor<NewCourierOrder> {
+       processOrders(data: string[][], user: UserInfo): NewCourierOrder[] { ... }
+   }
+   ```
+
+5. Export from `services/processors/index.ts`
+
+6. Add preparation function in `services/data-processing.ts`
+
+7. Register in `services/courier-service.ts`:
+   ```typescript
+   private static readonly processors = new Map([
+       [Courier.NewCourier, new NewCourierProcessor()],
+       // ...existing
+   ]);
+   ```
+
+8. Add courier option in `config/couriers.ts` with logo
 
 ### Updating Allowed Users
-1. Edit `brands` array in `config.ts`
-2. Add email addresses to the brand's `emails` array
-3. Deploy changes
 
-### Modifying Order Formats
-1. Update type definitions in `types.ts`
-2. Modify processor logic in `services.ts`
-3. Update preparation functions in `services.ts`
-4. Test with sample CSV files
+Edit `config/brands.ts` and add email to the brand's `emails` array.
 
-## Important Notes
+### Modifying Column Indexes
 
-- Always check authentication before processing orders
-- Validate CSV data structure before processing
-- Handle duplicate orders appropriately
-- Maintain backward compatibility with existing Excel formats
-- Use proper TypeScript types for all data transformations
-- Follow Next.js 15 best practices for App Router
-- Utilize React 19 features where applicable
-- Keep security headers updated
-- Monitor bundle size with Webpack Bundle Analyzer
-- Use Turbopack for faster development builds
+Edit `constants/indexes.ts` - indexes map to Shopify export CSV columns.
 
-## Code Style Guidelines
+### Adding Shopify Export Support for New Courier
 
-- Use TypeScript strict mode
-- Prefer functional components with hooks
-- Use server components where possible
-- Implement proper error boundaries
-- Follow ESLint rules
-- Use Tailwind CSS classes for styling
-- Avoid inline styles
-- Keep components small and focused
-- Use proper TypeScript generics
-- Document complex business logic
+1. Add column mapping in `constants/indexes.ts`
+2. Create preparation function in `services/data-processing.ts`
+3. Update detection in `CourierService.isShopifyExport()` if needed
+4. Add routing logic in `CourierService.processOrders()`
+
+## Code Style
+
+- Functional components with hooks
+- Server Components where possible
+- Tailwind CSS for styling (no inline styles)
+- Use `cn()` for class merging
+- Proper TypeScript generics
+- Document complex business logic with JSDoc comments
+- Use barrel exports (`index.ts`) for clean imports
