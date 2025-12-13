@@ -1,9 +1,11 @@
 # 10 - Main Components Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `09-ui-components-migration.md` completed
 
 ## Next Prompt
+
 - `11-app-context-migration.md`
 
 ---
@@ -12,13 +14,14 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte 5 `$props()`, `$state()`, `$derived()` runes, event handling, and validate with `svelte-autofixer` |
-| **context7** | Use `resolve-library-id` → `get-library-docs` for papaparse and xlsx libraries |
-| **better-auth** | Use `search` for auth client patterns used in User component |
+| MCP Server      | Usage                                                                                                                                               |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **svelte**      | **PRIMARY** - Use `get-documentation` for Svelte 5 `$props()`, `$state()`, `$derived()` runes, event handling, and validate with `svelte-autofixer` |
+| **context7**    | Use `resolve-library-id` → `get-library-docs` for papaparse and xlsx libraries                                                                      |
+| **better-auth** | Use `search` for auth client patterns used in User component                                                                                        |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - list-sections → get-documentation: "$props", "$state", "$derived"
@@ -56,6 +59,7 @@ mkdir -p src/lib/components/features
 ### Step 2: Create Upload Component
 
 **src/lib/components/features/upload.svelte:**
+
 ```svelte
 <!--
   Upload Component
@@ -75,12 +79,7 @@ mkdir -p src/lib/components/features
     class:opacity-50={disabled}
     class:cursor-not-allowed={disabled}
 >
-    <img
-        src="/upload.gif"
-        alt="Upload animation"
-        class="h-24 w-24 object-contain"
-        class:grayscale={disabled}
-    />
+    <img src="/upload.gif" alt="Upload animation" class="h-24 w-24 object-contain" class:grayscale={disabled} />
     <div class="flex flex-col items-center gap-2">
         <p class="text-lg font-medium text-zinc-300">
             {disabled ? "Select a courier first" : "Drop your CSV file here"}
@@ -95,6 +94,7 @@ mkdir -p src/lib/components/features
 ### Step 3: Create Download Component
 
 **src/lib/components/features/download.svelte:**
+
 ```svelte
 <!--
   Download Component
@@ -120,13 +120,9 @@ mkdir -p src/lib/components/features
 </script>
 
 <div class="flex flex-col items-center justify-center gap-6">
-    <img
-        src="/download.gif"
-        alt="Download animation"
-        class="h-24 w-24 object-contain"
-    />
+    <img src="/download.gif" alt="Download animation" class="h-24 w-24 object-contain" />
     <div class="flex flex-col items-center gap-2">
-        <p class="text-lg font-medium text-zinc-300 truncate max-w-xs">
+        <p class="max-w-xs truncate text-lg font-medium text-zinc-300">
             {fileName}
         </p>
         <p class="text-sm text-zinc-500">
@@ -139,6 +135,7 @@ mkdir -p src/lib/components/features
 ### Step 4: Create CourierPicker Component
 
 **src/lib/components/features/courier-picker.svelte:**
+
 ```svelte
 <!--
   CourierPicker Component
@@ -171,17 +168,11 @@ mkdir -p src/lib/components/features
                 class={cn(
                     "sleek flex flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all",
                     "hover:border-zinc-600 active:scale-95",
-                    isSelected
-                        ? "border-green-500 bg-green-500/10"
-                        : "border-zinc-800 bg-zinc-900/50",
+                    isSelected ? "border-green-500 bg-green-500/10" : "border-zinc-800 bg-zinc-900/50",
                     isUserCourier && !isSelected && "border-zinc-600"
                 )}
             >
-                <img
-                    src={option.logo}
-                    alt={option.label}
-                    class="h-12 w-12 object-contain"
-                />
+                <img src={option.logo} alt={option.label} class="h-12 w-12 object-contain" />
                 <span class="text-sm font-medium text-zinc-300">
                     {option.label}
                 </span>
@@ -197,6 +188,7 @@ mkdir -p src/lib/components/features
 ### Step 5: Create User Component
 
 **src/lib/components/features/user.svelte:**
+
 ```svelte
 <!--
   User Component
@@ -231,7 +223,9 @@ mkdir -p src/lib/components/features
     };
 </script>
 
-<div class="flex w-full flex-col gap-8 text-zinc-400 sm:max-w-xl sm:items-center sm:gap-16 md:flex-row md:justify-between lg:max-w-4xl 2xl:max-w-6xl">
+<div
+    class="flex w-full flex-col gap-8 text-zinc-400 sm:max-w-xl sm:items-center sm:gap-16 md:flex-row md:justify-between lg:max-w-4xl 2xl:max-w-6xl"
+>
     <div class="flex flex-col items-start gap-2 text-sm">
         <span>
             Name:
@@ -271,6 +265,7 @@ mkdir -p src/lib/components/features
 ### Step 6: Create OrderProcessor Component
 
 **src/lib/components/features/order-processor.svelte:**
+
 ```svelte
 <!--
   OrderProcessor Component
@@ -301,9 +296,7 @@ mkdir -p src/lib/components/features
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
     // Computed: is upload disabled?
-    const isDisabled = $derived(
-        selectedCourier === "" || currentUser.courier !== selectedCourier
-    );
+    const isDisabled = $derived(selectedCourier === "" || currentUser.courier !== selectedCourier);
 
     // Handle file selection
     const handleFileSelect = (file: File) => {
@@ -317,15 +310,11 @@ mkdir -p src/lib/components/features
                 const rawData = results.data as string[][];
 
                 // Process orders through courier service
-                const processedOrders = CourierService.processOrders(
-                    currentUser.courier as Courier,
-                    rawData,
-                    {
-                        name: currentUser.name,
-                        phone: currentUser.phone || "",
-                        merchant_id: currentUser.merchant_id || ""
-                    }
-                );
+                const processedOrders = CourierService.processOrders(currentUser.courier as Courier, rawData, {
+                    name: currentUser.name,
+                    phone: currentUser.phone || "",
+                    merchant_id: currentUser.merchant_id || ""
+                });
 
                 // Generate Excel file
                 const worksheet = XLSX.utils.json_to_sheet(processedOrders);
@@ -431,6 +420,7 @@ mkdir -p src/lib/components/features
 ### Step 7: Create Features Index
 
 **src/lib/components/features/index.ts:**
+
 ```typescript
 export { default as Upload } from "./upload.svelte";
 export { default as Download } from "./download.svelte";
@@ -442,24 +432,13 @@ export { default as OrderProcessor } from "./order-processor.svelte";
 ### Step 8: Update Main Components Index
 
 **src/lib/components/index.ts:**
+
 ```typescript
 // UI Components
-export {
-    Button,
-    LoadingSpinner,
-    Heading,
-    Footer,
-    NotAuthorized
-} from "./ui";
+export { Button, LoadingSpinner, Heading, Footer, NotAuthorized } from "./ui";
 
 // Feature Components
-export {
-    Upload,
-    Download,
-    CourierPicker,
-    User,
-    OrderProcessor
-} from "./features";
+export { Upload, Download, CourierPicker, User, OrderProcessor } from "./features";
 ```
 
 ---
@@ -495,16 +474,9 @@ Test with mock data:
 </script>
 
 <div class="flex min-h-screen flex-col items-center gap-12 p-8">
-    <CourierPicker
-        selectedCourier={selectedCourier}
-        userCourier={mockCurrentUser.courier}
-        onSelect={(c) => selectedCourier = c}
-    />
+    <CourierPicker {selectedCourier} userCourier={mockCurrentUser.courier} onSelect={(c) => (selectedCourier = c)} />
 
-    <OrderProcessor
-        currentUser={mockCurrentUser}
-        selectedCourier={selectedCourier}
-    />
+    <OrderProcessor currentUser={mockCurrentUser} {selectedCourier} />
 
     <User user={mockUser} currentUser={mockCurrentUser} />
 </div>
@@ -526,13 +498,13 @@ Test with mock data:
 
 ## Component Mapping
 
-| React Component | Svelte Component | Key Changes |
-|-----------------|------------------|-------------|
+| React Component  | Svelte Component         | Key Changes                             |
+| ---------------- | ------------------------ | --------------------------------------- |
 | `OrderProcessor` | `order-processor.svelte` | Papa Parse direct, no CSVReader wrapper |
-| `Upload` | `upload.svelte` | Pure presentational |
-| `Download` | `download.svelte` | Uses local formatFileSize |
-| `CourierPicker` | `courier-picker.svelte` | Props instead of context |
-| `User` | `user.svelte` | Better Auth signOut |
+| `Upload`         | `upload.svelte`          | Pure presentational                     |
+| `Download`       | `download.svelte`        | Uses local formatFileSize               |
+| `CourierPicker`  | `courier-picker.svelte`  | Props instead of context                |
+| `User`           | `user.svelte`            | Better Auth signOut                     |
 
 ---
 

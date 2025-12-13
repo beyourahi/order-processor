@@ -1,9 +1,11 @@
 # 02 - Cloudflare Configuration
 
 ## Prerequisites
+
 - `01-project-setup.md` completed
 
 ## Next Prompt
+
 - `03-tailwind-setup.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server          | Usage                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **cloudflare-docs** | **PRIMARY** - Use `search_cloudflare_documentation` for D1 database setup, wrangler configuration, Workers bindings, and adapter-cloudflare options |
-| **svelte** | Use `get-documentation` for SvelteKit adapter configuration and platform types |
+| **svelte**          | Use `get-documentation` for SvelteKit adapter configuration and platform types                                                                      |
 
 ### Recommended MCP Queries
+
 ```
 cloudflare-docs MCP:
 - search: "D1 database binding wrangler"
@@ -44,6 +47,7 @@ Configure Cloudflare Workers deployment with D1 database binding for Better Auth
 ### Step 1: Create wrangler.jsonc
 
 **wrangler.jsonc:**
+
 ```jsonc
 {
     "$schema": "node_modules/wrangler/config-schema.json",
@@ -108,6 +112,7 @@ Add the worker types reference:
 ### Step 4: Create .dev.vars for Local Development
 
 **.dev.vars:**
+
 ```env
 BETTER_AUTH_SECRET=dev-secret-replace-in-production-with-real-secret
 BETTER_AUTH_URL=http://localhost:5173
@@ -148,6 +153,7 @@ node_modules/
 ### Step 6: Create .env.example
 
 **.env.example:**
+
 ```env
 # Better Auth
 BETTER_AUTH_SECRET=     # Generate: openssl rand -base64 32
@@ -213,6 +219,7 @@ bun run preview
 ```
 
 Expected:
+
 - `worker-configuration.d.ts` is generated
 - No type errors related to Cloudflare
 - Preview server starts and shows placeholder page
@@ -234,6 +241,7 @@ Expected:
 ## D1 Database Reference
 
 Your D1 database is already created:
+
 - **Name**: `order_processor`
 - **ID**: `ae9e0e94-99a1-485f-9ed0-c42ad70c6094`
 

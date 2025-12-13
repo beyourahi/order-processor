@@ -1,9 +1,11 @@
 # 12 - Routes Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `11-app-context-migration.md` completed
 
 ## Next Prompt
+
 - `13-auth-flows-migration.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | **PRIMARY** - Use `get-documentation` for SvelteKit routing, layouts, `+page.svelte`, `+layout.svelte`, `+error.svelte`, load functions, and `$app/navigation` |
-| **better-auth** | Use `search` for auth client `useSession` and client-side auth patterns |
+| MCP Server      | Usage                                                                                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **svelte**      | **PRIMARY** - Use `get-documentation` for SvelteKit routing, layouts, `+page.svelte`, `+layout.svelte`, `+error.svelte`, load functions, and `$app/navigation` |
+| **better-auth** | Use `search` for auth client `useSession` and client-side auth patterns                                                                                        |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - list-sections → get-documentation: "routing", "layouts"
@@ -48,6 +51,7 @@ Create the SvelteKit routes that mirror the Next.js page structure. This include
 ### Step 1: Create Root Layout
 
 **src/routes/+layout.svelte:**
+
 ```svelte
 <!--
   Root Layout
@@ -76,6 +80,7 @@ Create the SvelteKit routes that mirror the Next.js page structure. This include
 ### Step 2: Update Layout Server Load
 
 **src/routes/+layout.server.ts:**
+
 ```typescript
 import type { LayoutServerLoad } from "./$types";
 
@@ -91,6 +96,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 ### Step 3: Create Main Page
 
 **src/routes/+page.svelte:**
+
 ```svelte
 <!--
   Main Page
@@ -101,14 +107,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     import { goto } from "$app/navigation";
     import { authClient } from "$lib/auth-client";
     import { courierService } from "$lib/stores";
-    import {
-        Heading,
-        LoadingSpinner,
-        NotAuthorized,
-        OrderProcessor,
-        CourierPicker,
-        User
-    } from "$lib/components";
+    import { Heading, LoadingSpinner, NotAuthorized, OrderProcessor, CourierPicker, User } from "$lib/components";
     import { isEmailAuthorized } from "$lib/hooks";
 
     // Get data from layout load
@@ -150,11 +149,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     {:else if currentUser}
         <!-- Authorized user - show main interface -->
         <div class="flex w-full flex-col items-center gap-20 text-center">
-            <div class="flex w-full max-w-xl flex-col-reverse items-center justify-center gap-12 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl">
-                <OrderProcessor
-                    {currentUser}
-                    selectedCourier={$courierService}
-                />
+            <div
+                class="flex w-full max-w-xl flex-col-reverse items-center justify-center gap-12 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
+            >
+                <OrderProcessor {currentUser} selectedCourier={$courierService} />
 
                 <CourierPicker
                     selectedCourier={$courierService}
@@ -175,6 +173,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 ### Step 4: Create Error Page
 
 **src/routes/+error.svelte:**
+
 ```svelte
 <!--
   Error Page
@@ -203,15 +202,14 @@ export const load: LayoutServerLoad = async ({ locals }) => {
         </p>
     </div>
 
-    <Button onclick={handleReset} variant="outline">
-        Go back home
-    </Button>
+    <Button onclick={handleReset} variant="outline">Go back home</Button>
 </div>
 ```
 
 ### Step 5: Update Login Page
 
 **src/routes/login/+page.svelte:**
+
 ```svelte
 <!--
   Login Page
@@ -295,15 +293,14 @@ export const load: LayoutServerLoad = async ({ locals }) => {
         Continue with Google
     </button>
 
-    <p class="text-sm text-zinc-500">
-        Only authorized accounts can access this application
-    </p>
+    <p class="text-sm text-zinc-500">Only authorized accounts can access this application</p>
 </div>
 ```
 
 ### Step 6: Create Login Page Server Load (Optional Protection)
 
 **src/routes/login/+page.server.ts:**
+
 ```typescript
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
@@ -331,6 +328,7 @@ bun run preview
 ```
 
 Test flow:
+
 1. Visit http://localhost:8787 - should show login prompt if not authenticated
 2. Click "Sign In" - should go to /login
 3. Click "Continue with Google" - should initiate OAuth

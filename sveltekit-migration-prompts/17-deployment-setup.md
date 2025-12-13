@@ -1,9 +1,11 @@
 # 17 - Deployment Setup
 
 ## Prerequisites
+
 - `01-project-setup.md` through `16-styling-verification.md` completed
 
 ## Next Prompt
+
 - `18-testing-verification.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server          | Usage                                                                                                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **cloudflare-docs** | **PRIMARY** - Use `search_cloudflare_documentation` for wrangler deploy, Workers secrets, D1 production setup, custom domains, and observability |
-| **svelte** | Use `get-documentation` for SvelteKit build configuration and adapter options |
+| **svelte**          | Use `get-documentation` for SvelteKit build configuration and adapter options                                                                    |
 
 ### Recommended MCP Queries
+
 ```
 cloudflare-docs MCP:
 - search: "wrangler deploy Workers"
@@ -47,6 +50,7 @@ Configure production deployment to Cloudflare Workers/Pages with proper environm
 ### Step 1: Update wrangler.jsonc for Production
 
 **wrangler.jsonc:**
+
 ```jsonc
 {
     "$schema": "node_modules/wrangler/config-schema.json",
@@ -98,10 +102,12 @@ wrangler secret put GOOGLE_CLIENT_SECRET
 Go to [Google Cloud Console](https://console.cloud.google.com/) and add production redirect URIs:
 
 **Authorized JavaScript origins:**
+
 - `https://order-processor.pages.dev`
 - `https://your-custom-domain.com` (if applicable)
 
 **Authorized redirect URIs:**
+
 - `https://order-processor.pages.dev/api/auth/callback/google`
 - `https://your-custom-domain.com/api/auth/callback/google` (if applicable)
 
@@ -162,15 +168,15 @@ After deployment:
 
 1. **Visit the production URL**: https://order-processor.pages.dev
 2. **Test authentication**:
-   - Click "Sign In"
-   - Complete Google OAuth
-   - Verify redirect back to app
+    - Click "Sign In"
+    - Complete Google OAuth
+    - Verify redirect back to app
 3. **Test authorization**:
-   - Login with authorized email - should see main UI
-   - Login with unauthorized email - should see "Access Denied"
+    - Login with authorized email - should see main UI
+    - Login with unauthorized email - should see "Access Denied"
 4. **Test file processing**:
-   - Upload test CSV
-   - Verify Excel download
+    - Upload test CSV
+    - Verify Excel download
 
 ### Step 8: Set Up Custom Domain (Optional)
 
@@ -266,27 +272,31 @@ wrangler deployments list
 
 ## Environment Variables Reference
 
-| Variable | Where to Set | Description |
-|----------|--------------|-------------|
-| `BETTER_AUTH_SECRET` | `wrangler secret put` | Encryption key |
-| `BETTER_AUTH_URL` | `wrangler.jsonc` vars | Base URL |
-| `GOOGLE_CLIENT_ID` | `wrangler secret put` | OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | `wrangler secret put` | OAuth secret |
+| Variable               | Where to Set          | Description     |
+| ---------------------- | --------------------- | --------------- |
+| `BETTER_AUTH_SECRET`   | `wrangler secret put` | Encryption key  |
+| `BETTER_AUTH_URL`      | `wrangler.jsonc` vars | Base URL        |
+| `GOOGLE_CLIENT_ID`     | `wrangler secret put` | OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | `wrangler secret put` | OAuth secret    |
 
 ---
 
 ## Troubleshooting
 
 ### Issue: "Secrets not available"
+
 **Fix:** Ensure secrets are set with `wrangler secret put`
 
 ### Issue: OAuth redirect fails
+
 **Fix:** Check Google Console has correct redirect URIs
 
 ### Issue: D1 connection fails
+
 **Fix:** Verify database_id in wrangler.jsonc matches your D1
 
 ### Issue: Build fails
+
 **Fix:** Run `bun run check` and fix TypeScript errors
 
 ---

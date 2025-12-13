@@ -1,9 +1,11 @@
 # 15 - Static Assets Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `14-csv-excel-integration.md` completed
 
 ## Next Prompt
+
 - `16-styling-verification.md`
 
 ---
@@ -12,11 +14,12 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server | Usage                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------- |
 | **svelte** | Use `get-documentation` for SvelteKit static assets, `%sveltekit.assets%`, and image handling |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - get-documentation: "static assets", "images"
@@ -84,6 +87,7 @@ static/
 Update the config to use static paths:
 
 **src/lib/config/couriers.ts:**
+
 ```typescript
 import type { CourierOption } from "$lib/types";
 
@@ -108,6 +112,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 ### Step 5: Update Upload Component
 
 **src/lib/components/features/upload.svelte:**
+
 ```svelte
 <!--
   Upload Component
@@ -126,12 +131,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
     class:opacity-50={disabled}
     class:cursor-not-allowed={disabled}
 >
-    <img
-        src="/upload.gif"
-        alt="Upload animation"
-        class="h-24 w-24 object-contain"
-        class:grayscale={disabled}
-    />
+    <img src="/upload.gif" alt="Upload animation" class="h-24 w-24 object-contain" class:grayscale={disabled} />
     <div class="flex flex-col items-center gap-2">
         <p class="text-lg font-medium text-zinc-300">
             {disabled ? "Select a courier first" : "Drop your CSV file here"}
@@ -146,6 +146,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 ### Step 6: Update Download Component
 
 **src/lib/components/features/download.svelte:**
+
 ```svelte
 <!--
   Download Component
@@ -163,11 +164,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 </script>
 
 <div class="flex flex-col items-center justify-center gap-6">
-    <img
-        src="/download.gif"
-        alt="Download animation"
-        class="h-24 w-24 object-contain"
-    />
+    <img src="/download.gif" alt="Download animation" class="h-24 w-24 object-contain" />
     <div class="flex flex-col items-center gap-2">
         <p class="max-w-xs truncate text-lg font-medium text-zinc-300">
             {fileName}
@@ -182,6 +179,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 ### Step 7: Update CourierPicker Component
 
 **src/lib/components/features/courier-picker.svelte:**
+
 ```svelte
 <!--
   CourierPicker Component
@@ -213,18 +211,11 @@ export const COURIER_OPTIONS: CourierOption[] = [
                 class={cn(
                     "sleek flex flex-col items-center gap-3 rounded-xl border-2 p-6 transition-all",
                     "hover:border-zinc-600 active:scale-95",
-                    isSelected
-                        ? "border-green-500 bg-green-500/10"
-                        : "border-zinc-800 bg-zinc-900/50",
+                    isSelected ? "border-green-500 bg-green-500/10" : "border-zinc-800 bg-zinc-900/50",
                     isUserCourier && !isSelected && "border-zinc-600"
                 )}
             >
-                <img
-                    src={option.logo}
-                    alt={option.label}
-                    class="h-12 w-12 object-contain"
-                    loading="lazy"
-                />
+                <img src={option.logo} alt={option.label} class="h-12 w-12 object-contain" loading="lazy" />
                 <span class="text-sm font-medium text-zinc-300">
                     {option.label}
                 </span>
@@ -240,6 +231,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 ### Step 8: Update app.html Favicon
 
 **src/app.html:**
+
 ```html
 <!doctype html>
 <html lang="en" class="dark">
@@ -252,7 +244,10 @@ export const COURIER_OPTIONS: CourierOption[] = [
         <meta name="theme-color" content="#0F0F0F" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
         %sveltekit.head%
     </head>
     <body data-sveltekit-preload-data="hover" class="min-h-screen bg-[#0F0F0F] font-sans text-white antialiased">
@@ -264,6 +259,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 ### Step 9: Create Asset Test Page
 
 **src/routes/asset-test/+page.svelte:**
+
 ```svelte
 <!--
   Asset Test Page
@@ -282,11 +278,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
             <div class="flex gap-8">
                 {#each COURIER_OPTIONS as option}
                     <div class="flex flex-col items-center gap-2">
-                        <img
-                            src={option.logo}
-                            alt={option.label}
-                            class="h-16 w-16 object-contain"
-                        />
+                        <img src={option.logo} alt={option.label} class="h-16 w-16 object-contain" />
                         <span class="text-sm text-zinc-400">{option.label}</span>
                     </div>
                 {/each}
@@ -318,6 +310,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 For better performance, preload critical assets:
 
 **src/routes/+layout.svelte:**
+
 ```svelte
 <script lang="ts">
     import "../app.css";
@@ -353,6 +346,7 @@ bun run dev
 ```
 
 Visit http://localhost:5173/asset-test and verify:
+
 1. Both courier logos load correctly
 2. Upload GIF animates
 3. Download GIF animates
@@ -387,12 +381,12 @@ bun run build
 
 ## Asset Path Differences
 
-| Next.js | SvelteKit |
-|---------|-----------|
-| `public/image.png` | `static/image.png` |
-| `import img from '/image.png'` | `src="/image.png"` |
-| `<Image src={img} />` | `<img src="/image.png" />` |
-| `next/image` optimization | Native `<img>` or @unpic/svelte |
+| Next.js                        | SvelteKit                       |
+| ------------------------------ | ------------------------------- |
+| `public/image.png`             | `static/image.png`              |
+| `import img from '/image.png'` | `src="/image.png"`              |
+| `<Image src={img} />`          | `<img src="/image.png" />`      |
+| `next/image` optimization      | Native `<img>` or @unpic/svelte |
 
 ---
 

@@ -1,0 +1,27 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "order-processor",
+    "main": ".svelte-kit/cloudflare/_worker.js",
+    "compatibility_flags": ["nodejs_compat"],
+    "compatibility_date": "2025-05-29",
+    "assets": {
+        "binding": "ASSETS",
+        "directory": ".svelte-kit/cloudflare"
+    },
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "order_processor",
+            "database_id": "ae9e0e94-99a1-485f-9ed0-c42ad70c6094"
+        }
+    ],
+    "observability": {
+        "enabled": true
+    },
+    "limits": {
+        "cpu_ms": 300000
+    },
+    "vars": {
+        "BETTER_AUTH_URL": "https://order-processor.pages.dev"
+    }
+}

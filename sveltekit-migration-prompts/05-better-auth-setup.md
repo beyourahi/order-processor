@@ -1,12 +1,14 @@
 # 05 - Better Auth Setup
 
 ## Prerequisites
+
 - `01-project-setup.md` completed
 - `02-cloudflare-configuration.md` completed
 - `03-tailwind-setup.md` completed
 - `04-shadcn-ui-setup.md` completed
 
 ## Next Prompt
+
 - `06-types-migration.md`
 
 ---
@@ -15,13 +17,14 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **better-auth** | **PRIMARY** - Use `search` or `chat` for Better Auth setup, D1 adapter, Google OAuth, SvelteKit integration, and hooks configuration |
-| **cloudflare-docs** | Use `search_cloudflare_documentation` for D1 database operations, SQL schema, and Workers environment |
-| **svelte** | Use `get-documentation` for hooks.server.ts patterns and server-side data loading |
+| MCP Server          | Usage                                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **better-auth**     | **PRIMARY** - Use `search` or `chat` for Better Auth setup, D1 adapter, Google OAuth, SvelteKit integration, and hooks configuration |
+| **cloudflare-docs** | Use `search_cloudflare_documentation` for D1 database operations, SQL schema, and Workers environment                                |
+| **svelte**          | Use `get-documentation` for hooks.server.ts patterns and server-side data loading                                                    |
 
 ### Recommended MCP Queries
+
 ```
 better-auth MCP:
 - search: "SvelteKit integration"
@@ -62,6 +65,7 @@ bun add @better-auth/d1
 ### Step 2: Create Server Auth Configuration
 
 **src/lib/server/auth.ts:**
+
 ```typescript
 import { betterAuth } from "better-auth";
 import { d1Adapter } from "@better-auth/d1";
@@ -104,6 +108,7 @@ export type Auth = ReturnType<typeof createAuth>;
 ### Step 3: Create Auth Client
 
 **src/lib/auth-client.ts:**
+
 ```typescript
 import { createAuthClient } from "better-auth/svelte";
 
@@ -118,6 +123,7 @@ export const { signIn, signOut, useSession } = authClient;
 ### Step 4: Update hooks.server.ts
 
 **src/hooks.server.ts:**
+
 ```typescript
 import type { Handle } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
@@ -162,6 +168,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 ### Step 5: Update app.d.ts
 
 **src/app.d.ts:**
+
 ```typescript
 /// <reference types="@sveltejs/kit" />
 /// <reference types="@cloudflare/workers-types" />
@@ -209,6 +216,7 @@ export {};
 ### Step 6: Create Layout Server Load
 
 **src/routes/+layout.server.ts:**
+
 ```typescript
 import type { LayoutServerLoad } from "./$types";
 
@@ -223,6 +231,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 ### Step 7: Update .dev.vars
 
 **.dev.vars:**
+
 ```env
 BETTER_AUTH_SECRET=your-32-character-secret-key-here
 BETTER_AUTH_URL=http://localhost:5173
@@ -290,6 +299,7 @@ CREATE TABLE IF NOT EXISTS verifications (
 ### Step 9: Create Login Page
 
 **src/routes/login/+page.svelte:**
+
 ```svelte
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
@@ -363,6 +373,7 @@ CREATE TABLE IF NOT EXISTS verifications (
 ### Step 10: Test Auth Setup
 
 **src/routes/+page.svelte:**
+
 ```svelte
 <script lang="ts">
     import { page } from "$app/state";
@@ -419,6 +430,7 @@ bun run preview
 ```
 
 Test flow:
+
 1. Visit http://localhost:8787/login
 2. Click "Continue with Google"
 3. Complete Google OAuth flow

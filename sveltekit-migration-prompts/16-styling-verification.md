@@ -1,9 +1,11 @@
 # 16 - Styling Verification
 
 ## Prerequisites
+
 - `01-project-setup.md` through `15-static-assets-migration.md` completed
 
 ## Next Prompt
+
 - `17-deployment-setup.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | Use `get-documentation` for Svelte component styling patterns, class directives, and CSS scoping |
+| MCP Server   | Usage                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| **svelte**   | Use `get-documentation` for Svelte component styling patterns, class directives, and CSS scoping       |
 | **context7** | Use `resolve-library-id` → `get-library-docs` for Tailwind CSS class utilities if styling issues arise |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - get-documentation: "styling", "scoped styles"
@@ -45,6 +48,7 @@ Perform comprehensive visual verification to ensure the SvelteKit app looks iden
 Run both apps simultaneously for comparison:
 
 **Terminal 1 (Original Next.js):**
+
 ```bash
 cd /path/to/original-order-processor
 npm run dev
@@ -52,6 +56,7 @@ npm run dev
 ```
 
 **Terminal 2 (New SvelteKit):**
+
 ```bash
 cd /path/to/order-processor
 bun run dev
@@ -63,6 +68,7 @@ bun run dev
 Open both apps side-by-side and verify each item:
 
 #### Global Layout
+
 - [ ] Background color matches (`#0F0F0F`)
 - [ ] Text color is white
 - [ ] Font family matches (Geist)
@@ -70,6 +76,7 @@ Open both apps side-by-side and verify each item:
 - [ ] Overall page structure
 
 #### Heading Component
+
 - [ ] Title text size (5xl mobile, 7xl desktop)
 - [ ] Title font weight (bold)
 - [ ] Tagline color (zinc-400)
@@ -77,6 +84,7 @@ Open both apps side-by-side and verify each item:
 - [ ] Center alignment
 
 #### Button Component
+
 - [ ] All variants render correctly
 - [ ] Hover states match
 - [ ] Active states match
@@ -85,11 +93,13 @@ Open both apps side-by-side and verify each item:
 - [ ] Border radius
 
 #### Loading Spinner
+
 - [ ] Animation speed matches
 - [ ] Dot size and positioning
 - [ ] Color (white)
 
 #### Courier Picker
+
 - [ ] Button sizing and padding
 - [ ] Border color (zinc-800 default)
 - [ ] Selected state (green border + bg)
@@ -98,6 +108,7 @@ Open both apps side-by-side and verify each item:
 - [ ] Hover state
 
 #### Order Processor (Drop Zone)
+
 - [ ] Border style (dashed)
 - [ ] Border color states
 - [ ] Height matches (h-80)
@@ -106,22 +117,26 @@ Open both apps side-by-side and verify each item:
 - [ ] Disabled state opacity
 
 #### Upload Component
+
 - [ ] GIF animation
 - [ ] Text content
 - [ ] Disabled state styling
 
 #### Download Component
+
 - [ ] GIF animation
 - [ ] Filename display
 - [ ] File size formatting
 
 #### User Component
+
 - [ ] Layout (row on desktop, column on mobile)
 - [ ] Name and email styling
 - [ ] Link hover states
 - [ ] Logout button styling
 
 #### Not Authorized
+
 - [ ] Red "Access Denied" text
 - [ ] Message text
 - [ ] Button styling
@@ -131,17 +146,20 @@ Open both apps side-by-side and verify each item:
 Test at these breakpoints:
 
 #### Mobile (< 640px)
+
 - [ ] Column layout for main content
 - [ ] Proper spacing
 - [ ] Touch-friendly button sizes
 - [ ] Footer visible
 
 #### Tablet (640px - 1024px)
+
 - [ ] Layout transitions correctly
 - [ ] No horizontal overflow
 - [ ] Readable text sizes
 
 #### Desktop (> 1024px)
+
 - [ ] Row layout for main content
 - [ ] Proper max-widths
 - [ ] Hover states work
@@ -157,19 +175,14 @@ Test at these breakpoints:
 ### Step 5: Create Screenshot Comparison Tool
 
 **src/routes/style-check/+page.svelte:**
+
 ```svelte
 <!--
   Style Check Page
   Displays all UI states for visual verification
 -->
 <script lang="ts">
-    import {
-        Button,
-        LoadingSpinner,
-        Heading,
-        Footer,
-        NotAuthorized
-    } from "$lib/components";
+    import { Button, LoadingSpinner, Heading, Footer, NotAuthorized } from "$lib/components";
     import { COURIER_OPTIONS } from "$lib/config";
     import { cn } from "$lib/utils";
 
@@ -179,13 +192,13 @@ Test at these breakpoints:
 <div class="min-h-screen space-y-16 p-8">
     <!-- Section: Heading -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Heading Component</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Heading Component</h2>
         <Heading />
     </section>
 
     <!-- Section: Buttons -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Button Variants</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Button Variants</h2>
         <div class="flex flex-wrap justify-center gap-4">
             <Button>Default</Button>
             <Button variant="secondary">Secondary</Button>
@@ -204,18 +217,18 @@ Test at these breakpoints:
 
     <!-- Section: Loading -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Loading Spinner</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Loading Spinner</h2>
         <LoadingSpinner />
     </section>
 
     <!-- Section: Courier Picker -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Courier Picker</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Courier Picker</h2>
         <div class="flex flex-wrap justify-center gap-4">
             {#each COURIER_OPTIONS as option}
                 {@const isSelected = selectedCourier === option.value}
                 <button
-                    onclick={() => selectedCourier = option.value}
+                    onclick={() => (selectedCourier = option.value)}
                     class={cn(
                         "sleek flex flex-col items-center gap-3 rounded-xl border-2 p-6",
                         isSelected
@@ -232,23 +245,29 @@ Test at these breakpoints:
 
     <!-- Section: Drop Zone States -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Drop Zone States</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Drop Zone States</h2>
         <div class="flex flex-wrap justify-center gap-8">
             <!-- Normal -->
             <div class="flex flex-col items-center gap-2">
-                <div class="flex h-48 w-64 items-center justify-center rounded-xl border-2 border-dashed border-zinc-700">
+                <div
+                    class="flex h-48 w-64 items-center justify-center rounded-xl border-2 border-dashed border-zinc-700"
+                >
                     <span class="text-zinc-400">Normal</span>
                 </div>
             </div>
             <!-- Hover -->
             <div class="flex flex-col items-center gap-2">
-                <div class="flex h-48 w-64 items-center justify-center rounded-xl border-2 border-dashed border-zinc-500 bg-zinc-900/50">
+                <div
+                    class="flex h-48 w-64 items-center justify-center rounded-xl border-2 border-dashed border-zinc-500 bg-zinc-900/50"
+                >
                     <span class="text-zinc-400">Hover</span>
                 </div>
             </div>
             <!-- Disabled -->
             <div class="flex flex-col items-center gap-2">
-                <div class="flex h-48 w-64 items-center justify-center rounded-xl border-2 border-dashed border-zinc-800 opacity-50">
+                <div
+                    class="flex h-48 w-64 items-center justify-center rounded-xl border-2 border-dashed border-zinc-800 opacity-50"
+                >
                     <span class="text-zinc-400">Disabled</span>
                 </div>
             </div>
@@ -257,7 +276,7 @@ Test at these breakpoints:
 
     <!-- Section: Upload/Download GIFs -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Animations</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Animations</h2>
         <div class="flex gap-16">
             <div class="flex flex-col items-center gap-2">
                 <img src="/upload.gif" alt="Upload" class="h-24 w-24" />
@@ -272,15 +291,17 @@ Test at these breakpoints:
 
     <!-- Section: Logout Button -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Logout Button</h2>
-        <button class="sleek rounded-xl bg-red-500 px-12 py-3 text-sm font-bold text-white uppercase active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Logout Button</h2>
+        <button
+            class="sleek rounded-xl bg-red-500 px-12 py-3 text-sm font-bold text-white uppercase active:scale-95 active:bg-red-700 xl:hover:bg-red-700"
+        >
             Log Out
         </button>
     </section>
 
     <!-- Section: Not Authorized -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">Not Authorized</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">Not Authorized</h2>
         <div class="max-w-md">
             <NotAuthorized />
         </div>
@@ -288,7 +309,7 @@ Test at these breakpoints:
 
     <!-- Section: User Info -->
     <section class="flex flex-col items-center gap-4 border-b border-zinc-800 pb-8">
-        <h2 class="text-sm uppercase tracking-wide text-zinc-500">User Info Layout</h2>
+        <h2 class="text-sm tracking-wide text-zinc-500 uppercase">User Info Layout</h2>
         <div class="flex w-full max-w-4xl flex-col gap-8 text-zinc-400 md:flex-row md:justify-between">
             <div class="flex flex-col gap-2 text-sm">
                 <span>
@@ -321,6 +342,7 @@ If you find styling differences, check:
 ### Step 7: Browser Testing
 
 Test in multiple browsers:
+
 - [ ] Chrome
 - [ ] Firefox
 - [ ] Safari (if available)
@@ -349,18 +371,23 @@ bun run dev
 ## Common Issues & Fixes
 
 ### Issue: Colors don't match
+
 **Fix:** Check `app.css` @theme section has correct HSL values
 
 ### Issue: Transitions feel different
+
 **Fix:** Verify `.sleek` class is defined with `duration-200 ease-in-out`
 
 ### Issue: Font looks different
+
 **Fix:** Ensure Geist font is loading from Google Fonts in `app.html`
 
 ### Issue: Spacing is off
+
 **Fix:** Compare Tailwind spacing classes (gap-X, p-X, m-X)
 
 ### Issue: Active states not working on mobile
+
 **Fix:** Use `active:` prefix, not `:active` pseudo-class
 
 ---

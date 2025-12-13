@@ -1,10 +1,12 @@
 # 03 - Tailwind CSS Setup
 
 ## Prerequisites
+
 - `01-project-setup.md` completed
 - `02-cloudflare-configuration.md` completed
 
 ## Next Prompt
+
 - `04-shadcn-ui-setup.md`
 
 ---
@@ -13,12 +15,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server   | Usage                                                                                                                            |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | **context7** | Use `resolve-library-id` → `get-library-docs` for Tailwind CSS v4 configuration, `@theme` syntax, and `@tailwindcss/vite` plugin |
-| **svelte** | Use `get-documentation` for SvelteKit styling integration and CSS handling |
+| **svelte**   | Use `get-documentation` for SvelteKit styling integration and CSS handling                                                       |
 
 ### Recommended MCP Queries
+
 ```
 context7 MCP:
 - resolve-library-id: "tailwindcss" → get-library-docs for v4 @theme syntax
@@ -42,6 +45,7 @@ Configure Tailwind CSS 4 with the exact same theme tokens and custom styles as t
 ### Step 1: Create app.css
 
 **src/app.css:**
+
 ```css
 @import "tailwindcss";
 
@@ -199,6 +203,7 @@ Configure Tailwind CSS 4 with the exact same theme tokens and custom styles as t
 Ensure the `<html>` tag has the dark class and body has base styles:
 
 **src/app.html:**
+
 ```html
 <!doctype html>
 <html lang="en" class="dark">
@@ -209,7 +214,10 @@ Ensure the `<html>` tag has the dark class and body has base styles:
         <meta name="robots" content="noindex, nofollow" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
         %sveltekit.head%
     </head>
     <body data-sveltekit-preload-data="hover" class="min-h-screen bg-[#0F0F0F] font-sans text-white antialiased">
@@ -221,6 +229,7 @@ Ensure the `<html>` tag has the dark class and body has base styles:
 ### Step 3: Verify vite.config.ts Has Tailwind Plugin
 
 **vite.config.ts:**
+
 ```typescript
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -234,6 +243,7 @@ export default defineConfig({
 ### Step 4: Update Root Layout to Import CSS
 
 **src/routes/+layout.svelte:**
+
 ```svelte
 <script lang="ts">
     import "../app.css";
@@ -249,12 +259,15 @@ export default defineConfig({
 ### Step 5: Test Styling with Updated Placeholder
 
 **src/routes/+page.svelte:**
+
 ```svelte
 <div class="flex min-h-screen flex-col items-center justify-center gap-8">
     <h1 class="text-4xl font-bold">Migration in Progress</h1>
 
     <!-- Test sleek class -->
-    <button class="sleek rounded-xl bg-red-500 px-8 py-3 text-white active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
+    <button
+        class="sleek rounded-xl bg-red-500 px-8 py-3 text-white active:scale-95 active:bg-red-700 xl:hover:bg-red-700"
+    >
         Test Button
     </button>
 
@@ -263,9 +276,7 @@ export default defineConfig({
 
     <!-- Test zinc colors -->
     <p class="text-zinc-400">This text should be zinc-400</p>
-    <p class="sleek font-bold text-zinc-300 active:text-zinc-400 xl:hover:text-zinc-400">
-        Hover/Active Test
-    </p>
+    <p class="sleek font-bold text-zinc-300 active:text-zinc-400 xl:hover:text-zinc-400">Hover/Active Test</p>
 </div>
 ```
 
@@ -279,6 +290,7 @@ bun run dev
 ```
 
 Visual checks:
+
 1. Background should be dark (`#0F0F0F`)
 2. Text should be white
 3. Button should have red background with hover/active states
@@ -306,14 +318,14 @@ bun run check
 
 The app uses a dark theme with these key colors:
 
-| Usage | Color | CSS |
-|-------|-------|-----|
-| Background | Near black | `bg-[#0F0F0F]` |
-| Primary text | White | `text-white` |
-| Secondary text | Zinc 400 | `text-zinc-400` |
-| Tertiary text | Zinc 300 | `text-zinc-300` |
-| Danger/Logout | Red 500 | `bg-red-500` |
-| Active courier | Green | Border/ring on selection |
+| Usage          | Color      | CSS                      |
+| -------------- | ---------- | ------------------------ |
+| Background     | Near black | `bg-[#0F0F0F]`           |
+| Primary text   | White      | `text-white`             |
+| Secondary text | Zinc 400   | `text-zinc-400`          |
+| Tertiary text  | Zinc 300   | `text-zinc-300`          |
+| Danger/Logout  | Red 500    | `bg-red-500`             |
+| Active courier | Green      | Border/ring on selection |
 
 ---
 

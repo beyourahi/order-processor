@@ -1,11 +1,13 @@
 # 04 - shadcn/ui Setup
 
 ## Prerequisites
+
 - `01-project-setup.md` completed
 - `02-cloudflare-configuration.md` completed
 - `03-tailwind-setup.md` completed
 
 ## Next Prompt
+
 - `05-better-auth-setup.md`
 
 ---
@@ -14,12 +16,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte 5 component patterns, `$props()` rune, and validate components with `svelte-autofixer` |
-| **context7** | Use `resolve-library-id` → `get-library-docs` for bits-ui and class-variance-authority (cva) |
+| MCP Server   | Usage                                                                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **svelte**   | **PRIMARY** - Use `get-documentation` for Svelte 5 component patterns, `$props()` rune, and validate components with `svelte-autofixer` |
+| **context7** | Use `resolve-library-id` → `get-library-docs` for bits-ui and class-variance-authority (cva)                                            |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - list-sections → get-documentation: "$props", "components"
@@ -54,6 +57,7 @@ bun add bits-ui
 ### Step 2: Create components.json
 
 **components.json:**
+
 ```json
 {
     "$schema": "https://shadcn-svelte.com/schema.json",
@@ -80,6 +84,7 @@ mkdir -p src/lib/components/ui
 ### Step 4: Create Button Component
 
 **src/lib/components/ui/button/index.ts:**
+
 ```typescript
 import Root from "./button.svelte";
 
@@ -94,6 +99,7 @@ export {
 ```
 
 **src/lib/components/ui/button/button.svelte:**
+
 ```svelte
 <script lang="ts" module>
     import { cva, type VariantProps } from "class-variance-authority";
@@ -150,12 +156,7 @@ export {
     }: ButtonProps & { children?: import("svelte").Snippet } = $props();
 </script>
 
-<button
-    type={type}
-    class={cn(buttonVariants({ variant, size, className }))}
-    disabled={disabled}
-    {...restProps}
->
+<button {type} class={cn(buttonVariants({ variant, size, className }))} {disabled} {...restProps}>
     {@render children?.()}
 </button>
 ```
@@ -163,6 +164,7 @@ export {
 ### Step 5: Create Index Export for UI Components
 
 **src/lib/components/ui/index.ts:**
+
 ```typescript
 export * from "./button";
 ```
@@ -170,6 +172,7 @@ export * from "./button";
 ### Step 6: Create Main Components Index
 
 **src/lib/components/index.ts:**
+
 ```typescript
 // UI Components
 export * from "./ui";
@@ -182,6 +185,7 @@ export * from "./ui";
 Update the test page:
 
 **src/routes/+page.svelte:**
+
 ```svelte
 <script lang="ts">
     import { Button } from "$lib/components/ui/button";
@@ -214,7 +218,9 @@ Update the test page:
     </div>
 
     <!-- Custom styled button (matching logout button style) -->
-    <button class="sleek rounded-xl bg-red-500 px-12 py-3 text-sm font-bold text-white uppercase active:scale-95 active:bg-red-700 xl:hover:bg-red-700">
+    <button
+        class="sleek rounded-xl bg-red-500 px-12 py-3 text-sm font-bold text-white uppercase active:scale-95 active:bg-red-700 xl:hover:bg-red-700"
+    >
         Log Out (Custom)
     </button>
 
@@ -236,6 +242,7 @@ bun run dev
 ```
 
 Visual checks:
+
 1. All button variants render correctly
 2. Hover states work on desktop
 3. Active states work on mobile
@@ -289,6 +296,7 @@ Visual checks:
 ## Original React Button Reference
 
 The original React button used:
+
 ```tsx
 import { Slot } from "@radix-ui/react-slot";
 const Comp = asChild ? Slot : "button";

@@ -1,9 +1,11 @@
 # 06 - Types Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `05-better-auth-setup.md` completed
 
 ## Next Prompt
+
 - `07-config-constants-migration.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **better-auth** | Use `search` for Better Auth type definitions (User, Session types) |
-| **svelte** | Use `get-documentation` for SvelteKit `app.d.ts` type declaration patterns |
+| MCP Server      | Usage                                                                      |
+| --------------- | -------------------------------------------------------------------------- |
+| **better-auth** | Use `search` for Better Auth type definitions (User, Session types)        |
+| **svelte**      | Use `get-documentation` for SvelteKit `app.d.ts` type declaration patterns |
 
 ### Recommended MCP Queries
+
 ```
 better-auth MCP:
 - search: "TypeScript types User Session"
@@ -47,6 +50,7 @@ mkdir -p src/lib/types
 ### Step 2: Migrate Courier Types
 
 **src/lib/types/courier.ts:**
+
 ```typescript
 /**
  * Supported courier services
@@ -114,30 +118,21 @@ export interface CourierOption {
  * Type guard for PathaoOrder
  */
 export const isPathaoOrder = (order: unknown): order is PathaoOrder => {
-    return (
-        typeof order === "object" &&
-        order !== null &&
-        "Order No" in order &&
-        "Phone No" in order
-    );
+    return typeof order === "object" && order !== null && "Order No" in order && "Phone No" in order;
 };
 
 /**
  * Type guard for SteadFastOrder
  */
 export const isSteadFastOrder = (order: unknown): order is SteadFastOrder => {
-    return (
-        typeof order === "object" &&
-        order !== null &&
-        "Invoice" in order &&
-        "Delivery Type" in order
-    );
+    return typeof order === "object" && order !== null && "Invoice" in order && "Delivery Type" in order;
 };
 ```
 
 ### Step 3: Migrate User Types
 
 **src/lib/types/user.ts:**
+
 ```typescript
 import type { Courier } from "./courier";
 
@@ -177,6 +172,7 @@ export interface UserInfo {
 ### Step 4: Migrate Config Types
 
 **src/lib/types/config.ts:**
+
 ```typescript
 /**
  * Application configuration
@@ -216,6 +212,7 @@ export type ArrayElement<A> = A extends readonly (infer T)[] ? T : never;
 ### Step 5: Create UI Types (Svelte-specific)
 
 **src/lib/types/ui.ts:**
+
 ```typescript
 import type { Snippet } from "svelte";
 
@@ -277,16 +274,11 @@ export interface AppState {
 ### Step 6: Create Index Export
 
 **src/lib/types/index.ts:**
+
 ```typescript
 // Courier types
 export * from "./courier";
-export type {
-    Courier,
-    SteadFastOrder,
-    PathaoOrder,
-    CourierProcessor,
-    CourierOption
-} from "./courier";
+export type { Courier, SteadFastOrder, PathaoOrder, CourierProcessor, CourierOption } from "./courier";
 
 // User types
 export * from "./user";
@@ -298,18 +290,13 @@ export type { AppConfig, DeepPartial, RequireFields, ArrayElement } from "./conf
 
 // UI types
 export * from "./ui";
-export type {
-    DropZoneProps,
-    DownloadProps,
-    ErrorProps,
-    CSVParseResult,
-    AppState
-} from "./ui";
+export type { DropZoneProps, DownloadProps, ErrorProps, CSVParseResult, AppState } from "./ui";
 ```
 
 ### Step 7: Update app.d.ts with Better Auth Types
 
 **src/app.d.ts:**
+
 ```typescript
 /// <reference types="@sveltejs/kit" />
 /// <reference types="@cloudflare/workers-types" />
@@ -386,12 +373,12 @@ bun run check
 
 ## Changes from Original
 
-| Original | SvelteKit | Reason |
-|----------|-----------|--------|
-| `@/types` | `$lib/types` | SvelteKit path alias |
-| `CSVReaderProps` | `CSVParseResult` | Different library API |
-| React-specific types | Svelte-specific types | Framework change |
-| `ButtonProps` | Removed | Defined in component module |
+| Original             | SvelteKit             | Reason                      |
+| -------------------- | --------------------- | --------------------------- |
+| `@/types`            | `$lib/types`          | SvelteKit path alias        |
+| `CSVReaderProps`     | `CSVParseResult`      | Different library API       |
+| React-specific types | Svelte-specific types | Framework change            |
+| `ButtonProps`        | Removed               | Defined in component module |
 
 ---
 

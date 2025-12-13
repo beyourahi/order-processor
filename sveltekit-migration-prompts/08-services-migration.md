@@ -1,9 +1,11 @@
 # 08 - Services Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `07-config-constants-migration.md` completed
 
 ## Next Prompt
+
 - `09-ui-components-migration.md`
 
 ---
@@ -12,11 +14,12 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server | Usage                                                          |
+| ---------- | -------------------------------------------------------------- |
 | **svelte** | Use `get-documentation` for SvelteKit `$lib` module resolution |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - get-documentation: "modules", "$lib"
@@ -43,6 +46,7 @@ mkdir -p src/lib/services/processors
 ### Step 2: Migrate SteadFast Processor
 
 **src/lib/services/processors/steadfast.ts:**
+
 ```typescript
 import type { CourierProcessor, SteadFastOrder, UserInfo } from "$lib/types";
 
@@ -78,7 +82,7 @@ const normalizePhone = (phone: string): string => {
  */
 export class SteadFastProcessor implements CourierProcessor<SteadFastOrder> {
     processOrders(data: string[][], user: UserInfo): SteadFastOrder[] {
-        return data.map(row => ({
+        return data.map((row) => ({
             Invoice: user.merchant_id,
             Name: row[0] ?? "",
             Address: row[1] ?? "",
@@ -97,6 +101,7 @@ export class SteadFastProcessor implements CourierProcessor<SteadFastOrder> {
 ### Step 3: Migrate Pathao Processor
 
 **src/lib/services/processors/pathao.ts:**
+
 ```typescript
 import type { CourierProcessor, PathaoOrder, UserInfo } from "$lib/types";
 
@@ -106,7 +111,7 @@ import type { CourierProcessor, PathaoOrder, UserInfo } from "$lib/types";
  */
 export class PathaoProcessor implements CourierProcessor<PathaoOrder> {
     processOrders(data: string[][], _user: UserInfo): PathaoOrder[] {
-        return data.map(row => ({
+        return data.map((row) => ({
             "Order No": row[0] ?? "",
             Name: row[1] ?? "",
             Product: row[2] ?? "",
@@ -122,6 +127,7 @@ export class PathaoProcessor implements CourierProcessor<PathaoOrder> {
 ### Step 4: Create Processors Index
 
 **src/lib/services/processors/index.ts:**
+
 ```typescript
 export { SteadFastProcessor } from "./steadfast";
 export { PathaoProcessor } from "./pathao";
@@ -130,6 +136,7 @@ export { PathaoProcessor } from "./pathao";
 ### Step 5: Migrate Data Processing Utilities
 
 **src/lib/services/data-processing.ts:**
+
 ```typescript
 import {
     SHOPIFY_EXPORT_INDEXES,
@@ -142,10 +149,7 @@ import {
  * Remove duplicate rows and extract specific columns
  * Uses Set for O(1) deduplication based on first column
  */
-export const removeDuplicatesAndExtractIndexes = (
-    data: string[][],
-    indexes: readonly number[]
-): string[][] => {
+export const removeDuplicatesAndExtractIndexes = (data: string[][], indexes: readonly number[]): string[][] => {
     const seen = new Set<string>();
     const result: string[][] = [];
 
@@ -153,7 +157,7 @@ export const removeDuplicatesAndExtractIndexes = (
         const key = row[0];
         if (key && !seen.has(key)) {
             seen.add(key);
-            result.push(indexes.map(i => row[i] ?? ""));
+            result.push(indexes.map((i) => row[i] ?? ""));
         }
     }
 
@@ -183,7 +187,7 @@ export const extractInvoices = (data: string[][]): Map<string, number> => {
  */
 export const prepareSteadFastOrderData = (data: string[][]): string[][] => {
     // Skip header row, filter rows that have data in required columns
-    const filtered = data.slice(1).filter(row => {
+    const filtered = data.slice(1).filter((row) => {
         const name = row[STEADFAST_INDEXES_ARRAY[0]];
         return name && name.trim() !== "";
     });
@@ -197,7 +201,7 @@ export const prepareSteadFastOrderData = (data: string[][]): string[][] => {
  */
 export const preparePathaoOrderData = (data: string[][]): string[][] => {
     // Filter rows where first column starts with #
-    const filtered = data.filter(row => {
+    const filtered = data.filter((row) => {
         const orderNo = row[SHOPIFY_EXPORT_INDEXES.ORDER_NAME];
         return orderNo && orderNo.startsWith("#");
     });
@@ -222,7 +226,10 @@ export const prepareShopifySteadFastOrderData = (data: string[][]): string[][] =
 
         if (!orderMap.has(orderName)) {
             // First occurrence - store the full row data
-            orderMap.set(orderName, SHOPIFY_STEADFAST_INDEXES_ARRAY.map(i => row[i] ?? ""));
+            orderMap.set(
+                orderName,
+                SHOPIFY_STEADFAST_INDEXES_ARRAY.map((i) => row[i] ?? "")
+            );
         }
         // Subsequent occurrences are ignored (same order, different line items)
     }
@@ -236,15 +243,14 @@ export const prepareShopifySteadFastOrderData = (data: string[][]): string[][] =
  */
 export const isShopifyExport = (headers: string[]): boolean => {
     const shopifyHeaders = ["Name", "Email", "Shipping Name", "Billing Name", "Financial Status"];
-    return shopifyHeaders.every(header =>
-        headers.some(h => h.toLowerCase().includes(header.toLowerCase()))
-    );
+    return shopifyHeaders.every((header) => headers.some((h) => h.toLowerCase().includes(header.toLowerCase())));
 };
 ```
 
 ### Step 6: Migrate Courier Service
 
 **src/lib/services/courier-service.ts:**
+
 ```typescript
 import { Courier } from "$lib/types";
 import type { SteadFastOrder, PathaoOrder, UserInfo } from "$lib/types";
@@ -269,11 +275,7 @@ export class CourierService {
      * Process orders for a specific courier
      * Auto-detects Shopify export format and routes to appropriate processor
      */
-    static processOrders(
-        courier: Courier,
-        rawData: string[][],
-        user: UserInfo
-    ): SteadFastOrder[] | PathaoOrder[] {
+    static processOrders(courier: Courier, rawData: string[][], user: UserInfo): SteadFastOrder[] | PathaoOrder[] {
         const processor = this.processors.get(courier);
 
         if (!processor) {
@@ -316,6 +318,7 @@ export class CourierService {
 ### Step 7: Create Services Index
 
 **src/lib/services/index.ts:**
+
 ```typescript
 // Main service
 export { CourierService } from "./courier-service";
@@ -356,11 +359,11 @@ Test the service:
         ["#13826", "test@example.com", "1500", "John Doe", "123 Main St", "01712345678", "Handle with care"]
     ];
 
-    const result = CourierService.processOrders(
-        Courier.SteadFast,
-        testData,
-        { name: "Test User", phone: "01700000000", merchant_id: "12345" }
-    );
+    const result = CourierService.processOrders(Courier.SteadFast, testData, {
+        name: "Test User",
+        phone: "01700000000",
+        merchant_id: "12345"
+    });
 
     console.log("Processed orders:", result);
 </script>
@@ -381,10 +384,10 @@ Test the service:
 
 ## Changes from Original
 
-| Original | SvelteKit | Reason |
-|----------|-----------|--------|
-| `@/services` | `$lib/services` | Path alias |
-| `@/types` | `$lib/types` | Path alias |
+| Original      | SvelteKit        | Reason     |
+| ------------- | ---------------- | ---------- |
+| `@/services`  | `$lib/services`  | Path alias |
+| `@/types`     | `$lib/types`     | Path alias |
 | `@/constants` | `$lib/constants` | Path alias |
 
 ---

@@ -1,9 +1,11 @@
 # 18 - Testing & Verification
 
 ## Prerequisites
+
 - `01-project-setup.md` through `17-deployment-setup.md` completed
 
 ## Next Prompt
+
 - None (this is the final prompt)
 
 ---
@@ -12,14 +14,15 @@
 
 For final testing and verification, these MCP servers may be helpful for troubleshooting:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | Use `get-documentation` for debugging Svelte components and `svelte-autofixer` to validate any fixes |
-| **better-auth** | Use `search` or `chat` to troubleshoot any authentication issues |
-| **cloudflare-docs** | Use `search_cloudflare_documentation` for production debugging, logs, and D1 queries |
-| **context7** | Use for any library-specific issues (papaparse, xlsx) |
+| MCP Server          | Usage                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| **svelte**          | Use `get-documentation` for debugging Svelte components and `svelte-autofixer` to validate any fixes |
+| **better-auth**     | Use `search` or `chat` to troubleshoot any authentication issues                                     |
+| **cloudflare-docs** | Use `search_cloudflare_documentation` for production debugging, logs, and D1 queries                 |
+| **context7**        | Use for any library-specific issues (papaparse, xlsx)                                                |
 
 ### Troubleshooting MCP Queries
+
 ```
 If auth issues:
 - better-auth MCP: search "troubleshooting session"
@@ -49,6 +52,7 @@ Perform comprehensive testing of the migrated application to ensure all function
 ### Step 1: Functional Testing Checklist
 
 #### Authentication Flow
+
 - [ ] **Login page loads**: Visit /login, see Google sign-in button
 - [ ] **Google OAuth works**: Click button, complete OAuth flow
 - [ ] **Session persists**: Refresh page, still logged in
@@ -56,35 +60,41 @@ Perform comprehensive testing of the migrated application to ensure all function
 - [ ] **Session expires**: After timeout, requires re-login
 
 #### Authorization Flow
+
 - [ ] **Authorized user**: Login with allowed email, see main UI
 - [ ] **Unauthorized user**: Login with other email, see "Access Denied"
 - [ ] **Email allowlist**: Verify brands.ts emails are checked
 
 #### File Processing
+
 - [ ] **CSV upload**: Drag and drop CSV file
 - [ ] **File type validation**: Reject non-CSV files
 - [ ] **Excel generation**: Download triggers automatically
 - [ ] **File naming**: Output file named correctly
 
 #### Courier Selection
+
 - [ ] **Courier picker renders**: All courier options visible
 - [ ] **Selection works**: Click to select courier
 - [ ] **User default shown**: "Your default" label appears
 - [ ] **Selection state**: Green border on selected
 
 #### SteadFast Processing
+
 - [ ] **Phone normalization**: +880 prefix removed
 - [ ] **Invoice field**: Uses merchant_id
 - [ ] **Contact info**: Includes brand name and phone
 - [ ] **All fields populated**: Check Excel output
 
 #### Pathao Processing
+
 - [ ] **Order number**: Extracted correctly
 - [ ] **Product name**: From lineitem
 - [ ] **Address fields**: City, address separate
 - [ ] **All fields populated**: Check Excel output
 
 #### UI/UX
+
 - [ ] **Loading states**: Spinner shows during load
 - [ ] **Error states**: Errors display properly
 - [ ] **Responsive design**: Works on mobile
@@ -93,6 +103,7 @@ Perform comprehensive testing of the migrated application to ensure all function
 ### Step 2: Create Test Script
 
 **scripts/test-processing.ts:**
+
 ```typescript
 /**
  * Test script for verifying courier processing
@@ -103,9 +114,147 @@ import { CourierService } from "../src/lib/services";
 import { Courier } from "../src/lib/types";
 
 const testData = [
-    ["Name", "Email", "Financial Status", "Paid at", "Fulfillment Status", "Fulfilled at", "Accepts Marketing", "Currency", "Subtotal", "Shipping", "Taxes", "Total", "Discount Code", "Discount Amount", "Shipping Method", "Created at", "Lineitem quantity", "Lineitem name", "Lineitem price", "Lineitem compare at price", "Lineitem sku", "Lineitem requires shipping", "Lineitem taxable", "Lineitem fulfillment status", "Billing Name", "Billing Street", "Billing Address1", "Billing Address2", "Billing Company", "Billing City", "Billing Zip", "Billing Province", "Billing Country", "Billing Phone", "Shipping Name", "Shipping Street", "Shipping Address1", "Shipping Address2", "Shipping Company", "Shipping City", "Shipping Zip", "Shipping Province", "Shipping Country", "Shipping Phone", "Notes"],
-    ["#13826", "test@example.com", "paid", "2024-01-15", "unfulfilled", "", "no", "BDT", "1200", "50", "0", "1250", "", "", "Standard", "2024-01-15", "1", "Product A", "1200", "", "SKU001", "yes", "yes", "", "John Doe", "123 Main St", "123 Main St", "Apt 4", "", "Dhaka", "1205", "Dhaka", "Bangladesh", "01712345678", "John Doe", "123 Main St", "123 Main St", "Apt 4", "", "Dhaka", "1205", "Dhaka", "Bangladesh", "+8801712345678", "Handle with care"],
-    ["#13827", "test2@example.com", "paid", "2024-01-15", "unfulfilled", "", "no", "BDT", "800", "50", "0", "850", "", "", "Standard", "2024-01-15", "1", "Product B", "800", "", "SKU002", "yes", "yes", "", "Jane Smith", "456 Oak Ave", "456 Oak Ave", "", "", "Chittagong", "4000", "Chittagong", "Bangladesh", "01898765432", "Jane Smith", "456 Oak Ave", "456 Oak Ave", "", "", "Chittagong", "4000", "Chittagong", "Bangladesh", "01898765432", ""]
+    [
+        "Name",
+        "Email",
+        "Financial Status",
+        "Paid at",
+        "Fulfillment Status",
+        "Fulfilled at",
+        "Accepts Marketing",
+        "Currency",
+        "Subtotal",
+        "Shipping",
+        "Taxes",
+        "Total",
+        "Discount Code",
+        "Discount Amount",
+        "Shipping Method",
+        "Created at",
+        "Lineitem quantity",
+        "Lineitem name",
+        "Lineitem price",
+        "Lineitem compare at price",
+        "Lineitem sku",
+        "Lineitem requires shipping",
+        "Lineitem taxable",
+        "Lineitem fulfillment status",
+        "Billing Name",
+        "Billing Street",
+        "Billing Address1",
+        "Billing Address2",
+        "Billing Company",
+        "Billing City",
+        "Billing Zip",
+        "Billing Province",
+        "Billing Country",
+        "Billing Phone",
+        "Shipping Name",
+        "Shipping Street",
+        "Shipping Address1",
+        "Shipping Address2",
+        "Shipping Company",
+        "Shipping City",
+        "Shipping Zip",
+        "Shipping Province",
+        "Shipping Country",
+        "Shipping Phone",
+        "Notes"
+    ],
+    [
+        "#13826",
+        "test@example.com",
+        "paid",
+        "2024-01-15",
+        "unfulfilled",
+        "",
+        "no",
+        "BDT",
+        "1200",
+        "50",
+        "0",
+        "1250",
+        "",
+        "",
+        "Standard",
+        "2024-01-15",
+        "1",
+        "Product A",
+        "1200",
+        "",
+        "SKU001",
+        "yes",
+        "yes",
+        "",
+        "John Doe",
+        "123 Main St",
+        "123 Main St",
+        "Apt 4",
+        "",
+        "Dhaka",
+        "1205",
+        "Dhaka",
+        "Bangladesh",
+        "01712345678",
+        "John Doe",
+        "123 Main St",
+        "123 Main St",
+        "Apt 4",
+        "",
+        "Dhaka",
+        "1205",
+        "Dhaka",
+        "Bangladesh",
+        "+8801712345678",
+        "Handle with care"
+    ],
+    [
+        "#13827",
+        "test2@example.com",
+        "paid",
+        "2024-01-15",
+        "unfulfilled",
+        "",
+        "no",
+        "BDT",
+        "800",
+        "50",
+        "0",
+        "850",
+        "",
+        "",
+        "Standard",
+        "2024-01-15",
+        "1",
+        "Product B",
+        "800",
+        "",
+        "SKU002",
+        "yes",
+        "yes",
+        "",
+        "Jane Smith",
+        "456 Oak Ave",
+        "456 Oak Ave",
+        "",
+        "",
+        "Chittagong",
+        "4000",
+        "Chittagong",
+        "Bangladesh",
+        "01898765432",
+        "Jane Smith",
+        "456 Oak Ave",
+        "456 Oak Ave",
+        "",
+        "",
+        "Chittagong",
+        "4000",
+        "Chittagong",
+        "Bangladesh",
+        "01898765432",
+        ""
+    ]
 ];
 
 const testUser = {
@@ -159,23 +308,25 @@ bun run preview
 ### Step 4: Manual E2E Testing
 
 1. **Start the app locally**:
-   ```bash
-   bun run preview
-   ```
+
+    ```bash
+    bun run preview
+    ```
 
 2. **Test complete flow**:
-   - Open http://localhost:8787
-   - Click "Sign In"
-   - Complete Google OAuth
-   - Select courier (SteadFast or Pathao)
-   - Upload test CSV
-   - Verify Excel downloads
-   - Check Excel content is correct
-   - Click "Log Out"
+    - Open http://localhost:8787
+    - Click "Sign In"
+    - Complete Google OAuth
+    - Select courier (SteadFast or Pathao)
+    - Upload test CSV
+    - Verify Excel downloads
+    - Check Excel content is correct
+    - Click "Log Out"
 
 ### Step 5: Cross-Browser Testing
 
 Test in:
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (if available)
@@ -232,17 +383,20 @@ bun run deploy
 ## Final Migration Verification
 
 ### Code Quality
+
 - [ ] No TypeScript errors (`bun run check`)
 - [ ] No linting errors (`bun run lint`)
 - [ ] Build succeeds (`bun run build`)
 
 ### Authentication
+
 - [ ] Google OAuth login works
 - [ ] Session persists across refreshes
 - [ ] Logout clears session
 - [ ] Email allowlist enforced
 
 ### Core Functionality
+
 - [ ] CSV file upload works
 - [ ] SteadFast processing correct
 - [ ] Pathao processing correct
@@ -250,12 +404,14 @@ bun run deploy
 - [ ] Phone normalization works
 
 ### UI/UX
+
 - [ ] Visual design matches original
 - [ ] Responsive on mobile
 - [ ] Animations/transitions work
 - [ ] All states render correctly
 
 ### Deployment
+
 - [ ] Production deployed
 - [ ] Secrets configured
 - [ ] D1 database working

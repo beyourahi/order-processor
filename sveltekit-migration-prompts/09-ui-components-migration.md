@@ -1,9 +1,11 @@
 # 09 - UI Components Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `08-services-migration.md` completed
 
 ## Next Prompt
+
 - `10-main-components-migration.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte 5 component patterns, `$props()`, `$state()` runes, and validate with `svelte-autofixer` |
-| **better-auth** | Use `search` for auth client signOut patterns |
+| MCP Server      | Usage                                                                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **svelte**      | **PRIMARY** - Use `get-documentation` for Svelte 5 component patterns, `$props()`, `$state()` runes, and validate with `svelte-autofixer` |
+| **better-auth** | Use `search` for auth client signOut patterns                                                                                             |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - list-sections → get-documentation: "$props", "$state", "components"
@@ -43,6 +46,7 @@ Migrate the UI components (Button already done in 04, now: LoadingSpinner, Headi
 ### Step 1: Create LoadingSpinner Component
 
 **src/lib/components/ui/loading-spinner.svelte:**
+
 ```svelte
 <!--
   LoadingSpinner Component
@@ -53,6 +57,7 @@ Migrate the UI components (Button already done in 04, now: LoadingSpinner, Headi
 ```
 
 **src/lib/components/ui/loading-spinner/index.ts:**
+
 ```typescript
 import LoadingSpinner from "./loading-spinner.svelte";
 export { LoadingSpinner };
@@ -73,6 +78,7 @@ mkdir -p src/lib/components/ui/not-authorized
 ### Step 2: Create LoadingSpinner Component
 
 **src/lib/components/ui/loading-spinner/loading-spinner.svelte:**
+
 ```svelte
 <!--
   LoadingSpinner Component
@@ -107,6 +113,7 @@ mkdir -p src/lib/components/ui/not-authorized
 ```
 
 **src/lib/components/ui/loading-spinner/index.ts:**
+
 ```typescript
 import LoadingSpinner from "./loading-spinner.svelte";
 export { LoadingSpinner };
@@ -116,6 +123,7 @@ export default LoadingSpinner;
 ### Step 3: Create Heading Component
 
 **src/lib/components/ui/heading/heading.svelte:**
+
 ```svelte
 <!--
   Heading Component
@@ -137,6 +145,7 @@ export default LoadingSpinner;
 ```
 
 **src/lib/components/ui/heading/index.ts:**
+
 ```typescript
 import Heading from "./heading.svelte";
 export { Heading };
@@ -146,6 +155,7 @@ export default Heading;
 ### Step 4: Create Footer Component
 
 **src/lib/components/ui/footer/footer.svelte:**
+
 ```svelte
 <!--
   Footer Component
@@ -156,7 +166,7 @@ export default Heading;
     import { APP_CONFIG } from "$lib/config";
 </script>
 
-<footer class="mt-auto pb-6 pt-12 text-center text-sm text-zinc-500">
+<footer class="mt-auto pt-12 pb-6 text-center text-sm text-zinc-500">
     <p>
         Designed & Developed by
         <a
@@ -172,6 +182,7 @@ export default Heading;
 ```
 
 **src/lib/components/ui/footer/index.ts:**
+
 ```typescript
 import Footer from "./footer.svelte";
 export { Footer };
@@ -181,6 +192,7 @@ export default Footer;
 ### Step 5: Create NotAuthorized Component
 
 **src/lib/components/ui/not-authorized/not-authorized.svelte:**
+
 ```svelte
 <!--
   NotAuthorized Component
@@ -201,8 +213,8 @@ export default Footer;
     <div class="flex flex-col gap-4">
         <h2 class="text-3xl font-bold text-red-500">Access Denied</h2>
         <p class="max-w-md text-zinc-400">
-            Your email is not authorized to access this application.
-            Please contact the administrator if you believe this is an error.
+            Your email is not authorized to access this application. Please contact the administrator if you believe
+            this is an error.
         </p>
     </div>
 
@@ -216,6 +228,7 @@ export default Footer;
 ```
 
 **src/lib/components/ui/not-authorized/index.ts:**
+
 ```typescript
 import NotAuthorized from "./not-authorized.svelte";
 export { NotAuthorized };
@@ -225,6 +238,7 @@ export default NotAuthorized;
 ### Step 6: Update UI Index Exports
 
 **src/lib/components/ui/index.ts:**
+
 ```typescript
 // Button
 export * from "./button";
@@ -250,15 +264,10 @@ export { NotAuthorized } from "./not-authorized";
 ### Step 7: Update Main Components Index
 
 **src/lib/components/index.ts:**
+
 ```typescript
 // UI Components
-export {
-    Button,
-    LoadingSpinner,
-    Heading,
-    Footer,
-    NotAuthorized
-} from "./ui";
+export { Button, LoadingSpinner, Heading, Footer, NotAuthorized } from "./ui";
 
 // Feature components will be added in prompt 10
 ```
@@ -266,15 +275,10 @@ export {
 ### Step 8: Test All UI Components
 
 **src/routes/+page.svelte:**
+
 ```svelte
 <script lang="ts">
-    import {
-        Button,
-        LoadingSpinner,
-        Heading,
-        Footer,
-        NotAuthorized
-    } from "$lib/components";
+    import { Button, LoadingSpinner, Heading, Footer, NotAuthorized } from "$lib/components";
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-12 p-8">
@@ -319,6 +323,7 @@ bun run dev
 ```
 
 Visual checks:
+
 1. Heading displays app name and description centered
 2. Button variants all render correctly
 3. LoadingSpinner animates (two dots rotating)
@@ -344,12 +349,12 @@ Visual checks:
 
 ## Component Mapping
 
-| React Component | Svelte Component | Changes |
-|-----------------|------------------|---------|
-| `LoadingSpinner` | `loading-spinner.svelte` | Same CSS animation |
-| `Heading` | `heading.svelte` | Same layout, uses APP_CONFIG |
-| `Footer` | `footer.svelte` | Same layout, uses APP_CONFIG |
-| `NotAuthorized` | `not-authorized.svelte` | Better Auth signOut |
+| React Component  | Svelte Component         | Changes                      |
+| ---------------- | ------------------------ | ---------------------------- |
+| `LoadingSpinner` | `loading-spinner.svelte` | Same CSS animation           |
+| `Heading`        | `heading.svelte`         | Same layout, uses APP_CONFIG |
+| `Footer`         | `footer.svelte`          | Same layout, uses APP_CONFIG |
+| `NotAuthorized`  | `not-authorized.svelte`  | Better Auth signOut          |
 
 ---
 

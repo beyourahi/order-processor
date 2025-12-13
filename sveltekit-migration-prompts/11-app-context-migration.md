@@ -1,9 +1,11 @@
 # 11 - App Context Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `10-main-components-migration.md` completed
 
 ## Next Prompt
+
 - `12-routes-migration.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | **PRIMARY** - Use `get-documentation` for Svelte stores (`writable`, `derived`), store contracts, and `$` prefix subscription |
-| **better-auth** | Use `search` for session handling and auth hooks patterns |
+| MCP Server      | Usage                                                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **svelte**      | **PRIMARY** - Use `get-documentation` for Svelte stores (`writable`, `derived`), store contracts, and `$` prefix subscription |
+| **better-auth** | Use `search` for session handling and auth hooks patterns                                                                     |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - list-sections → get-documentation: "stores", "writable"
@@ -50,6 +53,7 @@ mkdir -p src/lib/stores
 ### Step 2: Create App Store
 
 **src/lib/stores/app.ts:**
+
 ```typescript
 import { writable } from "svelte/store";
 
@@ -82,13 +86,9 @@ export const resetAppState = () => {
 ### Step 3: Create Stores Index
 
 **src/lib/stores/index.ts:**
+
 ```typescript
-export {
-    courierService,
-    zoneHover,
-    acceptedFile,
-    resetAppState
-} from "./app";
+export { courierService, zoneHover, acceptedFile, resetAppState } from "./app";
 ```
 
 ### Step 4: Create Hooks Directory
@@ -100,6 +100,7 @@ mkdir -p src/lib/hooks
 ### Step 5: Create useCurrentUser Hook
 
 **src/lib/hooks/use-current-user.ts:**
+
 ```typescript
 import { findBrandByEmail } from "$lib/config";
 import type { CurrentUser } from "$lib/types";
@@ -139,6 +140,7 @@ export const isEmailAuthorized = (email: string | undefined): boolean => {
 ### Step 6: Create Hooks Index
 
 **src/lib/hooks/index.ts:**
+
 ```typescript
 export { getCurrentUser, isEmailAuthorized } from "./use-current-user";
 ```
@@ -146,6 +148,7 @@ export { getCurrentUser, isEmailAuthorized } from "./use-current-user";
 ### Step 7: Update hooks.server.ts to Include CurrentUser
 
 **src/hooks.server.ts:**
+
 ```typescript
 import type { Handle } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
@@ -197,6 +200,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 ### Step 8: Update Layout Server Load
 
 **src/routes/+layout.server.ts:**
+
 ```typescript
 import type { LayoutServerLoad } from "./$types";
 
@@ -227,13 +231,11 @@ Here's how to use stores in a component:
 
     // Or use update for complex changes
     const toggleZoneHover = () => {
-        zoneHover.update(v => !v);
+        zoneHover.update((v) => !v);
     };
 </script>
 
-<!-- Use $ prefix to subscribe -->
-<p>Selected: {$courierService}</p>
-<p>Hovering: {$zoneHover}</p>
+<!-- Use $ prefix to subscribe --><p>Selected: {$courierService}</p><p>Hovering: {$zoneHover}</p>
 ```
 
 ### Step 10: Create Store-Connected OrderProcessor
@@ -241,6 +243,7 @@ Here's how to use stores in a component:
 Update the OrderProcessor to use stores:
 
 **Alternative src/lib/components/features/order-processor.svelte (store version):**
+
 ```svelte
 <!--
   OrderProcessor Component (Store Version)
@@ -267,9 +270,7 @@ Update the OrderProcessor to use stores:
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
     // Computed: is upload disabled?
-    const isDisabled = $derived(
-        $courierService === "" || currentUser.courier !== $courierService
-    );
+    const isDisabled = $derived($courierService === "" || currentUser.courier !== $courierService);
 
     // Handle file selection
     const handleFileSelect = (file: File) => {
@@ -281,15 +282,11 @@ Update the OrderProcessor to use stores:
             complete: (results) => {
                 const rawData = results.data as string[][];
 
-                const processedOrders = CourierService.processOrders(
-                    currentUser.courier as Courier,
-                    rawData,
-                    {
-                        name: currentUser.name,
-                        phone: currentUser.phone || "",
-                        merchant_id: currentUser.merchant_id || ""
-                    }
-                );
+                const processedOrders = CourierService.processOrders(currentUser.courier as Courier, rawData, {
+                    name: currentUser.name,
+                    phone: currentUser.phone || "",
+                    merchant_id: currentUser.merchant_id || ""
+                });
 
                 const worksheet = XLSX.utils.json_to_sheet(processedOrders);
                 const workbook = XLSX.utils.book_new();
@@ -412,12 +409,12 @@ bun run preview
 
 ## React Context vs Svelte Stores
 
-| React Context | Svelte Store | Usage |
-|---------------|--------------|-------|
-| `useContext(AppContext)` | `import { store } from '$lib/stores'` | Import |
-| `ctx.courierService` | `$courierService` | Read |
-| `ctx.setCourierService(v)` | `courierService.set(v)` | Write |
-| Provider component needed | No provider needed | Setup |
+| React Context              | Svelte Store                          | Usage  |
+| -------------------------- | ------------------------------------- | ------ |
+| `useContext(AppContext)`   | `import { store } from '$lib/stores'` | Import |
+| `ctx.courierService`       | `$courierService`                     | Read   |
+| `ctx.setCourierService(v)` | `courierService.set(v)`               | Write  |
+| Provider component needed  | No provider needed                    | Setup  |
 
 ---
 

@@ -1,9 +1,11 @@
 # 14 - CSV & Excel Integration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `13-auth-flows-migration.md` completed
 
 ## Next Prompt
+
 - `15-static-assets-migration.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server   | Usage                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- |
 | **context7** | **PRIMARY** - Use `resolve-library-id` → `get-library-docs` for papaparse CSV parsing API and xlsx Excel generation |
-| **svelte** | Use `get-documentation` for Svelte 5 async patterns and `$state` for processing states |
+| **svelte**   | Use `get-documentation` for Svelte 5 async patterns and `$state` for processing states                              |
 
 ### Recommended MCP Queries
+
 ```
 context7 MCP:
 - resolve-library-id: "papaparse" → get-library-docs for parse() API, complete callback
@@ -50,6 +53,7 @@ bun add -D @types/papaparse
 ### Step 2: Create CSV Utilities
 
 **src/lib/utils/csv.ts:**
+
 ```typescript
 import Papa from "papaparse";
 import type { CSVParseResult } from "$lib/types";
@@ -101,17 +105,14 @@ export const formatFileSize = (bytes: number): string => {
 ### Step 3: Create Excel Utilities
 
 **src/lib/utils/excel.ts:**
+
 ```typescript
 import * as XLSX from "xlsx";
 
 /**
  * Generate and download an Excel file from data
  */
-export const generateExcel = <T extends object>(
-    data: T[],
-    fileName: string,
-    sheetName: string = "Sheet1"
-): void => {
+export const generateExcel = <T extends object>(data: T[], fileName: string, sheetName: string = "Sheet1"): void => {
     // Create worksheet from JSON data
     const worksheet = XLSX.utils.json_to_sheet(data);
 
@@ -126,10 +127,7 @@ export const generateExcel = <T extends object>(
 /**
  * Generate Excel file as a Blob (for custom handling)
  */
-export const generateExcelBlob = <T extends object>(
-    data: T[],
-    sheetName: string = "Sheet1"
-): Blob => {
+export const generateExcelBlob = <T extends object>(data: T[], sheetName: string = "Sheet1"): Blob => {
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -146,6 +144,7 @@ export const generateExcelBlob = <T extends object>(
 ### Step 4: Update Utils Index
 
 **src/lib/utils/index.ts:**
+
 ```typescript
 // Class name utility
 export { cn } from "./cn";
@@ -158,6 +157,7 @@ export { generateExcel, generateExcelBlob } from "./excel";
 ```
 
 **src/lib/utils/cn.ts:** (move from utils.ts)
+
 ```typescript
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -170,6 +170,7 @@ export const cn = (...inputs: ClassValue[]): string => {
 ### Step 5: Update OrderProcessor with Utilities
 
 **src/lib/components/features/order-processor.svelte:**
+
 ```svelte
 <!--
   OrderProcessor Component
@@ -199,9 +200,7 @@ export const cn = (...inputs: ClassValue[]): string => {
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
     // Computed: is upload disabled?
-    const isDisabled = $derived(
-        selectedCourier === "" || currentUser.courier !== selectedCourier
-    );
+    const isDisabled = $derived(selectedCourier === "" || currentUser.courier !== selectedCourier);
 
     // Handle file selection
     const handleFileSelect = async (file: File) => {
@@ -220,15 +219,11 @@ export const cn = (...inputs: ClassValue[]): string => {
             }
 
             // Process orders through courier service
-            const processedOrders = CourierService.processOrders(
-                currentUser.courier as Courier,
-                result.data,
-                {
-                    name: currentUser.name,
-                    phone: currentUser.phone || "",
-                    merchant_id: currentUser.merchant_id || ""
-                }
-            );
+            const processedOrders = CourierService.processOrders(currentUser.courier as Courier, result.data, {
+                name: currentUser.name,
+                phone: currentUser.phone || "",
+                merchant_id: currentUser.merchant_id || ""
+            });
 
             // Generate and download Excel file
             const fileName = generateFileName(currentUser.courier as string);
@@ -239,7 +234,6 @@ export const cn = (...inputs: ClassValue[]): string => {
                 acceptedFile = null;
                 zoneHover = false;
             }, 2000);
-
         } catch (e) {
             console.error("Processing error:", e);
             error = e instanceof Error ? e.message : "Failed to process file";
@@ -331,23 +325,18 @@ export const cn = (...inputs: ClassValue[]): string => {
     {#if error}
         <div class="flex flex-col items-center gap-4">
             <p class="text-red-500">{error}</p>
-            <button
-                onclick={() => error = null}
-                class="text-sm text-zinc-400 hover:text-white"
-            >
-                Try again
-            </button>
+            <button onclick={() => (error = null)} class="text-sm text-zinc-400 hover:text-white"> Try again </button>
         </div>
-    <!-- Processing state -->
+        <!-- Processing state -->
     {:else if isProcessing}
         <div class="flex flex-col items-center gap-4">
             <div class="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             <p class="text-zinc-400">Processing...</p>
         </div>
-    <!-- File accepted -->
+        <!-- File accepted -->
     {:else if acceptedFile}
         <Download fileName={acceptedFile.name} fileSize={acceptedFile.size} />
-    <!-- Upload prompt -->
+        <!-- Upload prompt -->
     {:else}
         <Upload disabled={isDisabled} />
     {/if}
@@ -359,6 +348,7 @@ export const cn = (...inputs: ClassValue[]): string => {
 Create a test CSV file for development:
 
 **static/test-orders.csv:**
+
 ```csv
 Name,Email,Financial Status,Paid at,Fulfillment Status,Fulfilled at,Accepts Marketing,Currency,Subtotal,Shipping,Taxes,Total,Discount Code,Discount Amount,Shipping Method,Created at,Lineitem quantity,Lineitem name,Lineitem price,Lineitem compare at price,Lineitem sku,Lineitem requires shipping,Lineitem taxable,Lineitem fulfillment status,Billing Name,Billing Street,Billing Address1,Billing Address2,Billing Company,Billing City,Billing Zip,Billing Province,Billing Country,Billing Phone,Shipping Name,Shipping Street,Shipping Address1,Shipping Address2,Shipping Company,Shipping City,Shipping Zip,Shipping Province,Shipping Country,Shipping Phone,Notes
 #13826,test@example.com,paid,2024-01-15,unfulfilled,,no,BDT,1200,50,0,1250,,,Standard,2024-01-15,1,Product A,1200,,SKU001,yes,yes,,John Doe,123 Main St,123 Main St,Apt 4,,Dhaka,1205,Dhaka,Bangladesh,01712345678,John Doe,123 Main St,123 Main St,Apt 4,,Dhaka,1205,Dhaka,Bangladesh,01712345678,Handle with care
@@ -368,6 +358,7 @@ Name,Email,Financial Status,Paid at,Fulfillment Status,Fulfilled at,Accepts Mark
 ### Step 7: Create File Processing Test Page
 
 **src/routes/test-processing/+page.svelte:**
+
 ```svelte
 <!--
   File Processing Test Page
@@ -387,41 +378,41 @@ Name,Email,Financial Status,Paid at,Fulfillment Status,Fulfilled at,Accepts Mark
 
     const testSteadFast = () => {
         const parsed = parseCSVString(testCSV);
-        const processed = CourierService.processOrders(
-            Courier.SteadFast,
-            parsed.data,
-            { name: "Test Brand", phone: "01700000000", merchant_id: "12345" }
-        );
+        const processed = CourierService.processOrders(Courier.SteadFast, parsed.data, {
+            name: "Test Brand",
+            phone: "01700000000",
+            merchant_id: "12345"
+        });
         results = JSON.stringify(processed, null, 2);
     };
 
     const testPathao = () => {
         const parsed = parseCSVString(testCSV);
-        const processed = CourierService.processOrders(
-            Courier.Pathao,
-            parsed.data,
-            { name: "Test Brand", phone: "01700000000", merchant_id: "12345" }
-        );
+        const processed = CourierService.processOrders(Courier.Pathao, parsed.data, {
+            name: "Test Brand",
+            phone: "01700000000",
+            merchant_id: "12345"
+        });
         results = JSON.stringify(processed, null, 2);
     };
 
     const downloadSteadFast = () => {
         const parsed = parseCSVString(testCSV);
-        const processed = CourierService.processOrders(
-            Courier.SteadFast,
-            parsed.data,
-            { name: "Test Brand", phone: "01700000000", merchant_id: "12345" }
-        );
+        const processed = CourierService.processOrders(Courier.SteadFast, parsed.data, {
+            name: "Test Brand",
+            phone: "01700000000",
+            merchant_id: "12345"
+        });
         generateExcel(processed, "test-steadfast.xlsx");
     };
 
     const downloadPathao = () => {
         const parsed = parseCSVString(testCSV);
-        const processed = CourierService.processOrders(
-            Courier.Pathao,
-            parsed.data,
-            { name: "Test Brand", phone: "01700000000", merchant_id: "12345" }
-        );
+        const processed = CourierService.processOrders(Courier.Pathao, parsed.data, {
+            name: "Test Brand",
+            phone: "01700000000",
+            merchant_id: "12345"
+        });
         generateExcel(processed, "test-pathao.xlsx");
     };
 </script>
@@ -433,9 +424,7 @@ Name,Email,Financial Status,Paid at,Fulfillment Status,Fulfilled at,Accepts Mark
         <button onclick={testSteadFast} class="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700">
             Test SteadFast
         </button>
-        <button onclick={testPathao} class="rounded-lg bg-green-600 px-4 py-2 hover:bg-green-700">
-            Test Pathao
-        </button>
+        <button onclick={testPathao} class="rounded-lg bg-green-600 px-4 py-2 hover:bg-green-700"> Test Pathao </button>
     </div>
 
     <div class="flex gap-4">
@@ -466,6 +455,7 @@ bun run dev
 ```
 
 Test the pipeline:
+
 1. Visit /test-processing
 2. Click "Test SteadFast" - should show JSON output
 3. Click "Download SteadFast Excel" - should download .xlsx file
@@ -487,12 +477,12 @@ Test the pipeline:
 
 ## Library Comparison
 
-| react-papaparse | Papa Parse (direct) |
-|-----------------|---------------------|
-| `<CSVReader>` component | `Papa.parse(file, options)` |
-| Render prop pattern | Promise-based API |
-| `formatFileSize` included | Custom implementation |
-| React-specific | Framework agnostic |
+| react-papaparse           | Papa Parse (direct)         |
+| ------------------------- | --------------------------- |
+| `<CSVReader>` component   | `Papa.parse(file, options)` |
+| Render prop pattern       | Promise-based API           |
+| `formatFileSize` included | Custom implementation       |
+| React-specific            | Framework agnostic          |
 
 ---
 

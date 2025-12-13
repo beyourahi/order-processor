@@ -1,9 +1,11 @@
 # 01 - Project Setup
 
 ## Prerequisites
+
 - None (this is the first prompt)
 
 ## Next Prompt
+
 - `02-cloudflare-configuration.md`
 
 ---
@@ -12,12 +14,13 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
-| **svelte** | Use `list-sections` then `get-documentation` for SvelteKit project structure, `svelte.config.js` options, and path alias configuration |
-| **context7** | Use `resolve-library-id` → `get-library-docs` for Vite, ESLint, and Prettier configuration options |
+| MCP Server   | Usage                                                                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **svelte**   | Use `list-sections` then `get-documentation` for SvelteKit project structure, `svelte.config.js` options, and path alias configuration |
+| **context7** | Use `resolve-library-id` → `get-library-docs` for Vite, ESLint, and Prettier configuration options                                     |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - get-documentation: "project structure", "configuration"
@@ -40,6 +43,7 @@ Initialize a new SvelteKit project structure within the existing repository, pre
 ### Step 1: Backup Current Configuration
 
 Before making changes, note the current structure. The following directories will be preserved and migrated:
+
 - `src/config/` - Configuration files
 - `src/constants/` - Constants
 - `src/services/` - Business logic
@@ -51,6 +55,7 @@ Before making changes, note the current structure. The following directories wil
 Create the core SvelteKit configuration files:
 
 **svelte.config.js:**
+
 ```javascript
 import adapter from "@sveltejs/adapter-cloudflare";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
@@ -74,6 +79,7 @@ export default config;
 ```
 
 **vite.config.ts:**
+
 ```typescript
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -85,6 +91,7 @@ export default defineConfig({
 ```
 
 **tsconfig.json:**
+
 ```json
 {
     "extends": "./.svelte-kit/tsconfig.json",
@@ -203,6 +210,7 @@ src/
 ### Step 6: Create utils.ts
 
 **src/lib/utils.ts:**
+
 ```typescript
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -215,6 +223,7 @@ export const cn = (...inputs: ClassValue[]): string => {
 ### Step 7: Create app.d.ts
 
 **src/app.d.ts:**
+
 ```typescript
 /// <reference types="@sveltejs/kit" />
 /// <reference types="@cloudflare/workers-types" />
@@ -241,11 +250,13 @@ export {};
 ### Step 8: Create Placeholder Files
 
 **src/routes/+page.svelte:**
+
 ```svelte
 <h1>Migration in progress...</h1>
 ```
 
 **src/hooks.server.ts:**
+
 ```typescript
 import type { Handle } from "@sveltejs/kit";
 
@@ -258,6 +269,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 ### Step 9: Create Prettier Config
 
 **.prettierrc:**
+
 ```json
 {
     "useTabs": false,
@@ -280,6 +292,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 ### Step 10: Create ESLint Config
 
 **eslint.config.js:**
+
 ```javascript
 import prettier from "eslint-config-prettier";
 import js from "@eslint/js";

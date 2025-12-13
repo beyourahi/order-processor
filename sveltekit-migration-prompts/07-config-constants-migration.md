@@ -1,9 +1,11 @@
 # 07 - Config & Constants Migration
 
 ## Prerequisites
+
 - `01-project-setup.md` through `06-types-migration.md` completed
 
 ## Next Prompt
+
 - `08-services-migration.md`
 
 ---
@@ -12,11 +14,12 @@
 
 Before implementing this prompt, use these MCP servers for accurate documentation:
 
-| MCP Server | Usage |
-|------------|-------|
+| MCP Server | Usage                                                                             |
+| ---------- | --------------------------------------------------------------------------------- |
 | **svelte** | Use `get-documentation` for SvelteKit `$lib` alias and module resolution patterns |
 
 ### Recommended MCP Queries
+
 ```
 svelte MCP:
 - get-documentation: "modules", "$lib"
@@ -44,6 +47,7 @@ mkdir -p src/lib/config
 ### Step 2: Migrate App Config
 
 **src/lib/config/app.ts:**
+
 ```typescript
 import type { AppConfig } from "$lib/types";
 
@@ -65,6 +69,7 @@ export const APP_CONFIG: AppConfig = {
 ### Step 3: Migrate Brands Config
 
 **src/lib/config/brands.ts:**
+
 ```typescript
 import { Courier } from "$lib/types";
 import type { Brand } from "$lib/types";
@@ -112,19 +117,20 @@ export const BRANDS: Brand[] = [
  * Flattened list of all allowed email addresses
  * Used for quick authorization checks
  */
-export const allowedEmails: string[] = BRANDS.flatMap(brand => brand.emails);
+export const allowedEmails: string[] = BRANDS.flatMap((brand) => brand.emails);
 
 /**
  * Find brand by email address
  */
 export const findBrandByEmail = (email: string): Brand | undefined => {
-    return BRANDS.find(brand => brand.emails.includes(email));
+    return BRANDS.find((brand) => brand.emails.includes(email));
 };
 ```
 
 ### Step 4: Migrate Couriers Config
 
 **src/lib/config/couriers.ts:**
+
 ```typescript
 import type { CourierOption } from "$lib/types";
 
@@ -155,6 +161,7 @@ export const COURIER_OPTIONS: CourierOption[] = [
 ### Step 5: Create Config Index
 
 **src/lib/config/index.ts:**
+
 ```typescript
 // App configuration
 export { APP_CONFIG } from "./app";
@@ -175,6 +182,7 @@ mkdir -p src/lib/constants
 ### Step 7: Migrate File Constants
 
 **src/lib/constants/files.ts:**
+
 ```typescript
 /**
  * Output file configuration
@@ -193,13 +201,14 @@ export const generateFileName = (courierName: string): string => {
 ### Step 8: Migrate Index Constants
 
 **src/lib/constants/indexes.ts:**
+
 ```typescript
 /**
  * Shopify export CSV column indexes
  * These map to specific columns in the Shopify order export
  */
 export const SHOPIFY_EXPORT_INDEXES = {
-    ORDER_NAME: 0,       // #13826
+    ORDER_NAME: 0, // #13826
     EMAIL: 1,
     FINANCIAL_STATUS: 2,
     PAID_AT: 3,
@@ -290,6 +299,7 @@ export const SHOPIFY_STEADFAST_INDEXES_ARRAY = [34, 36, 43, 11, 44] as const;
 ### Step 9: Create Constants Index
 
 **src/lib/constants/index.ts:**
+
 ```typescript
 // File constants
 export { FILE_PREFIX, FILE_EXTENSION, generateFileName } from "./files";
@@ -321,6 +331,7 @@ cp public/steadfast.png src/lib/assets/
 Or update the couriers.ts to use static paths:
 
 **Alternative src/lib/config/couriers.ts (using static paths):**
+
 ```typescript
 import type { CourierOption } from "$lib/types";
 
@@ -380,12 +391,12 @@ Test imports in a component:
 
 ## Changes from Original
 
-| Original | SvelteKit | Reason |
-|----------|-----------|--------|
-| `@/config` | `$lib/config` | Path alias |
-| `@/constants` | `$lib/constants` | Path alias |
-| Next.js Image imports | Static paths or $lib/assets | Different asset handling |
-| Coming soon couriers | Removed | Already cleaned up in original |
+| Original              | SvelteKit                   | Reason                         |
+| --------------------- | --------------------------- | ------------------------------ |
+| `@/config`            | `$lib/config`               | Path alias                     |
+| `@/constants`         | `$lib/constants`            | Path alias                     |
+| Next.js Image imports | Static paths or $lib/assets | Different asset handling       |
+| Coming soon couriers  | Removed                     | Already cleaned up in original |
 
 ---
 
