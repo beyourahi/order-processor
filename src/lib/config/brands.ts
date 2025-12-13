@@ -13,6 +13,7 @@ import type { Brand } from "$lib/types";
 export const BRANDS: Brand[] = [
     {
         name: "Rahi Khan",
+        phone: "1873146332",
         emails: ["beyourahi@gmail.com", "rahikhan360@gmail.com"],
         url: "https://beyourahi.com",
         courier: Courier.SteadFast,

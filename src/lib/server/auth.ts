@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { drizzle } from "drizzle-orm/d1";
+import * as schema from "./schema";
 
 /**
  * Environment variables required for Better Auth.
@@ -24,14 +25,16 @@ interface AuthEnv {
  * @param env - Environment variables containing auth secrets
  */
 export function createAuth(d1: D1Database, env: AuthEnv) {
-    // Initialize Drizzle ORM with the D1 binding
-    const db = drizzle(d1);
+    // Initialize Drizzle ORM with the D1 binding and schema
+    const db = drizzle(d1, { schema });
 
     return betterAuth({
         // Use Drizzle adapter with SQLite provider (D1 is SQLite-based)
+        // Pass schema explicitly for proper table mapping
         database: drizzleAdapter(db, {
             provider: "sqlite",
-            usePlural: true // Better Auth expects plural table names (users, sessions, etc.)
+            usePlural: true, // Better Auth expects plural table names (users, sessions, etc.)
+            schema
         }),
 
         // Base URL for auth callbacks - must match OAuth redirect URIs
