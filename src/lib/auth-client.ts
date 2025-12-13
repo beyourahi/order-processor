@@ -12,7 +12,8 @@ import { createAuthClient } from "better-auth/svelte";
  * In development, this is typically http://localhost:5173.
  */
 export const authClient = createAuthClient({
-    baseURL: import.meta.env.VITE_BETTER_AUTH_URL || "http://localhost:5173"
+    // Empty baseURL uses the current origin (works in dev and production)
+    baseURL: ""
 });
 
 /**

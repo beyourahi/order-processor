@@ -65,8 +65,8 @@ export function createAuth(d1: D1Database, env: AuthEnv) {
         // Trusted origins for CORS and OAuth callbacks
         trustedOrigins: [
             "http://localhost:5173", // Vite dev server
-            "http://localhost:8787" // Wrangler preview
-            // Production URL will be added in deployment
+            "http://localhost:8787", // Wrangler preview
+            "https://order-processor.beyourahi.workers.dev" // Production
         ]
     });
 }
