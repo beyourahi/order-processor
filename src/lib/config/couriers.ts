@@ -4,20 +4,22 @@
  */
 
 import type { CourierOption } from "$lib/types";
+import pathaoLogo from "$lib/assets/pathao.png";
+import steadfastLogo from "$lib/assets/steadfast.png";
 
 /**
  * Available courier options for the picker
- * Logos are served from the static directory
+ * Logos are imported from $lib/assets and processed by Vite
  */
 export const COURIER_OPTIONS: CourierOption[] = [
     {
         value: "Pathao",
         label: "Pathao",
-        logo: "/pathao.png"
+        logo: pathaoLogo
     },
     {
         value: "SteadFast",
         label: "SteadFast",
-        logo: "/steadfast.png"
+        logo: steadfastLogo
     }
 ];

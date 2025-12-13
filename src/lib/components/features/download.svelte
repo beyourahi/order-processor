@@ -4,6 +4,8 @@
   Displays filename and formatted file size
 -->
 <script lang="ts">
+    import downloadGif from "$lib/assets/download.gif";
+
     interface Props {
         fileName: string;
         fileSize: number;
@@ -22,7 +24,7 @@
 </script>
 
 <div class="flex flex-col items-center justify-center gap-6">
-    <img src="/download.gif" alt="Download animation" class="h-24 w-24 object-contain" />
+    <img src={downloadGif} alt="Download animation" class="h-24 w-24 object-contain" />
     <div class="flex flex-col items-center gap-2">
         <p class="max-w-xs truncate text-lg font-medium text-zinc-300">
             {fileName}

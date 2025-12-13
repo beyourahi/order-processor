@@ -4,7 +4,6 @@
 @source "./lib/**/*.{js,ts,svelte}";
 @source "./routes/**/*.{js,ts,svelte}";
 
-/* Theme configuration - matches original tailwind.css */
 @theme {
     /* Colors */
     --color-background: hsl(0 0% 100%);
@@ -48,20 +47,9 @@
     --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* Custom utility classes - matches original globals.css */
+/* Transition utility */
 .sleek {
     @apply transform-gpu transition-all duration-200 ease-in-out;
-}
-
-/* Floating label input effects */
-.input-data input:focus ~ label,
-.input-data input:valid ~ label {
-    @apply -translate-y-5 text-sm text-white/60;
-}
-
-.input-data input:focus ~ .underline:before,
-.input-data input:valid ~ .underline:before {
-    @apply scale-x-100;
 }
 
 /* Loading spinner animation */
@@ -107,14 +95,6 @@
 
 *::-webkit-scrollbar-track {
     @apply rounded-xl bg-transparent;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-    @apply h-0 bg-transparent;
-}
-
-.hide-scrollbar::-webkit-scrollbar-thumb {
-    @apply hidden;
 }
 
 /* Keyframe animations */
