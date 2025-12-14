@@ -125,11 +125,14 @@
     role="button"
     tabindex={isDisabled ? -1 : 0}
     class={cn(
-        "flex h-80 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors lg:w-1/2",
+        "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
+        "h-56 sm:h-64 md:h-72 lg:h-80",
+        "lg:w-full lg:max-w-md xl:max-w-lg",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F]",
         isDisabled
             ? "cursor-not-allowed border-zinc-800 opacity-50"
-            : "cursor-pointer border-zinc-700 hover:border-zinc-500",
-        zoneHover && "border-zinc-500 bg-zinc-900/50",
+            : "cursor-pointer border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900/30",
+        zoneHover && "border-zinc-400 bg-zinc-900/50",
         error && "border-red-500/50"
     )}
     ondragover={handleDragOver}
@@ -150,15 +153,20 @@
 
     <!-- Error display -->
     {#if error}
-        <div class="flex flex-col items-center gap-4">
-            <p class="text-red-500">{error}</p>
-            <button onclick={() => (error = null)} class="text-sm text-zinc-400 hover:text-white"> Try again </button>
+        <div class="flex flex-col items-center gap-3 px-4 text-center sm:gap-4">
+            <p class="text-sm text-red-400 sm:text-base">{error}</p>
+            <button
+                onclick={() => (error = null)}
+                class="sleek rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white active:scale-95"
+            >
+                Try again
+            </button>
         </div>
         <!-- Processing state -->
     {:else if isProcessing}
-        <div class="flex flex-col items-center gap-4">
-            <div class="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-            <p class="text-zinc-400">Processing...</p>
+        <div class="flex flex-col items-center gap-3 sm:gap-4">
+            <div class="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-8 sm:w-8"></div>
+            <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
         </div>
         <!-- File accepted -->
     {:else if acceptedFile}

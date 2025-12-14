@@ -13,13 +13,13 @@ import steadfastLogo from "$lib/assets/steadfast.png";
  */
 export const COURIER_OPTIONS: CourierOption[] = [
     {
-        value: "Pathao",
-        label: "Pathao",
-        logo: pathaoLogo
-    },
-    {
         value: "SteadFast",
         label: "SteadFast",
         logo: steadfastLogo
+    },
+    {
+        value: "Pathao",
+        label: "Pathao",
+        logo: pathaoLogo
     }
 ];

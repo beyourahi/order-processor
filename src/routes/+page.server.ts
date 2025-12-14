@@ -1,18 +1,23 @@
+import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 /**
  * Main page server load function.
  *
  * Provides authentication and authorization data to the page component.
- * The page handles auth states client-side for better UX (showing
- * appropriate UI for loading, not logged in, not authorized, etc.)
+ * Redirects unauthenticated users to login page to prevent any flash of content.
  *
  * Data flow:
  * 1. hooks.server.ts populates locals with session/user/currentUser
- * 2. This load function passes that data to the page
- * 3. Page component uses $derived to reactively access the data
+ * 2. This load function checks authentication and redirects if needed
+ * 3. Authenticated users get passed data to the page component
  */
 export const load: PageServerLoad = async ({ locals }) => {
+    // Redirect unauthenticated users to login page
+    if (!locals.user) {
+        redirect(303, "/login");
+    }
+
     return {
         user: locals.user,
         currentUser: locals.currentUser,

@@ -1,9 +1,8 @@
 <!--
   NotAuthorized Component
   Shows when user is authenticated but not in allowlist.
-
   Displays the user's email and provides a way to sign out
-  and try with a different account.
+  with responsive styling across all breakpoints
 -->
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
@@ -26,22 +25,24 @@
     };
 </script>
 
-<div class="flex flex-col items-center gap-8 text-center">
-    <div class="flex flex-col gap-4">
-        <p class="text-5xl">🔒</p>
-        <h2 class="text-2xl font-bold text-red-500">Access Denied</h2>
-        <p class="max-w-md text-zinc-400">
+<div class="flex flex-col items-center gap-6 px-4 text-center sm:gap-8">
+    <div class="flex flex-col gap-3 sm:gap-4">
+        <p class="text-4xl sm:text-5xl">🔒</p>
+        <h2 class="text-xl font-bold text-red-500 sm:text-2xl">Access Denied</h2>
+        <p class="max-w-xs text-sm text-zinc-400 sm:max-w-md sm:text-base">
             The email address
-            <span class="font-medium text-zinc-300">{user?.email}</span>
+            <span class="break-all font-medium text-zinc-300">{user?.email}</span>
             is not authorized to access this application.
         </p>
-        <p class="text-sm text-zinc-500">Please contact the administrator if you believe this is an error.</p>
+        <p class="text-xs text-zinc-500 sm:text-sm">
+            Please contact the administrator if you believe this is an error.
+        </p>
     </div>
 
     <button
         onclick={handleLogout}
         disabled={isLoggingOut}
-        class="sleek rounded-xl bg-zinc-800 px-8 py-3 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+        class="sleek w-full max-w-xs rounded-xl bg-zinc-800 px-6 py-2.5 text-xs font-medium text-white active:scale-95 disabled:opacity-50 sm:w-auto sm:px-8 sm:py-3 sm:text-sm xl:hover:bg-zinc-700"
     >
         {isLoggingOut ? "Signing out..." : "Sign in with a different account"}
     </button>

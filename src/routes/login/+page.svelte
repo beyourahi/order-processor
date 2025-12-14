@@ -1,6 +1,7 @@
 <!--
   Login Page
   Google OAuth sign-in with redirect support
+  Responsive design for all screen sizes
 -->
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
@@ -44,11 +45,11 @@
     <title>Sign In - Shopify Order Processor</title>
 </svelte:head>
 
-<div class="flex min-h-screen flex-col items-center justify-center gap-12 p-4">
+<div class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 lg:gap-12">
     <Heading />
 
     {#if error}
-        <div class="rounded-lg bg-red-500/10 px-4 py-2 text-red-500">
+        <div class="max-w-xs rounded-lg bg-red-500/10 px-4 py-2.5 text-center text-xs text-red-400 sm:max-w-sm sm:text-sm">
             {error}
         </div>
     {/if}
@@ -56,12 +57,12 @@
     <button
         onclick={handleGoogleLogin}
         disabled={isLoading}
-        class="sleek flex items-center gap-3 rounded-xl bg-white px-8 py-3 text-sm font-medium text-black active:scale-95 disabled:opacity-50 xl:hover:bg-white/90"
+        class="sleek flex w-full max-w-xs items-center justify-center gap-2.5 rounded-xl bg-white px-6 py-3 text-sm font-medium text-black active:scale-95 disabled:opacity-50 sm:w-auto sm:gap-3 sm:px-8 sm:py-3.5 xl:hover:bg-white/90"
     >
         {#if isLoading}
-            <div class="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+            <div class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent sm:h-5 sm:w-5"></div>
         {:else}
-            <svg class="h-5 w-5" viewBox="0 0 24 24">
+            <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -80,8 +81,10 @@
                 />
             </svg>
         {/if}
-        Continue with Google
+        <span>Continue with Google</span>
     </button>
 
-    <p class="text-sm text-zinc-500">Only authorized accounts can access this application</p>
+    <p class="max-w-xs text-center text-xs text-zinc-500 sm:max-w-none sm:text-sm">
+        Only authorized accounts can access this application
+    </p>
 </div>

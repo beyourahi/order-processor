@@ -4,6 +4,14 @@
 @source "./lib/**/*.{js,ts,svelte}";
 @source "./routes/**/*.{js,ts,svelte}";
 
+:root {
+    --font-sans: Inter, sans-serif;
+}
+
+@theme inline {
+    --font-sans: var(--font-sans);
+}
+
 @theme {
     /* Colors */
     --color-background: hsl(0 0% 100%);
