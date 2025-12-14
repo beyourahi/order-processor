@@ -45,7 +45,7 @@
     <title>Sign In - Shopify Order Processor</title>
 </svelte:head>
 
-<div class="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 lg:gap-12">
+<div class="flex grow flex-col items-center justify-center gap-8 overflow-hidden px-4 sm:gap-10 sm:px-6 lg:gap-12">
     <Heading />
 
     {#if error}
@@ -59,11 +59,11 @@
     <button
         onclick={handleGoogleLogin}
         disabled={isLoading}
-        class="sleek flex w-full max-w-xs items-center justify-center gap-2.5 rounded-xl bg-white px-6 py-3 text-sm font-medium text-black active:scale-95 disabled:opacity-50 sm:w-auto sm:gap-3 sm:px-8 sm:py-3.5 xl:hover:bg-white/90"
+        class="sleek group flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-medium text-zinc-200 backdrop-blur-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5 xl:hover:border-white/20 xl:hover:bg-white/5"
     >
         {#if isLoading}
             <div
-                class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent sm:h-5 sm:w-5"
+                class="h-4 w-4 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent sm:h-5 sm:w-5"
             ></div>
         {:else}
             <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
