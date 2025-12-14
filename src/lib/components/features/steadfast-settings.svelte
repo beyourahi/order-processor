@@ -226,7 +226,7 @@
                             "w-full rounded-lg py-2.5 text-sm font-medium transition-all duration-200",
                             "focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50",
                             canSave && formState !== "saving"
-                                ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 active:scale-[0.98]"
+                                ? "cursor-pointer bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 active:scale-[0.98]"
                                 : "cursor-not-allowed bg-zinc-800/50 text-zinc-500"
                         )}
                     >
