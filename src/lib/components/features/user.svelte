@@ -13,6 +13,7 @@
         user: {
             email: string;
             name: string;
+            image?: string | null | undefined;
         };
         currentUser: CurrentUser;
     }
@@ -55,22 +56,32 @@
                 "sleek relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300 sm:h-10 sm:w-10",
                 "border border-zinc-700/50 bg-zinc-800/90 text-zinc-300 backdrop-blur-sm",
                 "hover:border-zinc-600 hover:bg-zinc-700 hover:text-white",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+                user.image && "overflow-hidden p-0"
             )}
             aria-label="Visit {currentUser.name}"
         >
-            <svg
-                class="h-4 w-4 sm:h-5 sm:w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-            </svg>
+            {#if user.image}
+                <img
+                    src={user.image}
+                    alt={user.name}
+                    class="h-full w-full object-cover"
+                    referrerpolicy="no-referrer"
+                />
+            {:else}
+                <svg
+                    class="h-4 w-4 sm:h-5 sm:w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+            {/if}
         </a>
 
         <!-- Expandable name badge -->
