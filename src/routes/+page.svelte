@@ -6,11 +6,14 @@
 <script lang="ts">
     import { page } from "$app/state";
     import { courierService } from "$lib/stores";
-    import { Heading, NotAuthorized, OrderProcessor, CourierPicker, User } from "$lib/components";
+    import { Heading, NotAuthorized, OrderProcessor, CourierPicker, User, SteadFastSettings } from "$lib/components";
 
     // Get data from server load (user is guaranteed to exist due to server redirect)
     const user = $derived(page.data.user);
     const currentUser = $derived(page.data.currentUser);
+
+    // Show SteadFast settings when that courier is selected
+    const showSteadFastSettings = $derived($courierService === "SteadFast");
 
     // Handle courier selection
     const handleCourierSelect = (courier: string) => {
@@ -35,7 +38,11 @@
         >
             <OrderProcessor {currentUser} selectedCourier={$courierService} />
 
-            <CourierPicker selectedCourier={$courierService} onSelect={handleCourierSelect} />
+            <!-- Courier picker with optional settings -->
+            <div class="flex w-full flex-col items-center gap-6">
+                <CourierPicker selectedCourier={$courierService} onSelect={handleCourierSelect} />
+                <SteadFastSettings visible={showSteadFastSettings} brandName={currentUser.name} />
+            </div>
         </div>
     {/if}
 </div>

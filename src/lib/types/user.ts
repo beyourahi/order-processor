@@ -19,25 +19,27 @@ export interface UserInfo {
 
 /**
  * Current user derived from auth and brand config
- * Represents the authenticated user's information with optional fields
+ * Represents the authenticated user's information
+ *
+ * Note: contact_name, contact_phone, and merchant_id are now stored
+ * in the database (brand_settings table) and fetched separately.
  */
 export interface CurrentUser {
     name: string;
-    phone?: string;
     courier: Courier | null;
-    merchant_id?: string;
     url?: string;
 }
 
 /**
  * Brand configuration for authorized users
  * Defines the structure for brand-specific settings and allowed emails
+ *
+ * Note: contact info (phone, merchant_id) is now stored in the database
+ * and managed via the SteadFast settings UI.
  */
 export interface Brand {
     name: string;
-    phone?: string;
     emails: string[];
     url: string;
     courier: Courier | null;
-    merchant_id?: string;
 }

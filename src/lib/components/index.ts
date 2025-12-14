@@ -6,4 +6,4 @@ export { Footer } from "./ui/footer";
 export { NotAuthorized } from "./ui/not-authorized";
 
 // Feature Components
-export { Upload, Download, CourierPicker, User, OrderProcessor, SessionProvider } from "./features";
+export { Upload, Download, CourierPicker, User, OrderProcessor, SessionProvider, SteadFastSettings } from "./features";

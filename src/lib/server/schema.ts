@@ -82,3 +82,17 @@ export const verifications = sqliteTable(
     },
     (table) => [index("idx_verifications_identifier").on(table.identifier)]
 );
+
+/**
+ * Brand settings table - stores editable contact info per brand
+ * Data is shared across all users of the same brand
+ */
+export const brandSettings = sqliteTable("brand_settings", {
+    id: text("id").primaryKey(),
+    brandName: text("brand_name").notNull().unique(),
+    contactName: text("contact_name"),
+    contactPhone: text("contact_phone"),
+    merchantId: text("merchant_id"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+});

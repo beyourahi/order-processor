@@ -10,7 +10,10 @@ import type { CurrentUser } from "$lib/types";
  * from the authenticated user's email.
  *
  * The CurrentUser contains brand-specific configuration needed for
- * order processing (courier preference, merchant ID, etc.)
+ * order processing (courier preference).
+ *
+ * Note: contact_name, contact_phone, and merchant_id are now stored
+ * in the database and fetched via the /api/brand-settings endpoint.
  *
  * @param email - The authenticated user's email address
  * @returns CurrentUser object with brand details, or null if not found/authorized
@@ -22,13 +25,9 @@ export const getCurrentUser = (email: string | undefined): CurrentUser | null =>
 
     if (!brand) return null;
 
-    // Build CurrentUser with optional properties handled for exactOptionalPropertyTypes
-    // Only include optional fields if they are defined (not undefined)
     return {
         name: brand.name,
         courier: brand.courier,
-        ...(brand.phone !== undefined && { phone: brand.phone }),
-        ...(brand.merchant_id !== undefined && { merchant_id: brand.merchant_id }),
         ...(brand.url !== undefined && { url: brand.url })
     };
 };

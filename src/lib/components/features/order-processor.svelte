@@ -45,11 +45,32 @@
                 console.warn("CSV parsing warnings:", result.errors);
             }
 
+            // Fetch brand settings from database for SteadFast courier
+            let contactName = currentUser.name;
+            let contactPhone = "";
+            let merchantId = "";
+
+            if (currentUser.courier === Courier.SteadFast) {
+                try {
+                    const settingsRes = await fetch("/api/brand-settings");
+                    if (settingsRes.ok) {
+                        const apiResult = (await settingsRes.json()) as {
+                            data: { contactName?: string; contactPhone?: string; merchantId?: string };
+                        };
+                        contactName = apiResult.data?.contactName || currentUser.name;
+                        contactPhone = apiResult.data?.contactPhone || "";
+                        merchantId = apiResult.data?.merchantId || "";
+                    }
+                } catch (settingsError) {
+                    console.warn("Failed to fetch brand settings, using defaults:", settingsError);
+                }
+            }
+
             // Process orders through courier service
             const processedOrders = CourierService.processOrders(currentUser.courier as Courier, result.data, {
-                name: currentUser.name,
-                phone: currentUser.phone || "",
-                merchant_id: currentUser.merchant_id || ""
+                name: contactName,
+                phone: contactPhone,
+                merchant_id: merchantId
             });
 
             // Generate and download Excel file

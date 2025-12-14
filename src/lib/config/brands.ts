@@ -9,19 +9,19 @@ import type { Brand } from "$lib/types";
 /**
  * Configuration for all supported brands
  * Each brand has specific settings for order processing
+ *
+ * Note: contact_name, contact_phone, and merchant_id are now stored
+ * in the database (brand_settings table) and editable via the UI.
  */
 export const BRANDS: Brand[] = [
     {
         name: "Rahi Khan",
-        phone: "1873146332",
         emails: ["beyourahi@gmail.com", "rahikhan360@gmail.com"],
         url: "https://beyourahi.com",
-        courier: Courier.SteadFast,
-        merchant_id: "69420"
+        courier: Courier.SteadFast
     },
     {
         name: "EnScented",
-        phone: "1948880753",
         emails: [
             "enscented.bd@gmail.com",
             "enscentedfragrance@gmail.com",
@@ -29,24 +29,19 @@ export const BRANDS: Brand[] = [
             "enscentedexecutives@gmail.com"
         ],
         url: "https://enscented.shop",
-        courier: Courier.SteadFast,
-        merchant_id: "330097"
+        courier: Courier.SteadFast
     },
     {
         name: "Aetheria",
-        phone: "1948880753",
         emails: ["aetheriaselfcare@gmail.com", "team@aetheriaselfcare.com"],
         url: "https://aetheriaselfcare.com",
-        courier: Courier.SteadFast,
-        merchant_id: "1436762"
+        courier: Courier.SteadFast
     },
     {
         name: "Corvien",
-        phone: "1312592710",
         emails: ["corvienco@gmail.com", "arifulashfi321@gmail.com"],
         url: "https://corvien.co",
-        courier: Courier.SteadFast,
-        merchant_id: "1618727"
+        courier: Courier.SteadFast
     }
 ];
 
