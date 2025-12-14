@@ -16,7 +16,13 @@ bun run deploy        # Build + deploy to Cloudflare Workers
 bun run check         # TypeScript/Svelte type checking
 bun run lint          # ESLint + Prettier checks
 bun run cf-typegen    # Generate Cloudflare types
-bun run db:migrate    # Run D1 database migrations
+
+# Database Commands
+bun run db:generate       # Generate migration from schema changes
+bun run db:migrate:local  # Apply migrations to local D1
+bun run db:migrate        # Apply migrations to remote D1 (production)
+bun run db:push           # Push schema directly (requires D1 credentials)
+bun run db:studio         # Open Drizzle Studio (requires D1 credentials)
 ```
 
 ## Tech Stack
@@ -25,10 +31,94 @@ bun run db:migrate    # Run D1 database migrations
 - **Language**: TypeScript 5.9.3 (strict mode)
 - **Styling**: Tailwind CSS 4.x
 - **Authentication**: Better Auth with Cloudflare D1
+- **Database ORM**: Drizzle ORM with Drizzle Kit for migrations
 - **Data Processing**: `xlsx`, `papaparse`
 - **UI Components**: bits-ui (shadcn/svelte) + class-variance-authority
 - **Deployment**: Cloudflare Workers with D1 database
 - **Linting**: ESLint 9.x + Prettier with Svelte plugin
+
+## Database Migrations
+
+### Schema-Driven Workflow
+
+The project uses Drizzle Kit for schema-driven migrations. The schema is defined in TypeScript and migrations are generated automatically.
+
+**Files:**
+
+- `src/lib/server/schema.ts` - Drizzle ORM schema definition
+- `drizzle.config.ts` - Drizzle Kit configuration
+- `migrations/` - SQL migration files
+- `migrations/meta/` - Drizzle Kit snapshots and journal
+
+### Making Schema Changes
+
+1. **Edit the schema** in `src/lib/server/schema.ts`:
+
+    ```typescript
+    // Add a new column
+    export const users = sqliteTable("users", {
+        // ... existing columns
+        newField: text("new_field") // Add new column
+    });
+    ```
+
+2. **Generate migration**:
+
+    ```bash
+    bun run db:generate
+    ```
+
+    This creates a new SQL file in `migrations/` (e.g., `0005_xxx.sql`)
+
+3. **Review the generated SQL** before applying
+
+4. **Apply migration locally**:
+
+    ```bash
+    bun run db:migrate:local
+    ```
+
+5. **Test the application** with `bun run dev`
+
+6. **Apply to production**:
+
+    ```bash
+    bun run db:migrate
+    ```
+
+### Migration Best Practices
+
+- **Never edit existing migrations** - Always generate new ones
+- **Review generated SQL** before committing
+- **Test locally first** using `db:migrate:local`
+- **Keep migrations small** - One logical change per migration
+- **Commit migrations with schema changes** - Keep them in sync
+
+### Drizzle Kit Commands
+
+| Command            | Description                                              |
+| ------------------ | -------------------------------------------------------- |
+| `db:generate`      | Generate SQL migration from schema changes               |
+| `db:migrate:local` | Apply migrations to local D1 database                    |
+| `db:migrate`       | Apply migrations to production D1                        |
+| `db:push`          | Push schema directly (dev only, requires D1 credentials) |
+| `db:studio`        | Open Drizzle Studio GUI (requires D1 credentials)        |
+
+### D1 Credentials (for push/studio)
+
+For `db:push` and `db:studio` commands, set these environment variables:
+
+```env
+CLOUDFLARE_ACCOUNT_ID=your_account_id
+CLOUDFLARE_DATABASE_ID=ae9e0e94-99a1-485f-9ed0-c42ad70c6094
+CLOUDFLARE_D1_TOKEN=your_api_token
+```
+
+Get the API token from [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens) with D1 Edit permissions.
+
+### Known Issues
+
+- **drizzle-kit 0.31.x hangs** - Using pinned version 0.30.0 due to [bug #4451](https://github.com/drizzle-team/drizzle-orm/issues/4451)
 
 ## Architecture
 

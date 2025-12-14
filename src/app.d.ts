@@ -77,6 +77,17 @@ declare global {
             session: Locals["session"];
             currentUser: CurrentUser | null;
         }
+
+        /**
+         * Custom error shape for type-safe error handling.
+         * - message: Required for all errors
+         * - errorId: Optional, populated by handleError for unexpected errors
+         *            Used to correlate user reports with server logs
+         */
+        interface Error {
+            message: string;
+            errorId?: string;
+        }
     }
 }
 

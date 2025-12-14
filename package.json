@@ -12,8 +12,14 @@
         "format": "prettier --write .",
         "lint": "prettier --check . && eslint .",
         "cf-typegen": "wrangler types",
-        "db:migrate": "wrangler d1 execute order_processor --remote --file=./migrations/0001_better_auth_tables.sql",
-        "db:migrate:local": "wrangler d1 execute order_processor --local --file=./migrations/0001_better_auth_tables.sql"
+        "db:generate": "drizzle-kit generate",
+        "db:push": "drizzle-kit push",
+        "db:pull": "drizzle-kit pull",
+        "db:studio": "drizzle-kit studio",
+        "db:check": "drizzle-kit check",
+        "db:migrate": "wrangler d1 migrations apply order_processor --remote",
+        "db:migrate:local": "wrangler d1 migrations apply order_processor --local",
+        "db:migrate:list": "wrangler d1 migrations list order_processor --local"
     },
     "devDependencies": {
         "@sveltejs/adapter-cloudflare": "^7.2.4",
@@ -22,6 +28,7 @@
         "@tailwindcss/vite": "^4.1.18",
         "@types/node": "^25.0.2",
         "@types/papaparse": "^5.5.2",
+        "drizzle-kit": "0.30.0",
         "eslint": "^9.39.2",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-svelte": "^3.13.1",
@@ -38,7 +45,7 @@
         "wrangler": "^4.54.0"
     },
     "dependencies": {
-        "better-auth": "^1.4.6",
+        "better-auth": "^1.4.7",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "drizzle-orm": "^0.45.1",

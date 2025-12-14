@@ -1,8 +1,45 @@
-import type { Handle } from "@sveltejs/kit";
+import type { Handle, HandleServerError } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { building } from "$app/environment";
 import { createAuth } from "$lib/server/auth";
 import { getCurrentUser } from "$lib/hooks";
+
+/**
+ * Security headers applied to all responses.
+ * These protect against common web vulnerabilities.
+ */
+const SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff", // Prevent MIME type sniffing
+    "X-Frame-Options": "DENY", // Prevent clickjacking
+    "Referrer-Policy": "strict-origin-when-cross-origin", // Control referrer info
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()", // Restrict browser features
+    "X-XSS-Protection": "1; mode=block" // Legacy XSS protection for older browsers
+} as const;
+
+/**
+ * Applies security headers to a response.
+ * Safely handles immutable response objects by cloning if necessary.
+ */
+function applySecurityHeaders(response: Response): Response {
+    // Check if headers are mutable by testing a set operation
+    try {
+        for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+            response.headers.set(key, value);
+        }
+        return response;
+    } catch {
+        // Headers are immutable (e.g., from redirect), clone the response
+        const newResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers)
+        });
+        for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+            newResponse.headers.set(key, value);
+        }
+        return newResponse;
+    }
+}
 
 /**
  * SvelteKit server hook for Better Auth integration.
@@ -63,5 +100,36 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     // Let svelteKitHandler process auth routes (/api/auth/*)
-    return svelteKitHandler({ event, resolve, auth, building });
+    // Then apply security headers to the response
+    const response = await svelteKitHandler({ event, resolve, auth, building });
+    return applySecurityHeaders(response);
+};
+
+/**
+ * Global error handler for unexpected server errors.
+ *
+ * This hook:
+ * 1. Generates a unique error ID for tracking
+ * 2. Logs the full error for debugging
+ * 3. Returns a safe error object without sensitive details
+ *
+ * The errorId can be used to correlate user reports with server logs.
+ */
+export const handleError: HandleServerError = async ({ error, event, status, message }) => {
+    const errorId = crypto.randomUUID();
+
+    // Log the full error for debugging (visible in Cloudflare logs)
+    console.error(`[${errorId}] Unhandled error:`, {
+        status,
+        message,
+        url: event.url.pathname,
+        method: event.request.method,
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+    });
+
+    // Return safe error object for client (no sensitive details)
+    return {
+        message: status >= 500 ? "An unexpected error occurred" : message,
+        errorId
+    };
 };

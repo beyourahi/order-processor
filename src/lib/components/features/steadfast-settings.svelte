@@ -154,7 +154,7 @@
                             type="text"
                             bind:value={contactName}
                             onfocus={handleFocus}
-                            placeholder="e.g., John Doe"
+                            placeholder="e.g., Lord Voldemort"
                             class={cn(
                                 "w-full rounded-lg border bg-zinc-800/50 px-3 py-2.5 text-sm text-white placeholder-zinc-500",
                                 "transition-all duration-200",

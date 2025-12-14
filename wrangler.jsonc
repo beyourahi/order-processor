@@ -13,7 +13,8 @@
         {
             "binding": "DB",
             "database_name": "order_processor",
-            "database_id": "ae9e0e94-99a1-485f-9ed0-c42ad70c6094"
+            "database_id": "ae9e0e94-99a1-485f-9ed0-c42ad70c6094",
+            "migrations_dir": "migrations"
         }
     ],
     "observability": {

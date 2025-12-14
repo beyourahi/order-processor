@@ -58,11 +58,22 @@ export function createAuth(d1: D1Database, env: AuthEnv) {
 
         // Session configuration
         session: {
+            // Session expires after 7 days of inactivity
+            expiresIn: 60 * 60 * 24 * 7, // 7 days
+            // Update session expiry on each request (rolling sessions)
+            updateAge: 60 * 60 * 24, // Update once per day
             // Enable cookie caching for performance
             cookieCache: {
                 enabled: true,
                 maxAge: 60 * 5 // 5 minutes
             }
+        },
+
+        // Advanced security settings
+        advanced: {
+            // Secure cookie configuration
+            cookiePrefix: "order-processor", // Unique prefix to avoid collisions
+            useSecureCookies: true // Force secure cookies (HTTPS only)
         },
 
         // Trusted origins for CORS and OAuth callbacks

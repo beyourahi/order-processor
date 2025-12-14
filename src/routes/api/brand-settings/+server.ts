@@ -20,12 +20,12 @@ import type { BrandSettingsPayload } from "$lib/types";
 export const GET: RequestHandler = async ({ locals, platform }) => {
     // Check authentication
     if (!locals.user) {
-        error(401, "Not authenticated");
+        error(401, { message: "Not authenticated" });
     }
 
     // Check authorization (must have currentUser from brand config)
     if (!locals.currentUser) {
-        error(403, "Not authorized");
+        error(403, { message: "Not authorized" });
     }
 
     const brandName = locals.currentUser.name;
@@ -52,12 +52,12 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
     // Check authentication
     if (!locals.user) {
-        error(401, "Not authenticated");
+        error(401, { message: "Not authenticated" });
     }
 
     // Check authorization
     if (!locals.currentUser) {
-        error(403, "Not authorized");
+        error(403, { message: "Not authorized" });
     }
 
     const brandName = locals.currentUser.name;
@@ -68,12 +68,12 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     try {
         body = await request.json();
     } catch {
-        error(400, "Invalid JSON body");
+        error(400, { message: "Invalid JSON body" });
     }
 
     // Validate required fields
     if (!body.merchantId || body.merchantId.trim().length === 0) {
-        error(400, "Merchant ID is required");
+        error(400, { message: "Merchant ID is required" });
     }
 
     // Check if settings exist
