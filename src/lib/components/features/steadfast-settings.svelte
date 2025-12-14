@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
     import { cn } from "$lib/utils";
+    import { hasMerchantId } from "$lib/stores";
     import type { BrandSettingsPayload } from "$lib/types";
 
     interface Props {
@@ -37,6 +38,11 @@
     // Validation: Merchant ID is required
     const isValid = $derived(merchantId.trim().length > 0);
     const canSave = $derived(hasChanges && isValid);
+
+    // Sync merchant ID status to store for cross-component communication
+    $effect(() => {
+        hasMerchantId.set(isValid);
+    });
 
     // Fetch settings when component becomes visible
     $effect(() => {

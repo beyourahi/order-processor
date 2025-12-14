@@ -62,12 +62,7 @@
             aria-label="Visit {currentUser.name}"
         >
             {#if user.image}
-                <img
-                    src={user.image}
-                    alt={user.name}
-                    class="h-full w-full object-cover"
-                    referrerpolicy="no-referrer"
-                />
+                <img src={user.image} alt={user.name} class="h-full w-full object-cover" referrerpolicy="no-referrer" />
             {:else}
                 <svg
                     class="h-4 w-4 sm:h-5 sm:w-5"

@@ -2,4 +2,4 @@
  * Stores barrel export
  */
 
-export { courierService } from "./app";
+export { courierService, hasMerchantId } from "./app";

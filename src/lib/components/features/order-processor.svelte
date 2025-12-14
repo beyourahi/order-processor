@@ -6,6 +6,7 @@
 <script lang="ts">
     import { CourierService } from "$lib/services";
     import { generateFileName } from "$lib/constants";
+    import { hasMerchantId } from "$lib/stores";
     import { Courier } from "$lib/types";
     import type { CurrentUser } from "$lib/types";
     import { cn, parseCSV, generateExcel } from "$lib/utils";
@@ -26,8 +27,12 @@
     let error = $state<string | null>(null);
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
+    // SteadFast requires merchant ID to be configured
+    const isSteadFast = $derived(selectedCourier === Courier.SteadFast);
+    const needsMerchantId = $derived(isSteadFast && !$hasMerchantId);
+
     // Computed: is upload disabled?
-    const isDisabled = $derived(selectedCourier === "" || currentUser.courier !== selectedCourier);
+    const isDisabled = $derived(selectedCourier === "" || currentUser.courier !== selectedCourier || needsMerchantId);
 
     // Handle file selection
     const handleFileSelect = async (file: File) => {
@@ -196,6 +201,6 @@
         <Download fileName={acceptedFile.name} fileSize={acceptedFile.size} />
         <!-- Upload prompt -->
     {:else}
-        <Upload disabled={isDisabled} />
+        <Upload disabled={isDisabled} {needsMerchantId} />
     {/if}
 </div>
