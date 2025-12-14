@@ -12,7 +12,7 @@
     };
 </script>
 
-<div class="flex min-h-screen flex-col items-center justify-center gap-8 p-4">
+<div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-4">
     <div class="flex flex-col items-center gap-4 text-center">
         <h1 class="text-6xl font-bold text-red-500">
             {page.status}

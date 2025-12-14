@@ -16,18 +16,15 @@
 </script>
 
 <div class="flex w-full flex-col items-center gap-4 sm:gap-6">
-    <!-- Section header -->
-    <h2 class="text-lg font-semibold tracking-tight text-white sm:text-xl">Choose your delivery partner</h2>
-
     <!-- Courier options grid -->
-    <div class="grid w-full max-w-xs grid-cols-2 gap-3 sm:max-w-sm sm:gap-4">
+    <div class="grid w-full grid-cols-2 gap-3 sm:max-w-sm sm:gap-4">
         {#each COURIER_OPTIONS as option (option.value)}
             {@const isSelected = selectedCourier === option.value}
 
             <button
                 onclick={() => onSelect(option.value)}
                 class={cn(
-                    "sleek group relative flex cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
+                    "sleek group relative flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
                     "border transition-all duration-200",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F]",
                     isSelected

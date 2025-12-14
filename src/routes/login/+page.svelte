@@ -45,7 +45,7 @@
     <title>Sign In - Shopify Order Processor</title>
 </svelte:head>
 
-<div class="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 lg:gap-12">
+<div class="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 py-8 sm:gap-10 sm:px-6 lg:gap-12">
     <Heading />
 
     {#if error}

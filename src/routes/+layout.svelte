@@ -21,7 +21,7 @@
     <link rel="preload" href={steadfastLogo} as="image" />
 </svelte:head>
 
-<div class="flex min-h-screen flex-col">
+<div class="flex min-h-dvh flex-col">
     <main class="flex grow flex-col">
         {@render children()}
     </main>

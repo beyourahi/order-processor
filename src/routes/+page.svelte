@@ -6,7 +6,7 @@
 <script lang="ts">
     import { page } from "$app/state";
     import { courierService } from "$lib/stores";
-    import { Heading, LoadingSpinner, NotAuthorized, OrderProcessor, CourierPicker, User } from "$lib/components";
+    import { Heading, NotAuthorized, OrderProcessor, CourierPicker, User } from "$lib/components";
 
     // Get data from server load (user is guaranteed to exist due to server redirect)
     const user = $derived(page.data.user);
@@ -27,16 +27,15 @@
         <NotAuthorized />
     {:else}
         <!-- Authorized user - show main interface -->
-        <div class="flex w-full flex-col items-center gap-12 text-center sm:gap-16 lg:gap-20">
-            <div
-                class="flex w-full max-w-md flex-col-reverse items-center justify-center gap-8 sm:max-w-xl sm:gap-10 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
-            >
-                <OrderProcessor {currentUser} selectedCourier={$courierService} />
+        <!-- Floating user badge (fixed position) -->
+        <User {user} {currentUser} />
 
-                <CourierPicker selectedCourier={$courierService} onSelect={handleCourierSelect} />
-            </div>
+        <div
+            class="flex w-full max-w-md flex-col-reverse items-center justify-center gap-8 sm:max-w-xl sm:gap-10 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
+        >
+            <OrderProcessor {currentUser} selectedCourier={$courierService} />
 
-            <User {user} {currentUser} />
+            <CourierPicker selectedCourier={$courierService} onSelect={handleCourierSelect} />
         </div>
     {/if}
 </div>
