@@ -3,7 +3,7 @@
  * Contains utility functions for cleaning, filtering, and preparing CSV data
  */
 
-import { STEADFAST_INDEXES_ARRAY, PATHAO_INDEXES_ARRAY, SHOPIFY_STEADFAST_INDEXES_ARRAY } from "$lib/constants";
+import { STEADFAST_INDEXES_ARRAY, PATHAO_INDEXES_ARRAY } from "$lib/constants";
 
 // ================== DATA PROCESSING UTILITIES ==================
 
@@ -86,8 +86,21 @@ export const preparePathaoOrderData = (rawData: string[][]): string[][] => {
 };
 
 /**
+ * Build a complete address string from Shopify CSV address components
+ * Combines address1, address2 (if present), and city
+ * Filters empty parts and joins with comma separator
+ */
+const buildFullAddress = (address1: string, address2: string, city: string): string => {
+    return [address1, address2, city]
+        .map((part) => part?.trim())
+        .filter(Boolean)
+        .join(", ");
+};
+
+/**
  * Prepare data for SteadFast courier processing from Shopify export
  * Handles multi-line orders and consolidates customer information
+ * Combines address1, address2, and city into a complete address
  */
 export const prepareShopifySteadFastOrderData = (rawData: string[][]): string[][] => {
     if (rawData.length <= 1) return []; // Need at least header + data
@@ -107,8 +120,20 @@ export const prepareShopifySteadFastOrderData = (rawData: string[][]): string[][
         // For Shopify exports, we only need the first occurrence of each order
         // since customer info is the same across all line items
         if (!orderMap.has(orderNumber)) {
-            // Extract: [name, address, phone, amount, notes]
-            const extractedData = SHOPIFY_STEADFAST_INDEXES_ARRAY.map((index) => row[index] || "");
+            // Build complete address from multiple Shopify address fields
+            // Column 36: Shipping Address1 (street)
+            // Column 37: Shipping Address2 (apartment/unit, optional)
+            // Column 39: Shipping City
+            const fullAddress = buildFullAddress(row[36] || "", row[37] || "", row[39] || "");
+
+            // Extract: [name, FULL_ADDRESS, phone, amount, notes]
+            const extractedData = [
+                row[34] || "", // Shipping Name (col 34)
+                fullAddress, // Combined address (cols 36 + 37 + 39)
+                row[43] || "", // Shipping Phone (col 43)
+                row[11] || "", // Total (col 11)
+                row[44] || "" // Notes (col 44)
+            ];
             orderMap.set(orderNumber, extractedData);
         }
     }
