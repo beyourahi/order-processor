@@ -33,11 +33,7 @@
             >
                 <OrderProcessor {currentUser} selectedCourier={$courierService} />
 
-                <CourierPicker
-                    selectedCourier={$courierService}
-                    userCourier={currentUser.courier}
-                    onSelect={handleCourierSelect}
-                />
+                <CourierPicker selectedCourier={$courierService} onSelect={handleCourierSelect} />
             </div>
 
             <User {user} {currentUser} />

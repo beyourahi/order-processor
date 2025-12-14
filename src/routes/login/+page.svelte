@@ -49,7 +49,9 @@
     <Heading />
 
     {#if error}
-        <div class="max-w-xs rounded-lg bg-red-500/10 px-4 py-2.5 text-center text-xs text-red-400 sm:max-w-sm sm:text-sm">
+        <div
+            class="max-w-xs rounded-lg bg-red-500/10 px-4 py-2.5 text-center text-xs text-red-400 sm:max-w-sm sm:text-sm"
+        >
             {error}
         </div>
     {/if}
@@ -60,7 +62,9 @@
         class="sleek flex w-full max-w-xs items-center justify-center gap-2.5 rounded-xl bg-white px-6 py-3 text-sm font-medium text-black active:scale-95 disabled:opacity-50 sm:w-auto sm:gap-3 sm:px-8 sm:py-3.5 xl:hover:bg-white/90"
     >
         {#if isLoading}
-            <div class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent sm:h-5 sm:w-5"></div>
+            <div
+                class="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent sm:h-5 sm:w-5"
+            ></div>
         {:else}
             <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path

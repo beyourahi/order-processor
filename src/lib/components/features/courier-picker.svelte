@@ -9,29 +9,25 @@
 
     interface Props {
         selectedCourier: string;
-        userCourier: string | null;
         onSelect: (courier: string) => void;
     }
 
-    let { selectedCourier, userCourier, onSelect }: Props = $props();
+    let { selectedCourier, onSelect }: Props = $props();
 </script>
 
 <div class="flex w-full flex-col items-center gap-4 sm:gap-6">
     <!-- Section header -->
-    <h2 class="text-lg font-semibold tracking-tight text-white sm:text-xl">
-        Choose your delivery partner
-    </h2>
+    <h2 class="text-lg font-semibold tracking-tight text-white sm:text-xl">Choose your delivery partner</h2>
 
     <!-- Courier options grid -->
     <div class="grid w-full max-w-xs grid-cols-2 gap-3 sm:max-w-sm sm:gap-4">
         {#each COURIER_OPTIONS as option (option.value)}
             {@const isSelected = selectedCourier === option.value}
-            {@const isUserCourier = userCourier === option.value}
 
             <button
                 onclick={() => onSelect(option.value)}
                 class={cn(
-                    "sleek group relative flex flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
+                    "sleek group relative flex cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
                     "border transition-all duration-200",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F]",
                     isSelected
@@ -50,7 +46,13 @@
                     )}
                 >
                     {#if isSelected}
-                        <svg class="h-3 w-3 text-white sm:h-3.5 sm:w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <svg
+                            class="h-3 w-3 text-white sm:h-3.5 sm:w-3.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="3"
+                        >
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     {/if}
@@ -73,38 +75,25 @@
                     />
                 </div>
 
-                <!-- Courier name and badge -->
-                <div class="flex flex-col items-center gap-1">
-                    <span
-                        class={cn(
-                            "text-sm font-semibold transition-colors duration-200 sm:text-base",
-                            isSelected ? "text-white" : "text-zinc-300 group-hover:text-white"
-                        )}
-                    >
-                        {option.label}
-                    </span>
-
-                    {#if isUserCourier}
-                        <span
-                            class={cn(
-                                "rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:text-xs",
-                                isSelected
-                                    ? "bg-emerald-500/20 text-emerald-400"
-                                    : "bg-zinc-700/50 text-zinc-400"
-                            )}
-                        >
-                            Default
-                        </span>
-                    {/if}
-                </div>
+                <!-- Courier name -->
+                <span
+                    class={cn(
+                        "text-sm font-semibold transition-colors duration-200 sm:text-base",
+                        isSelected ? "text-white" : "text-zinc-300 group-hover:text-white"
+                    )}
+                >
+                    {option.label}
+                </span>
             </button>
         {/each}
     </div>
 
     <!-- Helper text -->
-    {#if !selectedCourier}
-        <p class="mt-1 text-center text-xs text-zinc-500 sm:text-sm">
+    <p class="mt-1 text-center text-xs sm:text-sm {selectedCourier ? 'text-emerald-400' : 'text-zinc-500'}">
+        {#if selectedCourier}
+            ✓ Great choice! Now upload your order file
+        {:else}
             Select a courier to enable file upload
-        </p>
-    {/if}
+        {/if}
+    </p>
 </div>

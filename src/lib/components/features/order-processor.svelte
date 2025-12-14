@@ -165,7 +165,9 @@
         <!-- Processing state -->
     {:else if isProcessing}
         <div class="flex flex-col items-center gap-3 sm:gap-4">
-            <div class="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-8 sm:w-8"></div>
+            <div
+                class="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-8 sm:w-8"
+            ></div>
             <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
         </div>
         <!-- File accepted -->

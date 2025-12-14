@@ -35,8 +35,10 @@
     class="flex w-full max-w-md flex-col items-center gap-6 rounded-2xl border border-zinc-800/50 bg-zinc-900/30 p-4 text-zinc-400 sm:max-w-xl sm:gap-6 sm:p-6 md:flex-row md:justify-between lg:max-w-4xl lg:p-8 2xl:max-w-6xl"
 >
     <!-- User info section -->
-    <div class="flex w-full flex-col items-center gap-2 text-center text-xs sm:items-start sm:text-left sm:text-sm md:w-auto">
-        <span class="flex flex-col gap-0.5 sm:flex-row sm:gap-1.5">
+    <div
+        class="flex w-full flex-col items-center gap-2 text-center text-xs sm:items-start sm:text-left sm:text-sm md:w-auto"
+    >
+        <span class="flex gap-0.5 sm:gap-1.5">
             <span class="text-zinc-500">Name:</span>
             <a
                 href={currentUser.url || "#"}
@@ -48,7 +50,7 @@
             </a>
         </span>
 
-        <span class="flex flex-col gap-0.5 sm:flex-row sm:gap-1.5">
+        <span class="flex gap-0.5 sm:gap-1.5">
             <span class="text-zinc-500">Email:</span>
             <a
                 href={`mailto:${user.email}`}
@@ -63,7 +65,7 @@
     <button
         onclick={handleLogout}
         disabled={isLoggingOut}
-        class="sleek w-full rounded-xl bg-red-500/90 px-8 py-2.5 text-xs font-semibold text-white uppercase tracking-wide active:scale-95 active:bg-red-700 disabled:opacity-50 sm:w-auto sm:px-10 sm:py-3 sm:text-sm xl:hover:bg-red-600"
+        class="sleek w-full rounded-xl bg-red-500/90 px-8 py-2.5 text-xs font-semibold tracking-wide text-white uppercase active:scale-95 active:bg-red-700 disabled:opacity-50 sm:w-auto sm:px-10 sm:py-3 sm:text-sm xl:hover:bg-red-600"
     >
         {isLoggingOut ? "Logging out..." : "Log Out"}
     </button>
