@@ -28,7 +28,7 @@
     {:else}
         <!-- Authorized user - show main interface -->
         <!-- Floating user badge (fixed position) -->
-        <User {user} {currentUser} />
+        <User user={user!} currentUser={currentUser!} />
 
         <div
             class="flex w-full max-w-md flex-col-reverse items-center justify-center gap-8 sm:max-w-xl sm:gap-10 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"

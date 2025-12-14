@@ -23,9 +23,6 @@
     let showTooltip = $state(false);
     let expanded = $state(false);
 
-    // Get user initials for avatar
-    const initials = $derived((currentUser.name?.charAt(0) || user.email?.charAt(0) || "U").toUpperCase());
-
     const handleLogout = async () => {
         isLoggingOut = true;
         try {
@@ -42,6 +39,8 @@
     <!-- User info (expandable on hover/focus) -->
     <div
         class="group relative flex items-center"
+        role="group"
+        aria-label="User profile"
         onmouseenter={() => (expanded = true)}
         onmouseleave={() => (expanded = false)}
     >
@@ -60,7 +59,18 @@
             )}
             aria-label="Visit {currentUser.name}"
         >
-            {initials}
+            <svg
+                class="h-4 w-4 sm:h-5 sm:w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
         </a>
 
         <!-- Expandable name badge -->
@@ -69,7 +79,7 @@
                 "absolute right-0 flex items-center overflow-hidden rounded-full border border-zinc-700/50 bg-zinc-800/90 whitespace-nowrap backdrop-blur-sm transition-all duration-300",
                 expanded ? "w-auto pr-11 pl-3 opacity-100 sm:pr-12" : "w-0 pr-0 pl-0 opacity-0"
             )}
-            style="height: 2.25rem;"
+            style="height: 2.5rem;"
         >
             <div class="flex flex-col justify-center">
                 <span class="text-xs leading-tight font-medium text-zinc-200 sm:text-sm">
