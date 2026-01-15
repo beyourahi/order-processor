@@ -84,13 +84,4 @@
             </button>
         {/each}
     </div>
-
-    <!-- Helper text -->
-    <p class="mt-1 text-center text-xs sm:text-sm {selectedCourier ? 'text-emerald-400' : 'text-zinc-500'}">
-        {#if selectedCourier}
-            ✓ Great choice! Now upload your order file
-        {:else}
-            Select a courier to enable file upload
-        {/if}
-    </p>
 </div>
