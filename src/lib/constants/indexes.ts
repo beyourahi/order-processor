@@ -68,19 +68,6 @@ export const STEADFAST_INDEXES = {
 } as const;
 
 /**
- * Column indexes for Pathao CSV data extraction
- */
-export const PATHAO_INDEXES = {
-    NAME: 3,
-    PHONE: 4,
-    ADDRESS: 5,
-    AREA: 6,
-    AMOUNT: 9,
-    INSTRUCTIONS: 10,
-    PRODUCT: 11
-} as const;
-
-/**
  * Array-based indexes for data extraction
  *
  * SHOPIFY_STEADFAST_INDEXES_ARRAY maps to Shopify export columns for SteadFast:
@@ -88,17 +75,12 @@ export const PATHAO_INDEXES = {
  *
  * STEADFAST_INDEXES_ARRAY maps to CSV columns:
  * [34, 36, 39, 43, 11, 44] = [invoice, name, phone, address, amount, instructions]
- *
- * PATHAO_INDEXES_ARRAY maps to CSV columns:
- * [0, 34, 17, 36, 39, 11, 43] = [order_no, name, product, price, address, city, phone]
  */
 export const SHOPIFY_STEADFAST_INDEXES_ARRAY = [34, 36, 43, 11, 44] as const;
 export const STEADFAST_INDEXES_ARRAY = [34, 36, 39, 43, 11, 44] as const;
-export const PATHAO_INDEXES_ARRAY = [0, 34, 17, 36, 39, 11, 43] as const;
 
 /**
  * Type definitions for the indexes to ensure type safety
  */
 export type ShopifyExportIndexes = typeof SHOPIFY_EXPORT_INDEXES;
 export type SteadFastIndexes = typeof STEADFAST_INDEXES;
-export type PathaoIndexes = typeof PATHAO_INDEXES;

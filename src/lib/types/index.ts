@@ -3,8 +3,8 @@
  */
 
 // Courier Types
-export { Courier, isPathaoOrder, isSteadFastOrder } from "./courier";
-export type { SteadFastOrder, PathaoOrder, OrderType, CourierProcessor, CourierOption } from "./courier";
+export { Courier, isSteadFastOrder } from "./courier";
+export type { SteadFastOrder, OrderType, CourierProcessor, CourierOption } from "./courier";
 
 // User Types
 export type { Brand, CurrentUser, UserInfo } from "./user";

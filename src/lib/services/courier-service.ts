@@ -4,13 +4,8 @@
  */
 
 import { Courier, type CourierProcessor, type OrderType, type UserInfo } from "$lib/types";
-import {
-    prepareSteadFastOrderData,
-    preparePathaoOrderData,
-    prepareShopifySteadFastOrderData,
-    isShopifyExport
-} from "./data-processing";
-import { PathaoProcessor, SteadFastProcessor } from "./processors";
+import { prepareSteadFastOrderData, prepareShopifySteadFastOrderData, isShopifyExport } from "./data-processing";
+import { SteadFastProcessor } from "./processors";
 
 // ================== COURIER SERVICE ==================
 
@@ -20,8 +15,7 @@ import { PathaoProcessor, SteadFastProcessor } from "./processors";
  */
 export class CourierService {
     private static readonly processors = new Map<Courier, CourierProcessor<OrderType>>([
-        [Courier.SteadFast, new SteadFastProcessor()],
-        [Courier.Pathao, new PathaoProcessor()]
+        [Courier.SteadFast, new SteadFastProcessor()]
     ]);
 
     /**
@@ -49,16 +43,10 @@ export class CourierService {
             throw new Error(`No processor found for courier: ${courierType}`);
         }
 
-        let preparedData: string[][];
-
-        if (courierType === Courier.SteadFast) {
-            // Check if it's a Shopify export and use appropriate processing
-            preparedData = this.isShopifyExport(rawData)
-                ? prepareShopifySteadFastOrderData(rawData)
-                : prepareSteadFastOrderData(rawData);
-        } else {
-            preparedData = preparePathaoOrderData(rawData);
-        }
+        // Check if it's a Shopify export and use appropriate processing
+        const preparedData = this.isShopifyExport(rawData)
+            ? prepareShopifySteadFastOrderData(rawData)
+            : prepareSteadFastOrderData(rawData);
 
         return processor.processOrders(preparedData, user);
     }

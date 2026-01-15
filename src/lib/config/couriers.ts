@@ -4,7 +4,6 @@
  */
 
 import type { CourierOption } from "$lib/types";
-import pathaoLogo from "$lib/assets/pathao.png";
 import steadfastLogo from "$lib/assets/steadfast.png";
 
 /**
@@ -16,10 +15,5 @@ export const COURIER_OPTIONS: CourierOption[] = [
         value: "SteadFast",
         label: "SteadFast",
         logo: steadfastLogo
-    },
-    {
-        value: "Pathao",
-        label: "Pathao",
-        logo: pathaoLogo
     }
 ];

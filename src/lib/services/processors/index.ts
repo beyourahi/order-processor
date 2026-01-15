@@ -4,4 +4,3 @@
  */
 
 export { SteadFastProcessor } from "./steadfast";
-export { PathaoProcessor } from "./pathao";

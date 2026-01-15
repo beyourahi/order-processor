@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SvelteKit application for processing Shopify order exports into courier-specific Excel formats (Pathao and SteadFast). Authorized users upload CSV files and download courier-ready files. Deployed to Cloudflare Workers.
+SvelteKit application for processing Shopify order exports into SteadFast courier Excel format. Authorized users upload CSV files and download courier-ready files. Deployed to Cloudflare Workers.
 
 ## Commands
 
@@ -159,7 +159,6 @@ src/
 │   │   ├── courier-service.ts   # Main orchestrator
 │   │   ├── data-processing.ts   # CSV preparation utilities
 │   │   └── processors/          # Courier-specific processors
-│   │       ├── pathao.ts
 │   │       └── steadfast.ts
 │   ├── server/                  # Server-only code
 │   │   └── auth.ts              # Better Auth server config
@@ -188,14 +187,13 @@ src/
 3. **Preparation**: Data cleaned and columns extracted
     - `prepareSteadFastOrderData()` - Standard CSV format
     - `prepareShopifySteadFastOrderData()` - Shopify export format
-    - `preparePathaoOrderData()` - Pathao format
 4. **Processing**: Processor transforms to courier schema
 5. **Export**: Excel file generated with `xlsx` library
 
 ### Service Architecture
 
 ```typescript
-// Main orchestrator - routes to appropriate processor
+// Main orchestrator - processes orders for SteadFast courier
 CourierService.processOrders(courierType, rawData, user)
 
 // Courier processors implement generic interface
@@ -203,9 +201,8 @@ interface CourierProcessor<T> {
     processOrders(data: string[][], user: UserInfo): T[];
 }
 
-// Processors
-├── SteadFastProcessor → SteadFastOrder[]
-└── PathaoProcessor → PathaoOrder[]
+// Processor
+└── SteadFastProcessor → SteadFastOrder[]
 ```
 
 ### Authentication Flow
@@ -217,7 +214,7 @@ interface CourierProcessor<T> {
 
 ## Key Types
 
-### Order Output Schemas
+### Order Output Schema
 
 ```typescript
 // SteadFast courier format
@@ -232,17 +229,6 @@ interface SteadFastOrder {
     "Delivery Type": string; // "Home"
     "Contact Name": string; // Brand name
     "Contact Phone": string; // Brand phone
-}
-
-// Pathao courier format
-interface PathaoOrder {
-    "Order No": string;
-    Name: string;
-    Product: string;
-    Price: string;
-    Address: string;
-    City: string;
-    "Phone No": string;
 }
 ```
 
@@ -331,8 +317,9 @@ GOOGLE_CLIENT_SECRET=
 // $lib/stores/app.ts
 import { writable } from "svelte/store";
 
-export const courierService = writable<string>("");
-export const zoneHover = writable<boolean>(false);
+// Pre-selected to SteadFast as it's the only available courier
+export const courierService = writable<string>("SteadFast");
+export const hasMerchantId = writable<boolean>(false);
 ```
 
 ## Common Tasks
@@ -344,7 +331,6 @@ export const zoneHover = writable<boolean>(false);
     ```typescript
     export enum Courier {
         SteadFast = "SteadFast",
-        Pathao = "Pathao",
         NewCourier = "NewCourier" // Add here
     }
     ```
@@ -369,12 +355,14 @@ export const zoneHover = writable<boolean>(false);
 
     ```typescript
     private static readonly processors = new Map([
-        [Courier.NewCourier, new NewCourierProcessor()],
-        // ...existing
+        [Courier.SteadFast, new SteadFastProcessor()],
+        [Courier.NewCourier, new NewCourierProcessor()]
     ]);
     ```
 
 8. Add courier option in `$lib/config/couriers.ts` with logo
+
+9. Update store in `$lib/stores/app.ts` to remove pre-selection if multiple couriers exist
 
 ### Updating Allowed Users
 

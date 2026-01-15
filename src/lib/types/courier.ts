@@ -11,8 +11,7 @@ import type { UserInfo } from "./user";
  * Supported courier services
  */
 export enum Courier {
-    SteadFast = "SteadFast",
-    Pathao = "Pathao"
+    SteadFast = "SteadFast"
 }
 
 // ==================== Order Types ====================
@@ -34,29 +33,16 @@ export interface SteadFastOrder {
 }
 
 /**
- * Pathao order format for Excel export
- */
-export interface PathaoOrder {
-    "Order No": string;
-    Name: string;
-    Product: string;
-    Price: string;
-    Address: string;
-    City: string;
-    "Phone No": string;
-}
-
-/**
  * Union type for all order types
  */
-export type OrderType = PathaoOrder | SteadFastOrder;
+export type OrderType = SteadFastOrder;
 
 // ==================== Processing Interfaces ====================
 
 /**
  * Generic courier processor interface
  * Each courier service must implement this interface
- * @template T - The specific order type (PathaoOrder or SteadFastOrder)
+ * @template T - The specific order type (SteadFastOrder)
  */
 export interface CourierProcessor<T> {
     processOrders(data: string[][], user: UserInfo): T[];
@@ -72,13 +58,6 @@ export interface CourierOption {
 }
 
 // ==================== Type Guards ====================
-
-/**
- * Type guard to check if an order is a Pathao order
- */
-export const isPathaoOrder = (order: unknown): order is PathaoOrder => {
-    return typeof order === "object" && order !== null && "Order No" in order && "Phone No" in order;
-};
 
 /**
  * Type guard to check if an order is a SteadFast order

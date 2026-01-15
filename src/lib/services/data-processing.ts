@@ -3,7 +3,7 @@
  * Contains utility functions for cleaning, filtering, and preparing CSV data
  */
 
-import { STEADFAST_INDEXES_ARRAY, PATHAO_INDEXES_ARRAY } from "$lib/constants";
+import { STEADFAST_INDEXES_ARRAY } from "$lib/constants";
 
 // ================== DATA PROCESSING UTILITIES ==================
 
@@ -65,24 +65,6 @@ export const prepareSteadFastOrderData = (rawData: string[][]): string[][] => {
     // Remove first and last entries - these are typically header/footer or test entries
     // that SteadFast doesn't want in the final order processing
     return processed.slice(1, -1);
-};
-
-/**
- * Prepare data for Pathao courier processing
- * Optimized with proper filtering and error handling
- */
-export const preparePathaoOrderData = (rawData: string[][]): string[][] => {
-    if (rawData.length <= 1) return []; // Need at least header + data
-
-    return (
-        rawData
-            .slice(1) // Skip header row
-            // Pathao only accepts orders with invoice numbers starting with "#"
-            // This filtering ensures compliance with Pathao's order format requirements
-            .filter((row) => row?.[0]?.startsWith("#"))
-            // Map each row to extract only the columns Pathao needs
-            .map((row) => PATHAO_INDEXES_ARRAY.map((index) => row[index] || ""))
-    );
 };
 
 /**
