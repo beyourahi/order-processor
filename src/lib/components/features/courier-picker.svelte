@@ -16,8 +16,8 @@
 </script>
 
 <div class="flex w-full flex-col items-center gap-4 sm:gap-6">
-    <!-- Courier options grid -->
-    <div class="grid w-full grid-cols-2 gap-3 sm:max-w-sm sm:gap-4">
+    <!-- Courier options -->
+    <div class="flex w-full max-w-sm flex-col gap-3 sm:gap-4">
         {#each COURIER_OPTIONS as option (option.value)}
             {@const isSelected = selectedCourier === option.value}
 
