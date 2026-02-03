@@ -1,379 +1,337 @@
-# CLAUDE.md
+# Order Processor
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Parallel Workflow & Git Strategy -- READ FIRST
+
+**NEVER CREATE NEW BRANCHES.** Use git worktrees for parallel work:
+
+```bash
+# Create a worktree for a feature
+git worktree add ../order-processor-<feature> main
+
+# List active worktrees
+git worktree list
+
+# Remove a worktree when done
+git worktree remove ../order-processor-<feature>
+
+# Clean up stale worktree references
+git worktree prune
+```
+
+All commits go directly to `main`. No feature branches. No PRs for solo work. Worktrees allow parallel development without branch switching or stashing.
 
 ## Project Overview
 
-SvelteKit application for processing Shopify order exports into SteadFast courier Excel format. Authorized users upload CSV files and download courier-ready files. Deployed to Cloudflare Workers.
+SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Authorized users (identified by Google OAuth email allowlist) upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions and brand settings.
 
-## Commands
-
-```bash
-bun run dev           # Development server (Vite)
-bun run build         # Production build
-bun run preview       # Build + wrangler dev (local preview)
-bun run deploy        # Build + deploy to Cloudflare Workers
-bun run check         # TypeScript/Svelte type checking
-bun run lint          # ESLint + Prettier checks
-bun run cf-typegen    # Generate Cloudflare types
-
-# Database Commands
-bun run db:generate       # Generate migration from schema changes
-bun run db:migrate:local  # Apply migrations to local D1
-bun run db:migrate        # Apply migrations to remote D1 (production)
-bun run db:push           # Push schema directly (requires D1 credentials)
-bun run db:studio         # Open Drizzle Studio (requires D1 credentials)
-```
+**Production URL**: `https://order-processor.beyourahi.workers.dev`
 
 ## Tech Stack
 
-- **Framework**: SvelteKit 2.x with Svelte 5
-- **Language**: TypeScript 5.9.3 (strict mode)
-- **Styling**: Tailwind CSS 4.x
-- **Authentication**: Better Auth with Cloudflare D1
-- **Database ORM**: Drizzle ORM with Drizzle Kit for migrations
-- **Data Processing**: `xlsx`, `papaparse`
-- **UI Components**: bits-ui (shadcn/svelte) + class-variance-authority
-- **Deployment**: Cloudflare Workers with D1 database
-- **Linting**: ESLint 9.x + Prettier with Svelte plugin
+| Layer           | Technology                                            |
+| --------------- | ----------------------------------------------------- |
+| Framework       | SvelteKit 2.x (Svelte 5 with runes)                  |
+| Language        | TypeScript 5.9 (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
+| Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)    |
+| UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA |
+| Auth            | Better Auth with Google OAuth, Drizzle adapter        |
+| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                |
+| CSV Parsing     | PapaParse                                             |
+| Excel Export    | SheetJS (`xlsx`)                                      |
+| Deployment      | Cloudflare Workers (adapter-cloudflare)               |
+| Package Manager | Bun                                                   |
+| Linting         | ESLint 9 flat config + Prettier                       |
 
-## Database Migrations
+## Core Architecture
 
-### Schema-Driven Workflow
+### Data Processing Pipeline
 
-The project uses Drizzle Kit for schema-driven migrations. The schema is defined in TypeScript and migrations are generated automatically.
-
-**Files:**
-
-- `src/lib/server/schema.ts` - Drizzle ORM schema definition
-- `drizzle.config.ts` - Drizzle Kit configuration
-- `migrations/` - SQL migration files
-- `migrations/meta/` - Drizzle Kit snapshots and journal
-
-### Making Schema Changes
-
-1. **Edit the schema** in `src/lib/server/schema.ts`:
-
-    ```typescript
-    // Add a new column
-    export const users = sqliteTable("users", {
-        // ... existing columns
-        newField: text("new_field") // Add new column
-    });
-    ```
-
-2. **Generate migration**:
-
-    ```bash
-    bun run db:generate
-    ```
-
-    This creates a new SQL file in `migrations/` (e.g., `0005_xxx.sql`)
-
-3. **Review the generated SQL** before applying
-
-4. **Apply migration locally**:
-
-    ```bash
-    bun run db:migrate:local
-    ```
-
-5. **Test the application** with `bun run dev`
-
-6. **Apply to production**:
-
-    ```bash
-    bun run db:migrate
-    ```
-
-### Migration Best Practices
-
-- **Never edit existing migrations** - Always generate new ones
-- **Review generated SQL** before committing
-- **Test locally first** using `db:migrate:local`
-- **Keep migrations small** - One logical change per migration
-- **Commit migrations with schema changes** - Keep them in sync
-
-### Drizzle Kit Commands
-
-| Command            | Description                                              |
-| ------------------ | -------------------------------------------------------- |
-| `db:generate`      | Generate SQL migration from schema changes               |
-| `db:migrate:local` | Apply migrations to local D1 database                    |
-| `db:migrate`       | Apply migrations to production D1                        |
-| `db:push`          | Push schema directly (dev only, requires D1 credentials) |
-| `db:studio`        | Open Drizzle Studio GUI (requires D1 credentials)        |
-
-### D1 Credentials (for push/studio)
-
-For `db:push` and `db:studio` commands, set these environment variables:
-
-```env
-CLOUDFLARE_ACCOUNT_ID=your_account_id
-CLOUDFLARE_DATABASE_ID=ae9e0e94-99a1-485f-9ed0-c42ad70c6094
-CLOUDFLARE_D1_TOKEN=your_api_token
+```
+CSV Upload --> PapaParse --> Auto-detect Shopify format --> Extract/deduplicate columns
+  --> Normalize phone numbers (BD +880 format) --> CourierProcessor --> xlsx export
 ```
 
-Get the API token from [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens) with D1 Edit permissions.
+1. **Upload**: User uploads CSV, parsed client-side via PapaParse
+2. **Detection**: `CourierService.isShopifyExport()` checks header columns
+3. **Preparation**: Data cleaned, deduplicated, and columns extracted
+   - `prepareSteadFastOrderData()` -- standard CSV with known column indexes
+   - `prepareShopifySteadFastOrderData()` -- Shopify export with address concatenation (cols 36+37+39)
+4. **Processing**: `SteadFastProcessor.processOrders()` maps to courier schema
+5. **Export**: SheetJS generates `.xlsx` file for download
 
-### Known Issues
+### Service Layer
 
-- **drizzle-kit 0.31.x hangs** - Using pinned version 0.30.0 due to [bug #4451](https://github.com/drizzle-team/drizzle-orm/issues/4451)
+```
+CourierService (orchestrator)
+  --> isShopifyExport() -- format detection
+  --> processors Map<Courier, CourierProcessor<T>>
+      --> SteadFastProcessor -- implements CourierProcessor<SteadFastOrder>
+  --> data-processing.ts -- removeDuplicatesAndExtractIndexes(), extractInvoices()
+```
 
-## Architecture
+The `CourierProcessor<T>` interface is generic -- new couriers implement `processOrders(data, user): T[]`.
+
+### Authentication Flow
+
+```
+Google OAuth --> Better Auth --> D1 sessions --> hooks.server.ts
+  --> event.locals.user / session / currentUser
+  --> Email checked against BRANDS allowlist in $lib/config/brands.ts
+```
+
+- Auth instance created per-request (Cloudflare Workers provide D1 binding per-request)
+- `createAuth()` factory in `$lib/server/auth.ts` -- not a singleton
+- Session: 7-day expiry, rolling (updated daily), cookie-cached (5 min)
+- Cookie prefix: `order-processor`, secure-only
+- `getCurrentUser()` derives brand info from authenticated email
+
+### Database Schema (Drizzle ORM)
+
+Tables in `src/lib/server/schema.ts`:
+- `users` -- authenticated user profiles
+- `sessions` -- active sessions (indexed on `user_id`)
+- `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
+- `verifications` -- OAuth state/email verification tokens
+- `brand_settings` -- editable contact info per brand (contact_name, contact_phone, merchant_id)
+
+All columns use `snake_case` (required by Better Auth Drizzle adapter with `usePlural: true`).
 
 ### Project Structure
 
 ```
 src/
-├── routes/                       # SvelteKit routes
-│   ├── +layout.svelte           # Root layout
-│   ├── +layout.server.ts        # Server-side layout data
-│   ├── +page.svelte             # Home page
-│   ├── +page.server.ts          # Server-side page data
-│   ├── +error.svelte            # Error page
-│   ├── login/                   # Login page
-│   └── api/                     # API routes
-│       └── logout/+server.ts    # Logout endpoint
-├── lib/
-│   ├── auth-client.ts           # Better Auth client
-│   ├── components/              # Svelte components
-│   │   ├── ui/                  # Reusable UI (Button, Footer, etc.)
-│   │   └── features/            # Feature components
-│   │       ├── order-processor.svelte
-│   │       ├── upload.svelte
-│   │       ├── download.svelte
-│   │       ├── courier-picker.svelte
-│   │       └── user.svelte
-│   ├── config/                  # Application configuration
-│   │   ├── index.ts             # Re-exports all config
-│   │   ├── app.ts               # App metadata
-│   │   ├── brands.ts            # Authorized brands/emails
-│   │   └── couriers.ts          # Courier options with logos
-│   ├── constants/               # Static constants
-│   │   ├── index.ts             # Re-exports all constants
-│   │   ├── files.ts             # File-related constants
-│   │   └── indexes.ts           # CSV column indexes
-│   ├── services/                # Business logic
-│   │   ├── index.ts             # Re-exports all services
-│   │   ├── courier-service.ts   # Main orchestrator
-│   │   ├── data-processing.ts   # CSV preparation utilities
-│   │   └── processors/          # Courier-specific processors
-│   │       └── steadfast.ts
-│   ├── server/                  # Server-only code
-│   │   └── auth.ts              # Better Auth server config
-│   ├── stores/                  # Svelte stores
-│   │   └── app.ts               # Global app state
-│   ├── hooks/                   # Custom hooks
-│   │   └── use-current-user.ts  # User authentication hook
-│   ├── types/                   # TypeScript definitions
-│   │   ├── index.ts             # Re-exports all types
-│   │   ├── courier.ts           # Order types, CourierProcessor interface
-│   │   ├── user.ts              # User/Brand interfaces
-│   │   ├── ui.ts                # Component prop types
-│   │   └── config.ts            # Config types
-│   └── utils/                   # Utility functions
-│       └── index.ts             # cn() helper for Tailwind
-├── hooks.server.ts              # SvelteKit server hooks (auth)
-├── app.css                      # Global styles
-├── app.d.ts                     # App type declarations
-└── app.html                     # HTML template
+  routes/
+    +layout.svelte / +layout.server.ts   -- root layout, loads user/session
+    +page.svelte / +page.server.ts       -- main order processing page
+    +error.svelte                         -- error boundary
+    login/                               -- login page with Google OAuth
+    api/brand-settings/+server.ts        -- brand settings CRUD
+    api/logout/+server.ts                -- logout endpoint
+  lib/
+    auth-client.ts                       -- Better Auth client instance
+    server/
+      auth.ts                            -- createAuth() factory
+      schema.ts                          -- Drizzle ORM schema (5 tables)
+    components/
+      features/                          -- order-processor, upload, download, courier-picker, user, steadfast-settings, session-provider
+      ui/                                -- button, footer, heading, loading-spinner, not-authorized (shadcn-svelte)
+    config/
+      app.ts                             -- app metadata
+      brands.ts                          -- BRANDS array, allowedEmails, findBrandByEmail()
+      couriers.ts                        -- courier options with logos
+    constants/
+      files.ts                           -- file-related constants
+      indexes.ts                         -- CSV column index mappings
+    services/
+      courier-service.ts                 -- main orchestrator
+      data-processing.ts                 -- CSV prep utilities
+      processors/steadfast.ts            -- SteadFast processor
+    stores/app.ts                        -- courierService, hasMerchantId (Svelte writables)
+    hooks/use-current-user.ts            -- derives CurrentUser from email
+    types/                               -- courier.ts, user.ts, ui.ts, config.ts, brand-settings.ts
+    utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts
+  hooks.server.ts                        -- auth middleware + security headers
+  hooks.client.ts                        -- client-side hooks
+  app.css                                -- global Tailwind styles
+  app.d.ts                               -- App.Locals, App.Platform, App.PageData, App.Error
+  app.html                               -- HTML shell
 ```
 
-### Data Processing Pipeline
+### Path Aliases
 
-1. **Upload**: CSV parsed via `papaparse`
-2. **Detection**: `CourierService.isShopifyExport()` auto-detects Shopify format
-3. **Preparation**: Data cleaned and columns extracted
-    - `prepareSteadFastOrderData()` - Standard CSV format
-    - `prepareShopifySteadFastOrderData()` - Shopify export format
-4. **Processing**: Processor transforms to courier schema
-5. **Export**: Excel file generated with `xlsx` library
-
-### Service Architecture
-
-```typescript
-// Main orchestrator - processes orders for SteadFast courier
-CourierService.processOrders(courierType, rawData, user)
-
-// Courier processors implement generic interface
-interface CourierProcessor<T> {
-    processOrders(data: string[][], user: UserInfo): T[];
-}
-
-// Processor
-└── SteadFastProcessor → SteadFastOrder[]
+```
+$lib     --> src/lib (SvelteKit default)
+$src     --> src
+$components --> src/lib/components
+$config  --> src/lib/config
+$services --> src/lib/services
+$types   --> src/lib/types
 ```
 
-### Authentication Flow
+## Common Commands
 
-- **Provider**: Better Auth with Google OAuth
-- **Database**: Cloudflare D1 for session storage
-- **Authorization**: Email allowlist in `$lib/config/brands.ts`
-- **Session**: Server-side validation via `hooks.server.ts`
+```bash
+# Development
+bun run dev              # Vite dev server on :5173
+bun run build            # Production build
+bun run preview          # Build + wrangler dev (local Cloudflare preview on :8787)
+bun run deploy           # Build + deploy to Cloudflare Workers
 
-## Key Types
+# Type Checking & Linting
+bun run check            # svelte-kit sync + svelte-check
+bun run check:watch      # same, in watch mode
+bun run lint             # prettier --check + eslint
+bun run format           # prettier --write
 
-### Order Output Schema
+# Cloudflare
+bun run cf-typegen       # regenerate worker-configuration.d.ts
 
-```typescript
-// SteadFast courier format
-interface SteadFastOrder {
-    Invoice: string; // Merchant ID
-    Name: string; // Customer name
-    Address: string; // Full address
-    Phone: string; // Normalized (starts with 1)
-    Amount: string; // COD amount
-    Note: string; // Instructions
-    Lot: string; // Empty
-    "Delivery Type": string; // "Home"
-    "Contact Name": string; // Brand name
-    "Contact Phone": string; // Brand phone
-}
+# Database (Drizzle Kit + D1)
+bun run db:generate      # generate migration SQL from schema changes
+bun run db:migrate:local # apply migrations to local D1
+bun run db:migrate       # apply migrations to remote/production D1
+bun run db:push          # push schema directly (needs D1 credentials)
+bun run db:studio        # Drizzle Studio GUI (needs D1 credentials)
+bun run db:check         # validate migration state
+bun run db:pull          # pull remote schema
 ```
 
-### Phone Number Normalization (SteadFast)
+### Database Migration Workflow
 
-The SteadFast processor normalizes Bangladesh phone numbers:
+1. Edit schema in `src/lib/server/schema.ts`
+2. `bun run db:generate` -- creates SQL in `migrations/`
+3. Review the generated SQL before applying
+4. `bun run db:migrate:local` -- test locally
+5. `bun run dev` -- verify the app works
+6. `bun run db:migrate` -- apply to production
+7. Commit migration files alongside schema changes
 
-- Removes `+880` country code
-- Strips leading zeros
-- Ensures number starts with `1` (Bangladesh mobile format)
+For `db:push` and `db:studio`, set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, and `CLOUDFLARE_D1_TOKEN` env vars.
 
-### User/Brand Types
+## Code Style Guidelines
 
-```typescript
-interface Brand {
-    name: string;
-    phone?: string;
-    emails: string[]; // Allowed email addresses
-    url: string;
-    courier: Courier | null;
-    merchant_id?: string;
-}
-```
+### Prettier
 
-## Path Aliases
+- 4-space indentation (no tabs)
+- Double quotes
+- No trailing commas
+- 120 character print width
+- Plugins: `prettier-plugin-svelte`, `prettier-plugin-tailwindcss`
 
-```json
-"$lib/*": ["./src/lib/*"]
-```
+### ESLint
 
-## Environment Variables
+- Flat config (`eslint.config.js`) with `@eslint/js`, `typescript-eslint`, `eslint-plugin-svelte`, `eslint-config-prettier`
+- Unused vars allowed with `_` prefix: `argsIgnorePattern: "^_"`, `varsIgnorePattern: "^_"`
+- `svelte/no-navigation-without-resolve` disabled (app does not use a base path)
+- Ignored: `build/`, `.svelte-kit/`, `dist/`, `node_modules/`, `scripts/`, `worker-configuration.d.ts`
 
-```env
-# Better Auth (Required)
-BETTER_AUTH_SECRET=           # openssl rand -base64 32
-BETTER_AUTH_URL=http://localhost:5173
+### TypeScript
 
-# Google OAuth (Required)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-```
+- Strict mode with additional flags: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax`
+- Use `$lib/` alias imports, never relative paths from route files
+- Barrel exports (`index.ts`) in every module directory
+- Type optional properties with explicit `| undefined` for `exactOptionalPropertyTypes` compatibility (see `app.d.ts` Locals)
 
-## Cloudflare Configuration
-
-### D1 Database
-
-- **Name**: `order_processor`
-- **Binding**: `DB` (in wrangler.jsonc)
-
-### wrangler.jsonc
-
-```jsonc
-{
-    "name": "order-processor",
-    "compatibility_date": "2024-12-01",
-    "d1_databases": [
-        {
-            "binding": "DB",
-            "database_name": "order_processor",
-            "database_id": "..."
-        }
-    ]
-}
-```
-
-## Svelte 5 Patterns
-
-### State Management
+### Svelte 5 Patterns
 
 ```svelte
 <script lang="ts">
-    // Reactive state
+    // State (NOT writable stores for component-local state)
     let value = $state("");
-
-    // Derived values
-    let doubled = $derived(value * 2);
+    let derived = $derived(value.length);
 
     // Props
     let { user, onSubmit }: Props = $props();
 </script>
 ```
 
-### Stores
+- Use runes (`$state`, `$derived`, `$props`, `$effect`) for Svelte 5 components
+- Svelte `writable` stores only for cross-component global state (`$lib/stores/`)
+- Tailwind CSS for all styling -- no inline styles, no CSS modules
+- Use `cn()` from `$lib/utils` for conditional/merged Tailwind classes
+- JSDoc on complex business logic functions
 
-```typescript
-// $lib/stores/app.ts
-import { writable } from "svelte/store";
+## Testing Practices
 
-// Pre-selected to SteadFast as it's the only available courier
-export const courierService = writable<string>("SteadFast");
-export const hasMerchantId = writable<boolean>(false);
+No test framework is currently configured. When adding tests:
+
+- Use Vitest (already compatible with the Vite setup)
+- Add `vitest` to devDependencies and a `test` script to `package.json`
+- Place test files alongside source: `*.test.ts` or `*.spec.ts`
+- Priority test targets: `data-processing.ts` (CSV parsing), `SteadFastProcessor` (phone normalization, field mapping), `courier-service.ts` (format detection)
+
+## Repository Etiquette
+
+### Conventional Commits
+
+This repo uses conventional commit prefixes (visible in git log):
+
+```
+feat:     new feature (e.g., "feat: Add editable brand settings")
+fix:      bug fix (e.g., "fix: Include city in SteadFast address")
+refactor: code restructuring without behavior change
+style:    visual/UI changes only
+chore:    tooling, config, dependencies
+docs:     documentation changes
 ```
 
-## Common Tasks
+### Commit Discipline
 
-### Adding a New Courier Service
+- Atomic commits -- one logical change per commit
+- Never edit existing migration files -- always generate new ones
+- Commit migration SQL files alongside the schema.ts changes
+- Never commit `.env`, `.dev.vars`, or any file with secrets
 
-1. Add enum value in `$lib/types/courier.ts`:
+## Development Environment
 
-    ```typescript
-    export enum Courier {
-        SteadFast = "SteadFast",
-        NewCourier = "NewCourier" // Add here
-    }
-    ```
+### Prerequisites
 
-2. Create order interface and type guard in `$lib/types/courier.ts`
+- **Bun** (package manager and runtime)
+- **Wrangler** (Cloudflare Workers CLI, installed as devDependency)
+- **Google Cloud Console** project with OAuth 2.0 credentials
 
-3. Add column indexes in `$lib/constants/indexes.ts`
+### Environment Setup
 
-4. Create processor in `$lib/services/processors/newcourier.ts`:
+1. Copy `.env.example` to `.env` and `.dev.vars`
+2. Fill in required values:
+   - `BETTER_AUTH_SECRET` -- generate with `openssl rand -base64 32`
+   - `BETTER_AUTH_URL` -- `http://localhost:5173` for dev
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- from Google Cloud Console
+3. For D1 operations, also set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, `CLOUDFLARE_D1_TOKEN`
+4. Run `bun install` and `bun run dev`
 
-    ```typescript
-    export class NewCourierProcessor implements CourierProcessor<NewCourierOrder> {
-        processOrders(data: string[][], user: UserInfo): NewCourierOrder[] { ... }
-    }
-    ```
+### Cloudflare Bindings
 
-5. Export from `$lib/services/processors/index.ts`
+Configured in `wrangler.jsonc`:
+- **D1 Database**: binding `DB`, database `order_processor`
+- **Assets**: binding `ASSETS`, directory `.svelte-kit/cloudflare`
+- **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
+- **Observability**: enabled
+- **CPU Limit**: 300,000ms
+- **Vars**: `BETTER_AUTH_URL` set to production URL
 
-6. Add preparation function in `$lib/services/data-processing.ts`
+Access in SvelteKit via `event.platform.env.DB`, typed in `app.d.ts` under `App.Platform`.
 
-7. Register in `$lib/services/courier-service.ts`:
+### CSRF Protection
 
-    ```typescript
-    private static readonly processors = new Map([
-        [Courier.SteadFast, new SteadFastProcessor()],
-        [Courier.NewCourier, new NewCourierProcessor()]
-    ]);
-    ```
+Trusted origins configured in `svelte.config.js`:
+- `http://localhost:5173` (Vite dev)
+- `http://localhost:8787` (Wrangler preview)
+- `https://order-processor.beyourahi.workers.dev` (production)
 
-8. Add courier option in `$lib/config/couriers.ts` with logo
+## Documentation References (Progressive Disclosure)
 
-9. Update store in `$lib/stores/app.ts` to remove pre-selection if multiple couriers exist
+### Critical Documentation Pattern
 
-### Updating Allowed Users
+When encountering unfamiliar patterns, check these sources in order:
 
-Edit `$lib/config/brands.ts` and add email to the brand's `emails` array.
+1. **SvelteKit docs** -- routing, hooks, adapters, `event.platform` for Cloudflare
+2. **Svelte 5 docs** -- runes (`$state`, `$derived`, `$props`, `$effect`), snippets
+3. **Better Auth docs** -- `svelteKitHandler`, Drizzle adapter config, `usePlural`, cookie settings
+4. **Drizzle ORM docs** -- D1 driver, schema definition, migration workflow
+5. **Cloudflare Workers docs** -- D1 bindings, `wrangler.jsonc` config, `nodejs_compat`
+6. **shadcn-svelte docs** -- component installation, `components.json` config, new-york style
 
-## Code Style
+For extended documentation, create an `agent_docs/` directory at the project root. Store courier-specific business rules, onboarding guides, or API references there. Reference from this file when needed.
 
-- Svelte 5 components with runes ($state, $derived, $props)
-- Server-side data loading via +page.server.ts
-- Tailwind CSS for styling (no inline styles)
-- Use `cn()` from `$lib/utils` for class merging
-- Proper TypeScript generics
-- Document complex business logic with JSDoc comments
-- Use barrel exports (`index.ts`) for clean imports
+## Project-Specific Warnings
+
+1. **Auth instance is per-request** -- Cloudflare Workers provide D1 binding per-request. `createAuth()` in `$lib/server/auth.ts` is a factory, not a singleton. Never cache the auth instance at module scope.
+
+2. **`building` guard in hooks.server.ts** -- During SvelteKit build/prerender, platform bindings (D1) are unavailable. The `if (building)` check is critical. Do not remove it.
+
+3. **Better Auth column names must be snake_case** -- The Drizzle adapter with `usePlural: true` expects `snake_case` column names in the schema. Deviation causes silent auth failures.
+
+4. **Phone number normalization is Bangladesh-specific** -- `SteadFastProcessor` strips `+880`, removes leading zeros, and ensures numbers start with `1`. This is correct only for Bangladesh mobile numbers.
+
+5. **Shopify CSV column indexes are hardcoded** -- Column positions (34 for Shipping Name, 36/37/39 for address parts, 43 for phone, 44 for notes, 11 for total) are based on Shopify's current export format. If Shopify changes their export schema, these break silently.
+
+6. **`prepareSteadFastOrderData` trims first and last rows** -- The `.slice(1, -1)` intentionally removes header and trailing rows for standard CSV format. This does NOT apply to Shopify exports (handled separately).
+
+7. **Brand authorization is config-driven** -- `$lib/config/brands.ts` contains the email allowlist. Adding a user requires a code change and redeployment. Brand settings (contact info, merchant ID) are in D1 and editable via UI.
+
+8. **drizzle-kit version sensitivity** -- The project previously pinned drizzle-kit to 0.30.0 due to a hang bug in 0.31.x. Current version is 0.31.8. If migration commands hang, check for upstream issues.
+
+9. **Security headers are applied to all responses** -- `hooks.server.ts` sets X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, and X-XSS-Protection. Immutable responses (redirects) are cloned before header application.
+
+10. **Never commit `.env` or `.dev.vars`** -- These contain auth secrets and API tokens. Only `.env.example` is tracked. Use `wrangler secret put <NAME>` for production secrets.
