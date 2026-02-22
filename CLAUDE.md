@@ -1,8 +1,8 @@
+# Order Processor
+
 ## Always Do First
 
 **Invoke the `frontend-design` skill** before writing any frontend code, every session, no exceptions.
-
-# Order Processor
 
 ## Parallel Workflow & Git Strategy -- READ FIRST
 
