@@ -24,6 +24,8 @@ git worktree prune
 
 All commits go directly to `main`. No feature branches. No PRs for solo work. Worktrees allow parallel development without branch switching or stashing.
 
+**Always break large tasks into focused scopes** — run parallel agents with git worktrees, each with a narrow, well-defined goal.
+
 ## Project Overview
 
 SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Authorized users (identified by Google OAuth email allowlist) upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions and brand settings.
