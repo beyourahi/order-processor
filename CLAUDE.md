@@ -364,6 +364,7 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 - Name screenshots descriptively: `tmp_screenshots/homepage-hero.png`, `tmp_screenshots/cart-drawer-open.png`
 - Take screenshots at multiple viewport sizes when responsive behavior matters (mobile + desktop)
 - After each batch of changes, compare the screenshots against the original requirements or design spec and explicitly state what matches and what still needs work
+- **MANDATORY CLEANUP**: After every successful task implementation, if the `tmp_screenshots/` directory was created during the work, it must be deleted before the task is considered complete. Do not skip this step — it is a hard requirement.
 
 ### Port Detection
 
