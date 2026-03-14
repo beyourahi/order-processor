@@ -42,6 +42,12 @@ export const BRANDS: Brand[] = [
         emails: ["corvienco@gmail.com", "arifulashfi321@gmail.com"],
         url: "https://corvien.co",
         courier: Courier.SteadFast
+    },
+    {
+        name: "Elegant Punjabi",
+        emails: ["saifhossainsujal99@gmail.com"],
+        url: "https://elegantpanjabi.com",
+        courier: Courier.SteadFast
     }
 ];
 

@@ -34,19 +34,19 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 
 ## Tech Stack
 
-| Layer           | Technology                                            |
-| --------------- | ----------------------------------------------------- |
-| Framework       | SvelteKit 2.x (Svelte 5 with runes)                  |
+| Layer           | Technology                                                                             |
+| --------------- | -------------------------------------------------------------------------------------- |
+| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                    |
 | Language        | TypeScript 5.9 (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
-| Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)    |
-| UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA |
-| Auth            | Better Auth with Google OAuth, Drizzle adapter        |
-| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                |
-| CSV Parsing     | PapaParse                                             |
-| Excel Export    | SheetJS (`xlsx`)                                      |
-| Deployment      | Cloudflare Workers (adapter-cloudflare)               |
-| Package Manager | Bun                                                   |
-| Linting         | ESLint 9 flat config + Prettier                       |
+| Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)                                      |
+| UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA                                  |
+| Auth            | Better Auth with Google OAuth, Drizzle adapter                                         |
+| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                 |
+| CSV Parsing     | PapaParse                                                                              |
+| Excel Export    | SheetJS (`xlsx`)                                                                       |
+| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                |
+| Package Manager | Bun                                                                                    |
+| Linting         | ESLint 9 flat config + Prettier                                                        |
 
 ## Core Architecture
 
@@ -60,8 +60,8 @@ CSV Upload --> PapaParse --> Auto-detect Shopify format --> Extract/deduplicate 
 1. **Upload**: User uploads CSV, parsed client-side via PapaParse
 2. **Detection**: `CourierService.isShopifyExport()` checks header columns
 3. **Preparation**: Data cleaned, deduplicated, and columns extracted
-   - `prepareSteadFastOrderData()` -- standard CSV with known column indexes
-   - `prepareShopifySteadFastOrderData()` -- Shopify export with address concatenation (cols 36+37+39)
+    - `prepareSteadFastOrderData()` -- standard CSV with known column indexes
+    - `prepareShopifySteadFastOrderData()` -- Shopify export with address concatenation (cols 36+37+39)
 4. **Processing**: `SteadFastProcessor.processOrders()` maps to courier schema
 5. **Export**: SheetJS generates `.xlsx` file for download
 
@@ -94,6 +94,7 @@ Google OAuth --> Better Auth --> D1 sessions --> hooks.server.ts
 ### Database Schema (Drizzle ORM)
 
 Tables in `src/lib/server/schema.ts`:
+
 - `users` -- authenticated user profiles
 - `sessions` -- active sessions (indexed on `user_id`)
 - `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
@@ -280,15 +281,16 @@ docs:     documentation changes
 
 1. Copy `.env.example` to `.env` and `.dev.vars`
 2. Fill in required values:
-   - `BETTER_AUTH_SECRET` -- generate with `openssl rand -base64 32`
-   - `BETTER_AUTH_URL` -- `http://localhost:5173` for dev
-   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- from Google Cloud Console
+    - `BETTER_AUTH_SECRET` -- generate with `openssl rand -base64 32`
+    - `BETTER_AUTH_URL` -- `http://localhost:5173` for dev
+    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- from Google Cloud Console
 3. For D1 operations, also set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, `CLOUDFLARE_D1_TOKEN`
 4. Run `bun install` and `bun run dev`
 
 ### Cloudflare Bindings
 
 Configured in `wrangler.jsonc`:
+
 - **D1 Database**: binding `DB`, database `order_processor`
 - **Assets**: binding `ASSETS`, directory `.svelte-kit/cloudflare`
 - **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
@@ -301,6 +303,7 @@ Access in SvelteKit via `event.platform.env.DB`, typed in `app.d.ts` under `App.
 ### CSRF Protection
 
 Trusted origins configured in `svelte.config.js`:
+
 - `http://localhost:5173` (Vite dev)
 - `http://localhost:8787` (Wrangler preview)
 - `https://order-processor.beyourahi.workers.dev` (production)
