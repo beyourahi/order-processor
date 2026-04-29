@@ -32,11 +32,11 @@
     const needsMerchantId = $derived(isSteadFast && !$hasMerchantId);
 
     // Computed: is upload disabled?
-    const isDisabled = $derived(selectedCourier === "" || currentUser.courier !== selectedCourier || needsMerchantId);
+    const isDisabled = $derived(selectedCourier === "" || needsMerchantId);
 
     // Handle file selection
     const handleFileSelect = async (file: File) => {
-        if (isDisabled || !currentUser.courier) return;
+        if (isDisabled) return;
 
         acceptedFile = file;
         isProcessing = true;
@@ -55,7 +55,7 @@
             let contactPhone = "";
             let merchantId = "";
 
-            if (currentUser.courier === Courier.SteadFast) {
+            if (selectedCourier === Courier.SteadFast) {
                 try {
                     const settingsRes = await fetch("/api/brand-settings");
                     if (settingsRes.ok) {
@@ -72,14 +72,14 @@
             }
 
             // Process orders through courier service
-            const processedOrders = CourierService.processOrders(currentUser.courier as Courier, result.data, {
+            const processedOrders = CourierService.processOrders(selectedCourier as Courier, result.data, {
                 name: contactName,
                 phone: contactPhone,
                 merchant_id: merchantId
             });
 
             // Generate and download Excel file
-            const fileName = generateFileName(currentUser.courier as string);
+            const fileName = generateFileName(selectedCourier);
             generateExcel(processedOrders, fileName, "Sheet1");
 
             // Reset state after short delay (so user sees the download preview)

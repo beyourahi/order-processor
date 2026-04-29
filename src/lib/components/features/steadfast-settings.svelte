@@ -10,10 +10,9 @@
 
     interface Props {
         visible: boolean;
-        brandName: string;
     }
 
-    let { visible, brandName }: Props = $props();
+    let { visible }: Props = $props();
 
     // Form state
     let contactName = $state("");
@@ -248,8 +247,6 @@
         </div>
 
         <!-- Helper text -->
-        <p class="mt-3 text-center text-xs text-zinc-500">
-            Settings are shared with all {brandName} team members
-        </p>
+        <p class="mt-3 text-center text-xs text-zinc-500">Your personal SteadFast delivery settings</p>
     </div>
 {/if}

@@ -7,7 +7,7 @@ export { Courier, isSteadFastOrder } from "./courier";
 export type { SteadFastOrder, OrderType, CourierProcessor, CourierOption } from "./courier";
 
 // User Types
-export type { Brand, CurrentUser, UserInfo } from "./user";
+export type { CurrentUser, UserInfo } from "./user";
 
 // Config Types
 export type { AppConfig } from "./config";

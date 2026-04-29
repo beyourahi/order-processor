@@ -99,15 +99,21 @@ export const rateLimits = sqliteTable(
 );
 
 /**
- * Brand settings table - stores editable contact info per brand
- * Data is shared across all users of the same brand
+ * Brand settings table - stores editable contact info per user
  */
-export const brandSettings = sqliteTable("brand_settings", {
-    id: text("id").primaryKey(),
-    brandName: text("brand_name").notNull().unique(),
-    contactName: text("contact_name"),
-    contactPhone: text("contact_phone"),
-    merchantId: text("merchant_id"),
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
-});
+export const brandSettings = sqliteTable(
+    "brand_settings",
+    {
+        id: text("id").primaryKey(),
+        userId: text("user_id")
+            .notNull()
+            .unique()
+            .references(() => users.id, { onDelete: "cascade" }),
+        contactName: text("contact_name"),
+        contactPhone: text("contact_phone"),
+        merchantId: text("merchant_id"),
+        createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+        updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
+    },
+    (table) => [index("idx_brand_settings_user_id").on(table.userId)]
+);

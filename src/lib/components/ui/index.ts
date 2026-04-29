@@ -9,6 +9,3 @@ export * from "./heading";
 
 // Footer
 export * from "./footer";
-
-// Not Authorized
-export * from "./not-authorized";

@@ -1,6 +1,6 @@
 /**
  * Brand settings types for editable contact information
- * Data is shared across all users of the same brand
+ * Data is stored per user (keyed by userId)
  */
 
 /**
@@ -8,7 +8,7 @@
  */
 export interface BrandSettings {
     id: string;
-    brandName: string;
+    userId: string;
     contactName: string | null;
     contactPhone: string | null;
     merchantId: string | null;
@@ -38,7 +38,7 @@ export interface BrandSettingsResponse {
  * Default values returned when no settings exist
  */
 export interface BrandSettingsDefaults {
-    brandName: string;
+    userId: string;
     contactName: null;
     contactPhone: null;
     merchantId: null;

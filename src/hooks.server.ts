@@ -95,16 +95,20 @@ export const handle: Handle = async ({ event, resolve }) => {
     const auth = createAuth(db, env);
 
     // Fetch current session from cookies
-    const session = await auth.api.getSession({
-        headers: event.request.headers
-    });
+    let session;
+    try {
+        session = await auth.api.getSession({
+            headers: event.request.headers
+        });
+    } catch {
+        session = null;
+    }
 
     // Populate locals for use in load functions and endpoints
     if (session) {
         event.locals.session = session.session;
         event.locals.user = session.user;
-        // Derive currentUser from authenticated email and brand config
-        event.locals.currentUser = getCurrentUser(session.user.email);
+        event.locals.currentUser = getCurrentUser(session.user);
     } else {
         event.locals.session = null;
         event.locals.user = null;

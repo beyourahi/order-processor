@@ -15,6 +15,13 @@
             "when": 1777466505440,
             "tag": "0005_big_sphinx",
             "breakpoints": true
+        },
+        {
+            "idx": 6,
+            "version": "6",
+            "when": 1746057600000,
+            "tag": "0006_brand_settings_user_id",
+            "breakpoints": true
         }
     ]
 }

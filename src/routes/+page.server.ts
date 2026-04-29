@@ -20,7 +20,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
         user: locals.user,
-        currentUser: locals.currentUser,
-        isAuthorized: locals.currentUser !== null
+        currentUser: locals.currentUser
     };
 };
