@@ -84,6 +84,21 @@ export const verifications = sqliteTable(
 );
 
 /**
+ * Rate limits table - tracks request counts per IP + path for Better Auth's rate limiter.
+ * lastRequest is a Unix millisecond timestamp (not a Date), stored as plain integer.
+ */
+export const rateLimits = sqliteTable(
+    "rate_limits",
+    {
+        id: text("id").primaryKey(),
+        key: text("key").notNull(),
+        count: integer("count").notNull(),
+        lastRequest: integer("last_request").notNull()
+    },
+    (table) => [index("idx_rate_limits_key").on(table.key)]
+);
+
+/**
  * Brand settings table - stores editable contact info per brand
  * Data is shared across all users of the same brand
  */

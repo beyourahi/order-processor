@@ -8,12 +8,24 @@ import { getCurrentUser } from "$lib/hooks";
  * Security headers applied to all responses.
  * These protect against common web vulnerabilities.
  */
+// Google Fonts is loaded in app.html; lh3.googleusercontent.com serves user avatars from Google OAuth.
+// 'unsafe-inline' is required for SvelteKit's hydration bootstrap scripts and Tailwind's scoped styles.
+const CSP = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src https://fonts.gstatic.com",
+    "img-src 'self' data: https://lh3.googleusercontent.com",
+    "connect-src 'self'",
+    "frame-ancestors 'none'"
+].join("; ");
+
 const SECURITY_HEADERS = {
-    "X-Content-Type-Options": "nosniff", // Prevent MIME type sniffing
-    "X-Frame-Options": "DENY", // Prevent clickjacking
-    "Referrer-Policy": "strict-origin-when-cross-origin", // Control referrer info
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()", // Restrict browser features
-    "X-XSS-Protection": "1; mode=block" // Legacy XSS protection for older browsers
+    "Content-Security-Policy": CSP,
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY", // kept for browsers that predate CSP frame-ancestors support
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
 } as const;
 
 /**

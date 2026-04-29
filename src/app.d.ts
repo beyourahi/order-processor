@@ -2,6 +2,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import type { CurrentUser } from "$lib/types";
+import type { Auth } from "$lib/server/auth";
 
 /**
  * Type definitions for the SvelteKit application.
@@ -22,25 +23,8 @@ declare global {
          * with `exactOptionalPropertyTypes: true` in tsconfig.
          */
         interface Locals {
-            user: {
-                id: string;
-                email: string;
-                name: string;
-                image?: string | null | undefined;
-                emailVerified: boolean;
-                createdAt: Date;
-                updatedAt: Date;
-            } | null;
-            session: {
-                id: string;
-                userId: string;
-                expiresAt: Date;
-                token: string;
-                createdAt: Date;
-                updatedAt: Date;
-                ipAddress?: string | null | undefined;
-                userAgent?: string | null | undefined;
-            } | null;
+            user: Auth["$Infer"]["Session"]["user"] | null;
+            session: Auth["$Infer"]["Session"]["session"] | null;
             /** Current user derived from auth and brand config */
             currentUser: CurrentUser | null;
         }

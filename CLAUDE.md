@@ -90,6 +90,8 @@ Google OAuth --> Better Auth --> D1 sessions --> hooks.server.ts
 - Session: 7-day expiry, rolling (updated daily), cookie-cached (5 min)
 - Cookie prefix: `order-processor`, secure-only
 - `getCurrentUser()` derives brand info from authenticated email
+- Rate limiting enabled (20 req/min, D1-backed) — applies across all Cloudflare edge nodes
+- `App.Locals` user/session types derived via `Auth["$Infer"]["Session"]` — don't inline them manually
 
 ### Database Schema (Drizzle ORM)
 
@@ -100,6 +102,7 @@ Tables in `src/lib/server/schema.ts`:
 - `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
 - `verifications` -- OAuth state/email verification tokens
 - `brand_settings` -- editable contact info per brand (contact_name, contact_phone, merchant_id)
+- `rate_limits` -- request counts per IP+path for Better Auth's D1-backed rate limiter (20 req/60s)
 
 All columns use `snake_case` (required by Better Auth Drizzle adapter with `usePlural: true`).
 
@@ -118,7 +121,7 @@ src/
     auth-client.ts                       -- Better Auth client instance
     server/
       auth.ts                            -- createAuth() factory
-      schema.ts                          -- Drizzle ORM schema (5 tables)
+      schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
       features/                          -- order-processor, upload, download, courier-picker, user, steadfast-settings, session-provider
       ui/                                -- button, footer, heading, loading-spinner, not-authorized (shadcn-svelte)
@@ -341,9 +344,11 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 
 8. **drizzle-kit version sensitivity** -- The project previously pinned drizzle-kit to 0.30.0 due to a hang bug in 0.31.x. Current version is 0.31.8. If migration commands hang, check for upstream issues.
 
-9. **Security headers are applied to all responses** -- `hooks.server.ts` sets X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, and X-XSS-Protection. Immutable responses (redirects) are cloned before header application.
+9. **Security headers are applied to all responses** -- `hooks.server.ts` sets a Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. `X-XSS-Protection` was removed (deprecated). The CSP requires `'unsafe-inline'` for SvelteKit hydration scripts and Tailwind styles — do not tighten it without testing. Immutable responses (redirects) are cloned before header application.
 
 10. **Never commit `.env` or `.dev.vars`** -- These contain auth secrets and API tokens. Only `.env.example` is tracked. Use `wrangler secret put <NAME>` for production secrets.
+
+11. **Cookie cache version is a global session kill-switch** -- Bumping `cookieCache.version` in `createAuth()` instantly invalidates all cached sessions across all users/edge nodes. Use in security incidents. Current value: `"1"`.
 
 ---
 

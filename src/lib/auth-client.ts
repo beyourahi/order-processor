@@ -11,10 +11,7 @@ import { createAuthClient } from "better-auth/svelte";
  * The baseURL should match your BETTER_AUTH_URL environment variable.
  * In development, this is typically http://localhost:5173.
  */
-export const authClient = createAuthClient({
-    // Empty baseURL uses the current origin (works in dev and production)
-    baseURL: ""
-});
+export const authClient = createAuthClient({});
 
 /**
  * Convenience exports for commonly used auth methods.

@@ -65,8 +65,18 @@ export function createAuth(d1: D1Database, env: AuthEnv) {
             // Enable cookie caching for performance
             cookieCache: {
                 enabled: true,
-                maxAge: 60 * 5 // 5 minutes
+                maxAge: 60 * 5, // 5 minutes
+                // Bump version to instantly invalidate all cached sessions globally (e.g. security incident)
+                version: "1"
             }
+        },
+
+        // Rate limiting on auth routes — uses D1 so limits apply across all edge nodes
+        rateLimit: {
+            enabled: true,
+            window: 60, // 1-minute window
+            max: 20, // generous for an internal tool; sign-in/sign-up paths get stricter built-in rules (3/10s)
+            storage: "database"
         },
 
         // Advanced security settings
