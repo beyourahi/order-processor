@@ -82,14 +82,14 @@ The `CourierProcessor<T>` interface is generic -- new couriers implement `proces
 ```
 Google OAuth --> Better Auth --> D1 sessions --> hooks.server.ts
   --> event.locals.user / session / currentUser
-  --> Email checked against BRANDS allowlist in $lib/config/brands.ts
+  --> Any authenticated Google user is authorized (authentication is the sole gate)
 ```
 
 - Auth instance created per-request (Cloudflare Workers provide D1 binding per-request)
 - `createAuth()` factory in `$lib/server/auth.ts` -- not a singleton
 - Session: 7-day expiry, rolling (updated daily), cookie-cached (5 min)
 - Cookie prefix: `order-processor`, secure-only
-- `getCurrentUser()` derives brand info from authenticated email
+- `getCurrentUser()` maps session user to `CurrentUser { name, email }` — any authenticated user is authorized
 - Rate limiting enabled (20 req/min, D1-backed) — applies across all Cloudflare edge nodes
 - `App.Locals` user/session types derived via `Auth["$Infer"]["Session"]` — don't inline them manually
 
@@ -101,7 +101,7 @@ Tables in `src/lib/server/schema.ts`:
 - `sessions` -- active sessions (indexed on `user_id`)
 - `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
 - `verifications` -- OAuth state/email verification tokens
-- `brand_settings` -- editable contact info per brand (contact_name, contact_phone, merchant_id)
+- `brand_settings` -- editable contact info per user (contact_name, contact_phone, merchant_id), linked via `user_id` FK
 - `rate_limits` -- request counts per IP+path for Better Auth's D1-backed rate limiter (20 req/60s)
 
 All columns use `snake_case` (required by Better Auth Drizzle adapter with `usePlural: true`).
@@ -124,10 +124,9 @@ src/
       schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
       features/                          -- order-processor, upload, download, courier-picker, user, steadfast-settings, session-provider
-      ui/                                -- button, footer, heading, loading-spinner, not-authorized (shadcn-svelte)
+      ui/                                -- button, footer, heading, loading-spinner (shadcn-svelte)
     config/
       app.ts                             -- app metadata
-      brands.ts                          -- BRANDS array, allowedEmails, findBrandByEmail()
       couriers.ts                        -- courier options with logos
     constants/
       files.ts                           -- file-related constants
@@ -340,7 +339,7 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 
 6. **`prepareSteadFastOrderData` trims first and last rows** -- The `.slice(1, -1)` intentionally removes header and trailing rows for standard CSV format. This does NOT apply to Shopify exports (handled separately).
 
-7. **Brand authorization is config-driven** -- `$lib/config/brands.ts` contains the email allowlist. Adding a user requires a code change and redeployment. Brand settings (contact info, merchant ID) are in D1 and editable via UI.
+7. **Authorization is authentication-only** -- Any Google user who successfully authenticates is authorized. There is no email allowlist. Brand settings (contact name, phone, merchant ID) are per-user in D1 and editable via the UI. To restrict access, an email allowlist or similar gate would need to be re-added.
 
 8. **drizzle-kit version sensitivity** -- The project previously pinned drizzle-kit to 0.30.0 due to a hang bug in 0.31.x. Current version is 0.31.8. If migration commands hang, check for upstream issues.
 
