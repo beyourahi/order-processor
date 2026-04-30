@@ -9,3 +9,6 @@ export * from "./heading";
 
 // Footer
 export * from "./footer";
+
+// Input
+export * from "./input/index.js";

@@ -1,19 +1,35 @@
 <!--
   LoadingSpinner Component
-  Displays an animated loading indicator using CSS keyframe animations
-  The .loader class is defined in app.css with rotation and scale animations
+  Displays an animated loading indicator using Tailwind's animate-spin
+  Supports size variants (sm, md, lg) and a configurable border-top color class
 -->
 <script lang="ts">
+    import { cn } from "$lib/utils";
+
+    type Size = "sm" | "md" | "lg";
+
     interface Props {
+        size?: Size;
+        colorClass?: string;
         class?: string;
     }
 
-    let { class: className = "" }: Props = $props();
+    const sizeClasses: Record<Size, string> = {
+        sm: "h-4 w-4",
+        md: "h-5 w-5",
+        lg: "h-6 w-6"
+    };
+
+    let { size = "md", colorClass = "border-t-zinc-400", class: className = "" }: Props = $props();
 </script>
 
-<span class={["loader", className]} role="status" aria-label="Loading">
+<div
+    class={cn("animate-spin rounded-full border-2 border-zinc-500", sizeClasses[size], colorClass, className)}
+    role="status"
+    aria-label="Loading"
+>
     <span class="sr-only">Loading...</span>
-</span>
+</div>
 
 <style>
     .sr-only {

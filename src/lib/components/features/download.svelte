@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
     import downloadGif from "$lib/assets/download.gif";
+    import { formatFileSize } from "$lib/utils";
 
     interface Props {
         fileName: string;
@@ -12,15 +13,6 @@
     }
 
     let { fileName, fileSize }: Props = $props();
-
-    // Format file size for display
-    const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return "0 Bytes";
-        const k = 1024;
-        const sizes = ["Bytes", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-    };
 </script>
 
 <div class="flex flex-col items-center justify-center gap-4 px-4 sm:gap-6">
