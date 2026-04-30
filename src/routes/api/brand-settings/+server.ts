@@ -6,22 +6,33 @@ import { brandSettings } from "$lib/server/schema";
 import type { BrandSettingsPayload } from "$lib/types";
 
 /**
- * Fetch settings for the current authenticated user
+ * Asserts that the current request is authenticated.
+ * Returns the user object if authenticated, otherwise throws a 401 error.
  */
-export const GET: RequestHandler = async ({ locals, platform }) => {
+function requireAuth(locals: App.Locals) {
     if (!locals.user) {
         error(401, { message: "Not authenticated" });
     }
+    return locals.user;
+}
 
-    const userId = locals.user.id;
-    const db = drizzle(platform!.env.DB);
+/**
+ * Fetch settings for the current authenticated user
+ */
+export const GET: RequestHandler = async ({ locals, platform }) => {
+    const user = requireAuth(locals);
 
-    const settings = await db.select().from(brandSettings).where(eq(brandSettings.userId, userId)).get();
+    if (!platform?.env?.DB) {
+        error(503, { message: "Database unavailable" });
+    }
+
+    const db = drizzle(platform.env.DB);
+    const settings = await db.select().from(brandSettings).where(eq(brandSettings.userId, user.id)).get();
 
     return json({
         success: true,
         data: settings ?? {
-            userId,
+            userId: user.id,
             contactName: null,
             contactPhone: null,
             merchantId: null
@@ -29,28 +40,56 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
     });
 };
 
+const ALLOWED_BODY_KEYS = new Set<string>([
+    "contact_name",
+    "contactName",
+    "contact_phone",
+    "contactPhone",
+    "merchant_id",
+    "merchantId"
+]);
+
 /**
  * Create or update settings for the current authenticated user
  */
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
-    if (!locals.user) {
-        error(401, { message: "Not authenticated" });
+    const user = requireAuth(locals);
+
+    if (!platform?.env?.DB) {
+        error(503, { message: "Database unavailable" });
     }
 
-    const userId = locals.user.id;
-    const db = drizzle(platform!.env.DB);
+    const db = drizzle(platform.env.DB);
 
-    let body: BrandSettingsPayload;
+    let rawBody: unknown;
     try {
-        body = await request.json();
+        rawBody = await request.json();
     } catch {
         error(400, { message: "Invalid JSON body" });
     }
+
+    // Validate body shape: must be a plain object with only expected string fields
+    if (typeof rawBody !== "object" || rawBody === null || Array.isArray(rawBody)) {
+        error(400, { message: "Invalid request body" });
+    }
+
+    const bodyObj = rawBody as Record<string, unknown>;
+    for (const key of Object.keys(bodyObj)) {
+        if (!ALLOWED_BODY_KEYS.has(key)) {
+            error(400, { message: "Invalid request body" });
+        }
+        if (bodyObj[key] !== undefined && typeof bodyObj[key] !== "string") {
+            error(400, { message: "Invalid request body" });
+        }
+    }
+
+    const body = rawBody as BrandSettingsPayload;
 
     if (!body.merchantId || body.merchantId.trim().length === 0) {
         error(400, { message: "Merchant ID is required" });
     }
 
+    const userId = user.id;
     const existing = await db.select().from(brandSettings).where(eq(brandSettings.userId, userId)).get();
 
     const now = new Date();
