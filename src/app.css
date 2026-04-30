@@ -14,7 +14,7 @@
 
 @theme {
     /* Colors */
-    --color-background: hsl(0 0% 100%);
+    --color-background: oklch(0.065 0 0);
     --color-foreground: hsl(240 10% 3.9%);
 
     --color-card: hsl(0 0% 100%);
