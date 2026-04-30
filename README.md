@@ -8,17 +8,17 @@ Converts Shopify order export CSVs into courier-ready Excel files for the [Stead
 
 ## Tech Stack
 
-| Layer         | Technology                         |
-| ------------- | ---------------------------------- |
-| Framework     | SvelteKit 2 + Svelte 5 (runes)     |
-| Styling       | Tailwind CSS v4                    |
-| UI Components | shadcn-svelte                      |
-| Auth          | Better Auth (Google OAuth)         |
-| Database      | Cloudflare D1 + Drizzle ORM        |
-| CSV Parsing   | PapaParse                          |
-| Excel Export  | SheetJS                            |
-| Deployment    | Cloudflare Workers                 |
-| Package mgr   | Bun                                |
+| Layer         | Technology                     |
+| ------------- | ------------------------------ |
+| Framework     | SvelteKit 2 + Svelte 5 (runes) |
+| Styling       | Tailwind CSS v4                |
+| UI Components | shadcn-svelte                  |
+| Auth          | Better Auth (Google OAuth)     |
+| Database      | Cloudflare D1 + Drizzle ORM    |
+| CSV Parsing   | PapaParse                      |
+| Excel Export  | SheetJS                        |
+| Deployment    | Cloudflare Workers             |
+| Package mgr   | Bun                            |
 
 ---
 
@@ -55,15 +55,15 @@ bun run dev              # http://localhost:5173
 
 ## Environment Variables
 
-| Variable                 | Required | Description                                   |
-| ------------------------ | -------- | --------------------------------------------- |
-| `BETTER_AUTH_SECRET`     | Yes      | Random secret for session signing             |
-| `BETTER_AUTH_URL`        | Yes      | Deployed URL (also set in `wrangler.jsonc`)   |
-| `GOOGLE_CLIENT_ID`       | Yes      | Google OAuth client ID                        |
-| `GOOGLE_CLIENT_SECRET`   | Yes      | Google OAuth client secret                    |
-| `CLOUDFLARE_ACCOUNT_ID`  | Yes      | Cloudflare account ID                         |
-| `CLOUDFLARE_DATABASE_ID` | Yes      | D1 database ID                                |
-| `CLOUDFLARE_D1_TOKEN`    | Yes      | Cloudflare API token with D1 edit permission  |
+| Variable                 | Required | Description                                  |
+| ------------------------ | -------- | -------------------------------------------- |
+| `BETTER_AUTH_SECRET`     | Yes      | Random secret for session signing            |
+| `BETTER_AUTH_URL`        | Yes      | Deployed URL (also set in `wrangler.jsonc`)  |
+| `GOOGLE_CLIENT_ID`       | Yes      | Google OAuth client ID                       |
+| `GOOGLE_CLIENT_SECRET`   | Yes      | Google OAuth client secret                   |
+| `CLOUDFLARE_ACCOUNT_ID`  | Yes      | Cloudflare account ID                        |
+| `CLOUDFLARE_DATABASE_ID` | Yes      | D1 database ID                               |
+| `CLOUDFLARE_D1_TOKEN`    | Yes      | Cloudflare API token with D1 edit permission |
 
 `BETTER_AUTH_URL` is also a non-secret binding in `wrangler.jsonc` for production. All others are secrets — never commit them.
 
@@ -71,19 +71,19 @@ bun run dev              # http://localhost:5173
 
 ## Scripts
 
-| Script                       | Description                              |
-| ---------------------------- | ---------------------------------------- |
-| `bun run dev`                | Dev server on `:5173`                    |
-| `bun run preview`            | Wrangler local preview on `:8787`        |
-| `bun run build`              | Production build                         |
-| `bun run deploy`             | Build + deploy to Cloudflare Workers     |
-| `bun run check`              | TypeScript validation                    |
-| `bun run lint`               | Prettier + ESLint                        |
-| `bun run format`             | Prettier auto-format                     |
-| `bun run cf-typegen`         | Regenerate Cloudflare types              |
-| `bun run db:generate`        | Generate migration from schema changes   |
-| `bun run db:migrate`         | Apply migrations to production D1        |
-| `bun run db:migrate:local`   | Apply migrations to local D1             |
+| Script                     | Description                            |
+| -------------------------- | -------------------------------------- |
+| `bun run dev`              | Dev server on `:5173`                  |
+| `bun run preview`          | Wrangler local preview on `:8787`      |
+| `bun run build`            | Production build                       |
+| `bun run deploy`           | Build + deploy to Cloudflare Workers   |
+| `bun run check`            | TypeScript validation                  |
+| `bun run lint`             | Prettier + ESLint                      |
+| `bun run format`           | Prettier auto-format                   |
+| `bun run cf-typegen`       | Regenerate Cloudflare types            |
+| `bun run db:generate`      | Generate migration from schema changes |
+| `bun run db:migrate`       | Apply migrations to production D1      |
+| `bun run db:migrate:local` | Apply migrations to local D1           |
 
 ---
 
@@ -105,8 +105,8 @@ bun run deploy
 1. Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
 2. Create an OAuth 2.0 Client ID (Web application)
 3. Add authorized redirect URIs:
-   - `http://localhost:5173/api/auth/callback/google` (local)
-   - `https://order-processor.beyourahi.workers.dev/api/auth/callback/google` (production)
+    - `http://localhost:5173/api/auth/callback/google` (local)
+    - `https://order-processor.beyourahi.workers.dev/api/auth/callback/google` (production)
 
 ---
 

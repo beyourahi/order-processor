@@ -75,7 +75,7 @@
             const processedOrders = CourierService.processOrders(selectedCourier as Courier, result.data, {
                 name: contactName,
                 phone: contactPhone,
-                merchant_id: merchantId
+                merchantId: merchantId
             });
 
             // Generate and download Excel file

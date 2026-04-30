@@ -51,9 +51,9 @@ export const parseCSVString = (csvString: string): CSVParseResult => {
  * @returns Formatted string (e.g., "1.5 MB")
  */
 export const formatFileSize = (bytes: number): string => {
+    const BYTES_PER_UNIT = 1024;
     if (bytes === 0) return "0 Bytes";
-    const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    const i = Math.floor(Math.log(bytes) / Math.log(BYTES_PER_UNIT));
+    return parseFloat((bytes / Math.pow(BYTES_PER_UNIT, i)).toFixed(2)) + " " + sizes[i];
 };

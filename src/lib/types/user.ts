@@ -12,7 +12,7 @@
 export interface UserInfo {
     name: string;
     phone: string;
-    merchant_id: string;
+    merchantId: string;
 }
 
 /**

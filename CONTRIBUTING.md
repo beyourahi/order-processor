@@ -39,11 +39,11 @@ When in doubt, open an issue to discuss the change before writing code.
 
 ### Prerequisites
 
-| Tool | Version | Install |
-|---|---|---|
-| [Bun](https://bun.sh) | Latest | `curl -fsSL https://bun.sh/install \| bash` |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Included as devDep | `bunx wrangler` |
-| [Node.js](https://nodejs.org) | 20+ (for type compatibility) | Via `nvm` or direct |
+| Tool                                                            | Version                      | Install                                     |
+| --------------------------------------------------------------- | ---------------------------- | ------------------------------------------- |
+| [Bun](https://bun.sh)                                           | Latest                       | `curl -fsSL https://bun.sh/install \| bash` |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Included as devDep           | `bunx wrangler`                             |
+| [Node.js](https://nodejs.org)                                   | 20+ (for type compatibility) | Via `nvm` or direct                         |
 
 A Google Cloud Console project with OAuth 2.0 credentials is required for authentication during development.
 
@@ -86,17 +86,17 @@ bun run preview   # builds + starts wrangler dev on :8787
 
 ### Available Scripts
 
-| Script | Description |
-|---|---|
-| `bun run dev` | Vite dev server on `:5173` |
-| `bun run build` | Production build |
-| `bun run preview` | Build + Wrangler local Workers preview |
-| `bun run deploy` | Build + deploy to Cloudflare Workers |
-| `bun run check` | TypeScript and Svelte type checking |
-| `bun run check:watch` | Type checking in watch mode |
-| `bun run lint` | Prettier check + ESLint |
-| `bun run format` | Auto-format with Prettier |
-| `bun run cf-typegen` | Regenerate `worker-configuration.d.ts` |
+| Script                | Description                            |
+| --------------------- | -------------------------------------- |
+| `bun run dev`         | Vite dev server on `:5173`             |
+| `bun run build`       | Production build                       |
+| `bun run preview`     | Build + Wrangler local Workers preview |
+| `bun run deploy`      | Build + deploy to Cloudflare Workers   |
+| `bun run check`       | TypeScript and Svelte type checking    |
+| `bun run check:watch` | Type checking in watch mode            |
+| `bun run lint`        | Prettier check + ESLint                |
+| `bun run format`      | Auto-format with Prettier              |
+| `bun run cf-typegen`  | Regenerate `worker-configuration.d.ts` |
 
 ---
 
@@ -143,14 +143,14 @@ migrations/                         # Drizzle-generated SQL migrations (never ed
 
 ### Path Aliases
 
-| Alias | Maps to |
-|---|---|
-| `$lib` | `src/lib` |
-| `$src` | `src` |
+| Alias         | Maps to              |
+| ------------- | -------------------- |
+| `$lib`        | `src/lib`            |
+| `$src`        | `src`                |
 | `$components` | `src/lib/components` |
-| `$config` | `src/lib/config` |
-| `$services` | `src/lib/services` |
-| `$types` | `src/lib/types` |
+| `$config`     | `src/lib/config`     |
+| `$services`   | `src/lib/services`   |
+| `$types`      | `src/lib/types`      |
 
 Always use aliases — never use relative paths from route files.
 
@@ -228,13 +228,13 @@ Use `writable` stores only for cross-component global state in `src/lib/stores/`
 
 ### Formatting (Prettier)
 
-| Setting | Value |
-|---|---|
-| Indent | 4 spaces (no tabs) |
-| Quotes | Double |
-| Trailing commas | None |
-| Print width | 120 |
-| Plugins | `prettier-plugin-svelte`, `prettier-plugin-tailwindcss` |
+| Setting         | Value                                                   |
+| --------------- | ------------------------------------------------------- |
+| Indent          | 4 spaces (no tabs)                                      |
+| Quotes          | Double                                                  |
+| Trailing commas | None                                                    |
+| Print width     | 120                                                     |
+| Plugins         | `prettier-plugin-svelte`, `prettier-plugin-tailwindcss` |
 
 Run `bun run format` before committing. The CI equivalent is `bun run lint`.
 
@@ -301,16 +301,16 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Types
 
-| Type | When to use |
-|---|---|
-| `feat` | New user-facing feature |
-| `fix` | Bug fix |
+| Type       | When to use                                |
+| ---------- | ------------------------------------------ |
+| `feat`     | New user-facing feature                    |
+| `fix`      | Bug fix                                    |
 | `refactor` | Code restructuring with no behavior change |
-| `style` | Visual/UI-only changes |
-| `chore` | Tooling, config, dependency updates |
-| `docs` | Documentation changes only |
-| `perf` | Performance improvements |
-| `test` | Adding or updating tests |
+| `style`    | Visual/UI-only changes                     |
+| `chore`    | Tooling, config, dependency updates        |
+| `docs`     | Documentation changes only                 |
+| `perf`     | Performance improvements                   |
+| `test`     | Adding or updating tests                   |
 
 ### Examples
 
@@ -325,7 +325,7 @@ docs: document Shopify CSV column index assumptions
 ### Rules
 
 - Subject line: 50–70 characters, imperative mood, lowercase
-- Body: explain *why* the change was made, not *what* it does
+- Body: explain _why_ the change was made, not _what_ it does
 - Atomic commits — one logical change per commit
 - Never amend already-pushed commits
 
@@ -410,12 +410,12 @@ No test framework is currently configured in the project. When adding tests:
 
 ### Priority Test Targets
 
-| File | What to test |
-|---|---|
-| `src/lib/services/data-processing.ts` | CSV deduplication, row slicing edge cases |
+| File                                       | What to test                                             |
+| ------------------------------------------ | -------------------------------------------------------- |
+| `src/lib/services/data-processing.ts`      | CSV deduplication, row slicing edge cases                |
 | `src/lib/services/processors/steadfast.ts` | Phone normalization (+880, leading zeros), field mapping |
-| `src/lib/services/courier-service.ts` | Shopify format detection logic |
-| `src/lib/hooks/use-current-user.ts` | Null handling, name/email extraction |
+| `src/lib/services/courier-service.ts`      | Shopify format detection logic                           |
+| `src/lib/hooks/use-current-user.ts`        | Null handling, name/email extraction                     |
 
 ### Validation Before Commit
 
@@ -472,6 +472,7 @@ bun run db:migrate
 - **JSDoc** on public service functions where parameter intent is ambiguous
 
 If you introduce a new courier processor, document:
+
 - The courier's expected CSV schema
 - Any phone or address normalization specifics
 - Column index assumptions

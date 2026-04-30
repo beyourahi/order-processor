@@ -37,7 +37,7 @@ export class SteadFastProcessor implements CourierProcessor<SteadFastOrder> {
     processOrders(data: string[][], user: UserInfo): SteadFastOrder[] {
         return data.map((row) => ({
             // Always use brand's merchant ID as invoice
-            Invoice: user.merchant_id,
+            Invoice: user.merchantId,
             // Customer name from input file
             Name: row[0] || "",
             // Full customer address from input file

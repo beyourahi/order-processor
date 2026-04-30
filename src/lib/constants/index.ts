@@ -7,12 +7,7 @@
 export { FILE_PREFIX, FILE_EXTENSION, generateFileName } from "./files";
 
 // CSV column indexes
-export {
-    SHOPIFY_EXPORT_INDEXES,
-    STEADFAST_INDEXES,
-    STEADFAST_INDEXES_ARRAY,
-    SHOPIFY_STEADFAST_INDEXES_ARRAY
-} from "./indexes";
+export { STEADFAST_INDEXES, STEADFAST_INDEXES_ARRAY, SHOPIFY_STEADFAST_INDEXES_ARRAY } from "./indexes";
 
 // Type exports
-export type { ShopifyExportIndexes, SteadFastIndexes } from "./indexes";
+export type { SteadFastIndexes } from "./indexes";
