@@ -26,7 +26,7 @@
                 class={cn(
                     "sleek group relative flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
                     "border transition-all duration-200",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F]",
+                    "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
                     isSelected
                         ? "border-emerald-500/60 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
                         : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-800/60",

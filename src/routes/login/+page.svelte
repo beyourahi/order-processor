@@ -7,7 +7,7 @@
     import { authClient } from "$lib/auth-client";
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
-    import { Heading } from "$lib/components";
+    import { Heading, LoadingSpinner } from "$lib/components";
 
     let isLoading = $state(false);
     let error = $state<string | null>(null);
@@ -50,7 +50,7 @@
 
     {#if error}
         <div
-            class="max-w-xs rounded-lg bg-red-500/10 px-4 py-2.5 text-center text-xs text-red-400 sm:max-w-sm sm:text-sm"
+            class="bg-destructive/10 text-destructive max-w-xs rounded-lg px-4 py-2.5 text-center text-xs sm:max-w-sm sm:text-sm"
         >
             {error}
         </div>
@@ -62,9 +62,7 @@
         class="sleek group flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-medium text-zinc-200 backdrop-blur-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5 xl:hover:border-white/20 xl:hover:bg-white/5"
     >
         {#if isLoading}
-            <div
-                class="h-4 w-4 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent sm:h-5 sm:w-5"
-            ></div>
+            <LoadingSpinner size="sm" colorClass="border-t-transparent" />
         {:else}
             <svg class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path

@@ -10,6 +10,7 @@
     import { Courier } from "$lib/types";
     import type { CurrentUser } from "$lib/types";
     import { cn, parseCSV, generateExcel } from "$lib/utils";
+    import { LoadingSpinner } from "$lib/components";
     import Upload from "./upload.svelte";
     import Download from "./download.svelte";
 
@@ -154,7 +155,7 @@
         "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
         "h-56 sm:h-64 md:h-72 lg:h-80",
         "lg:w-full lg:max-w-md xl:max-w-lg",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F]",
+        "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
         isDisabled
             ? "cursor-not-allowed border-zinc-800 opacity-50"
             : "cursor-pointer border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900/30",
@@ -191,9 +192,7 @@
         <!-- Processing state -->
     {:else if isProcessing}
         <div class="flex flex-col items-center gap-3 sm:gap-4">
-            <div
-                class="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent sm:h-8 sm:w-8"
-            ></div>
+            <LoadingSpinner size="lg" colorClass="border-t-white" />
             <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
         </div>
         <!-- File accepted -->

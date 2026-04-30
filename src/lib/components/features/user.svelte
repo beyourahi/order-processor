@@ -7,6 +7,7 @@
     import { authClient } from "$lib/auth-client";
     import { goto } from "$app/navigation";
     import { cn } from "$lib/utils";
+    import { LoadingSpinner } from "$lib/components";
     import type { CurrentUser } from "$lib/types";
 
     interface Props {
@@ -89,7 +90,7 @@
                 <span class="text-xs leading-tight font-medium text-zinc-200 sm:text-sm">
                     {currentUser.name}
                 </span>
-                <span class="text-[10px] leading-tight text-zinc-500 sm:text-xs">
+                <span class="text-xs leading-tight text-zinc-500">
                     {user.email}
                 </span>
             </div>
@@ -115,7 +116,7 @@
             )}
         >
             {#if isLoggingOut}
-                <div class="h-4 w-4 animate-spin rounded-full border-2 border-zinc-500 border-t-transparent"></div>
+                <LoadingSpinner size="sm" />
             {:else}
                 <svg
                     class="h-4 w-4 text-red-400 transition-colors group-hover:text-white sm:h-4.5 sm:w-4.5"
