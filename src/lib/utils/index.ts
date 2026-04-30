@@ -3,5 +3,5 @@
  */
 
 export { cn } from "./cn";
-export { parseCSV } from "./csv";
+export { parseCSV, formatFileSize } from "./csv";
 export { generateExcel } from "./excel";

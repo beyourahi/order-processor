@@ -10,7 +10,6 @@
 -->
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
-    import { onMount } from "svelte";
     import type { Snippet } from "svelte";
 
     interface Props {
@@ -20,16 +19,16 @@
     let { children }: Props = $props();
 
     // Refresh session periodically to prevent stale data
-    onMount(() => {
+    $effect(() => {
         // Refresh every 4 minutes (session cache is 5 minutes)
-        const interval = setInterval(
+        const id = setInterval(
             () => {
                 authClient.useSession();
             },
             4 * 60 * 1000
         );
 
-        return () => clearInterval(interval);
+        return () => clearInterval(id);
     });
 </script>
 
