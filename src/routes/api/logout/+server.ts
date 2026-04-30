@@ -13,15 +13,22 @@ import type { RequestHandler } from "./$types";
  */
 
 export const POST: RequestHandler = async ({ cookies }) => {
-    // Clear session cookie
-    cookies.delete("better-auth.session_token", { path: "/" });
-
-    return json({ success: true });
+    try {
+        // Clear session cookie
+        cookies.delete("better-auth.session_token", { path: "/" });
+        return json({ success: true });
+    } catch (e) {
+        return json({ success: false, error: e instanceof Error ? e.message : "Logout failed" }, { status: 500 });
+    }
 };
 
 export const GET: RequestHandler = async ({ cookies }) => {
-    // Clear session cookie
-    cookies.delete("better-auth.session_token", { path: "/" });
+    try {
+        // Clear session cookie
+        cookies.delete("better-auth.session_token", { path: "/" });
+    } catch {
+        // Swallow cookie errors on GET — redirect regardless
+    }
 
     // Redirect to login after logout
     redirect(303, "/login");

@@ -91,6 +91,11 @@ export const handle: Handle = async ({ event, resolve }) => {
         GOOGLE_CLIENT_SECRET: event.platform?.env?.GOOGLE_CLIENT_SECRET ?? ""
     };
 
+    // Warn if BETTER_AUTH_SECRET is missing — auth will fail in production
+    if (db && !env.BETTER_AUTH_SECRET) {
+        console.error("[auth] BETTER_AUTH_SECRET is not set — auth will fail in production");
+    }
+
     // Create auth instance with the D1 database
     const auth = createAuth(db, env);
 
