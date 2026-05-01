@@ -109,17 +109,17 @@
             aria-label="Sign out"
             class={cn(
                 "sleek group flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border backdrop-blur-sm transition-all duration-200 sm:h-10 sm:w-10",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50",
+                "focus-visible:ring-destructive/50 focus:outline-none focus-visible:ring-2",
                 isLoggingOut
                     ? "cursor-wait border-zinc-700 bg-zinc-800/90"
-                    : "border-red-500/40 bg-red-500/10 hover:border-red-500 hover:bg-red-500 active:scale-95"
+                    : "border-destructive/40 bg-destructive/10 hover:border-destructive hover:bg-destructive active:scale-95"
             )}
         >
             {#if isLoggingOut}
                 <LoadingSpinner size="sm" />
             {:else}
                 <svg
-                    class="h-4 w-4 text-red-400 transition-colors group-hover:text-white sm:h-4.5 sm:w-4.5"
+                    class="text-destructive h-4 w-4 transition-colors group-hover:text-white sm:h-4.5 sm:w-4.5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

@@ -160,7 +160,7 @@
             ? "cursor-not-allowed border-zinc-800 opacity-50"
             : "cursor-pointer border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900/30",
         zoneHover && "border-zinc-400 bg-zinc-900/50",
-        error && "border-red-500/50"
+        error && "border-destructive/50"
     )}
     ondragover={handleDragOver}
     ondragleave={handleDragLeave}
@@ -181,7 +181,7 @@
     <!-- Error display -->
     {#if error}
         <div class="flex flex-col items-center gap-3 px-4 text-center sm:gap-4">
-            <p class="text-sm text-red-400 sm:text-base">{error}</p>
+            <p class="text-destructive text-sm sm:text-base">{error}</p>
             <button
                 onclick={() => (error = null)}
                 class="sleek rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white active:scale-95"

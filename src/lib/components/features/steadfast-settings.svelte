@@ -152,7 +152,7 @@
                 <!-- Save status indicator -->
                 <div class="mb-3 flex items-center justify-end gap-1.5 text-xs" aria-live="polite" aria-atomic="true">
                     {#if saveState === "saving"}
-                        <LoadingSpinner size="sm" colorClass="border-t-zinc-400" />
+                        <LoadingSpinner size="sm" colorClass="border-t-emerald-500" />
                         <span class="text-zinc-500">Saving...</span>
                     {:else if saveState === "saved"}
                         <svg

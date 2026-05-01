@@ -24,12 +24,10 @@ export const POST: RequestHandler = async ({ cookies }) => {
 
 export const GET: RequestHandler = async ({ cookies }) => {
     try {
-        // Clear session cookie
         cookies.delete("better-auth.session_token", { path: "/" });
-    } catch {
-        // Swallow cookie errors on GET — redirect regardless
+    } catch (e) {
+        console.error("[logout] Failed to delete session cookie on GET:", e);
     }
 
-    // Redirect to login after logout
     redirect(303, "/login");
 };

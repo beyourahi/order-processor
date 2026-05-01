@@ -28,7 +28,7 @@
                     "border transition-all duration-200",
                     "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
                     isSelected
-                        ? "border-emerald-500/60 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
+                        ? "border-courier-accent/60 bg-courier-accent/10 shadow-courier-accent/10 shadow-lg"
                         : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-800/60",
                     "active:scale-[0.97]"
                 )}
@@ -38,7 +38,7 @@
                     class={cn(
                         "absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all duration-200 sm:h-6 sm:w-6",
                         isSelected
-                            ? "border-emerald-500 bg-emerald-500"
+                            ? "border-courier-accent bg-courier-accent"
                             : "border-zinc-600 bg-transparent group-hover:border-zinc-500"
                     )}
                 >

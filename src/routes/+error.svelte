@@ -14,7 +14,7 @@
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-4">
     <div class="flex flex-col items-center gap-4 text-center">
-        <p class="text-6xl font-bold text-red-500">
+        <p class="text-6xl font-bold text-red-500" aria-label="HTTP status code {page.status}">
             {page.status}
         </p>
         <h1 class="text-2xl font-semibold text-zinc-300">
