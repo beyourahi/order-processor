@@ -179,10 +179,10 @@
                                 d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                             />
                         </svg>
-                        <span class="text-destructive">{saveError ?? "Save failed"}</span>
+                        <span class="text-destructive text-sm">{saveError ?? "Save failed"}</span>
                         <button
                             onclick={dismissError}
-                            class="ml-1 rounded text-zinc-500 underline hover:text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                            class="ml-1 rounded text-sm text-zinc-500 underline hover:text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                         >
                             Dismiss
                         </button>

@@ -40,14 +40,7 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
     });
 };
 
-const ALLOWED_BODY_KEYS = new Set<string>([
-    "contact_name",
-    "contactName",
-    "contact_phone",
-    "contactPhone",
-    "merchant_id",
-    "merchantId"
-]);
+const ALLOWED_BODY_KEYS = new Set<string>(["contactName", "contactPhone", "merchantId"]);
 
 /**
  * Create or update settings for the current authenticated user
