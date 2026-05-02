@@ -137,26 +137,26 @@
     <div class="animate-in fade-in slide-in-from-top-2 w-full max-w-sm duration-300">
         <!-- Section divider -->
         <div class="mb-4 flex items-center gap-3">
-            <div class="h-px flex-1 bg-zinc-800"></div>
+            <div class="bg-surface-raised h-px flex-1"></div>
             <span class="text-xs font-medium tracking-wider text-zinc-500 uppercase">SteadFast Settings</span>
-            <div class="h-px flex-1 bg-zinc-800"></div>
+            <div class="bg-surface-raised h-px flex-1"></div>
         </div>
 
         <!-- Form card -->
-        <div class="sleek rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 backdrop-blur-sm">
+        <div class="sleek border-surface-raised bg-surface/50 rounded-xl border p-4 backdrop-blur-sm">
             {#if saveState === "loading"}
                 <div class="flex items-center justify-center py-6">
-                    <LoadingSpinner size="sm" colorClass="border-t-emerald-500" />
+                    <LoadingSpinner size="sm" colorClass="border-t-courier-accent" />
                 </div>
             {:else}
                 <!-- Save status indicator -->
                 <div class="mb-3 flex items-center justify-end gap-1.5 text-xs" aria-live="polite" aria-atomic="true">
                     {#if saveState === "saving"}
-                        <LoadingSpinner size="sm" colorClass="border-t-emerald-500" />
+                        <LoadingSpinner size="sm" colorClass="border-t-courier-accent" />
                         <span class="text-zinc-500">Saving...</span>
                     {:else if saveState === "saved"}
                         <svg
-                            class="h-3 w-3 text-emerald-500"
+                            class="text-courier-accent h-3 w-3"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -164,7 +164,7 @@
                         >
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
-                        <span class="text-emerald-500">Saved</span>
+                        <span class="text-courier-accent">Saved</span>
                     {:else if saveState === "error"}
                         <svg
                             class="text-destructive h-3 w-3"

@@ -32,12 +32,12 @@ Additionally, the SteadFast settings form was rewritten with debounced auto-save
 
 ### Design System Alignment
 
-| ID     | File                                                          | Finding                                             | Resolution                                                                                                                                                                                       |
-| ------ | ------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| DS-001 | `src/app.css`, `courier-picker.svelte`, `input.svelte`        | Emerald green used but not tokenized                | Added `--color-courier-accent: oklch(0.69 0.17 162)` to `@theme`; consumed via `bg-courier-accent`/`border-courier-accent` in courier-picker and `focus-visible:ring-courier-accent/50` in input |
-| DS-002 | Throughout                                                    | `zinc-{700,800,900}` used directly                  | **DEFERRED** — touches >15 files, risk outweighs benefit                                                                                                                                         |
-| DS-003 | `login/+page.svelte`, `order-processor.svelte`, `user.svelte` | `red-400`/`red-500/10` instead of destructive token | Replaced all `text-red-400`, `bg-red-500/10`, `border-red-500/50`, `ring-red-500/50` usages with destructive-token equivalents                                                                   |
-| DS-004 | `steadfast-settings.svelte`                                   | Input styling block repeated 3×                     | Created `src/lib/components/ui/input/input.svelte` (CVA-style); replaced all 3 blocks                                                                                                            |
+| ID     | File                                                          | Finding                                             | Resolution                                                                                                                                                                                               |
+| ------ | ------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DS-001 | `src/app.css`, `courier-picker.svelte`, `input.svelte`        | Emerald green used but not tokenized                | Added `--color-courier-accent: oklch(0.69 0.17 162)` to `@theme`; consumed via `bg-courier-accent`/`border-courier-accent` in courier-picker and `focus-visible:ring-courier-accent/50` in input         |
+| DS-002 | Throughout                                                    | `zinc-{700,800,900}` used directly                  | Added `--color-surface` / `--color-surface-raised` / `--color-border-strong` tokens with exact Tailwind v4 zinc OKLCH values; mechanically replaced 16 occurrences across 5 components (pixel-identical) |
+| DS-003 | `login/+page.svelte`, `order-processor.svelte`, `user.svelte` | `red-400`/`red-500/10` instead of destructive token | Replaced all `text-red-400`, `bg-red-500/10`, `border-red-500/50`, `ring-red-500/50` usages with destructive-token equivalents                                                                           |
+| DS-004 | `steadfast-settings.svelte`                                   | Input styling block repeated 3×                     | Created `src/lib/components/ui/input/input.svelte` (CVA-style); replaced all 3 blocks                                                                                                                    |
 
 ### Component Structure
 
@@ -96,7 +96,7 @@ The SteadFast settings form was rewritten with the following behavior:
 - `slice(1, -1)` in `data-processing.ts` — documented in CLAUDE.md
 - Bangladesh phone number normalization — courier-specific, correct behavior
 - `drizzle-kit` version — intentional per CLAUDE.md warning
-- `DS-002` (zinc tokens) — deferred, risk exceeds benefit
+- (none — DS-002 resolved 2026-05-02 in follow-up pass)
 
 ---
 

@@ -29,7 +29,7 @@
                     "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
                     isSelected
                         ? "border-courier-accent/60 bg-courier-accent/10 shadow-courier-accent/10 shadow-lg"
-                        : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-800/60",
+                        : "border-surface-raised bg-surface/40 hover:border-border-strong hover:bg-surface-raised/60",
                     "active:scale-[0.97]"
                 )}
             >
@@ -59,7 +59,7 @@
                 <div
                     class={cn(
                         "flex h-14 w-14 items-center justify-center rounded-xl p-2 transition-all duration-200 sm:h-16 sm:w-16",
-                        isSelected ? "bg-white/10" : "bg-zinc-800/50 group-hover:bg-zinc-700/50"
+                        isSelected ? "bg-white/10" : "bg-surface-raised/50 group-hover:bg-border-strong/50"
                     )}
                 >
                     <img

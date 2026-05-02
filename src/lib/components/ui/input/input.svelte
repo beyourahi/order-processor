@@ -37,10 +37,10 @@
     {oninput}
     bind:value
     class={cn(
-        "w-full rounded-lg border bg-zinc-900 px-3 py-2 text-sm text-zinc-200 transition-colors placeholder:text-zinc-500",
+        "bg-surface w-full rounded-lg border px-3 py-2 text-sm text-zinc-200 transition-colors placeholder:text-zinc-500",
         "focus-visible:ring-courier-accent/50 focus-visible:ring-2 focus-visible:outline-none",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        error ? "border-destructive/50" : "border-zinc-700/50",
+        error ? "border-destructive/50" : "border-border-strong/50",
         className
     )}
 />

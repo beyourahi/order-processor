@@ -157,9 +157,9 @@
         "lg:w-full lg:max-w-md xl:max-w-lg",
         "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
         isDisabled
-            ? "cursor-not-allowed border-zinc-800 opacity-50"
-            : "cursor-pointer border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900/30",
-        zoneHover && "border-zinc-400 bg-zinc-900/50",
+            ? "border-surface-raised cursor-not-allowed opacity-50"
+            : "border-border-strong hover:bg-surface/30 cursor-pointer hover:border-zinc-500",
+        zoneHover && "bg-surface/50 border-zinc-400",
         error && "border-destructive/50"
     )}
     ondragover={handleDragOver}
@@ -184,7 +184,7 @@
             <p class="text-destructive text-sm sm:text-base">{error}</p>
             <button
                 onclick={() => (error = null)}
-                class="sleek rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"
+                class="sleek hover:bg-surface-raised rounded-lg px-4 py-2 text-sm text-zinc-400 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"
             >
                 Try again
             </button>

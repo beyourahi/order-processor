@@ -14,8 +14,13 @@
 
 @theme {
     /* Colors */
-    --color-background: oklch(0.065 0 0);
+    --color-background: oklch(0.197 0 0);
     --color-foreground: hsl(240 10% 3.9%);
+
+    /* Dark surface scale — semantic equivalents for zinc-900/800/700 */
+    --color-surface: oklch(0.21 0.006 285.885);
+    --color-surface-raised: oklch(0.274 0.006 286.033);
+    --color-border-strong: oklch(0.37 0.013 285.805);
 
     --color-card: hsl(0 0% 100%);
     --color-card-foreground: hsl(240 10% 3.9%);

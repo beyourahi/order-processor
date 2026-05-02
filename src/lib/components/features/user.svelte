@@ -54,7 +54,7 @@
             onblur={() => (expanded = false)}
             class={cn(
                 "sleek relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300 sm:h-10 sm:w-10",
-                "border border-zinc-700/50 bg-zinc-800/90 text-zinc-300 backdrop-blur-sm",
+                "border-border-strong/50 bg-surface-raised/90 border text-zinc-300 backdrop-blur-sm",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
                 user.image && "overflow-hidden p-0"
             )}
@@ -81,7 +81,7 @@
         <!-- Expandable name badge -->
         <div
             class={cn(
-                "absolute right-0 flex items-center overflow-hidden rounded-full border border-zinc-700/50 bg-zinc-800/90 whitespace-nowrap backdrop-blur-sm transition-all duration-300",
+                "border-border-strong/50 bg-surface-raised/90 absolute right-0 flex items-center overflow-hidden rounded-full border whitespace-nowrap backdrop-blur-sm transition-all duration-300",
                 expanded ? "w-auto pr-11 pl-3 opacity-100 sm:pr-12" : "w-0 pr-0 pl-0 opacity-0"
             )}
             style="height: 2.5rem;"
@@ -111,7 +111,7 @@
                 "sleek group flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border backdrop-blur-sm transition-all duration-200 sm:h-10 sm:w-10",
                 "focus-visible:ring-destructive/50 focus:outline-none focus-visible:ring-2",
                 isLoggingOut
-                    ? "cursor-wait border-zinc-700 bg-zinc-800/90"
+                    ? "border-border-strong bg-surface-raised/90 cursor-wait"
                     : "border-destructive/40 bg-destructive/10 hover:border-destructive hover:bg-destructive active:scale-95"
             )}
         >
@@ -136,12 +136,12 @@
         <!-- Tooltip -->
         {#if showTooltip && !isLoggingOut}
             <div
-                class="absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 rounded-md bg-zinc-800 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-200 shadow-lg"
+                class="bg-surface-raised absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-200 shadow-lg"
                 role="tooltip"
             >
                 Sign out
                 <div
-                    class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-zinc-800"
+                    class="border-b-surface-raised absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent"
                 ></div>
             </div>
         {/if}
