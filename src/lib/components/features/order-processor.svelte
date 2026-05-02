@@ -184,7 +184,7 @@
             <p class="text-destructive text-sm sm:text-base">{error}</p>
             <button
                 onclick={() => (error = null)}
-                class="sleek rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white active:scale-95"
+                class="sleek rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"
             >
                 Try again
             </button>

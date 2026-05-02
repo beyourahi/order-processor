@@ -49,11 +49,9 @@
     <Heading />
 
     {#if error}
-        <div
-            class="bg-destructive/10 text-destructive max-w-xs rounded-lg px-4 py-2.5 text-center text-xs sm:max-w-sm sm:text-sm"
-        >
+        <p class="text-destructive max-w-xs text-center text-sm sm:max-w-sm">
             {error}
-        </div>
+        </p>
     {/if}
 
     <button

@@ -146,7 +146,7 @@
         <div class="sleek rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 backdrop-blur-sm">
             {#if saveState === "loading"}
                 <div class="flex items-center justify-center py-6">
-                    <LoadingSpinner size="md" colorClass="border-t-emerald-500" />
+                    <LoadingSpinner size="sm" colorClass="border-t-emerald-500" />
                 </div>
             {:else}
                 <!-- Save status indicator -->
@@ -180,7 +180,10 @@
                             />
                         </svg>
                         <span class="text-destructive">{saveError ?? "Save failed"}</span>
-                        <button onclick={dismissError} class="ml-1 text-zinc-500 underline hover:text-zinc-300">
+                        <button
+                            onclick={dismissError}
+                            class="ml-1 rounded text-zinc-500 underline hover:text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                        >
                             Dismiss
                         </button>
                     {/if}
