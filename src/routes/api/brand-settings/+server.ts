@@ -1,14 +1,10 @@
 import { json, error } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
 import { drizzle } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 import { brandSettings } from "$lib/server/schema";
 import type { BrandSettingsPayload } from "$lib/types";
+import type { RequestHandler } from "./$types";
 
-/**
- * Asserts that the current request is authenticated.
- * Returns the user object if authenticated, otherwise throws a 401 error.
- */
 function requireAuth(locals: App.Locals) {
     if (!locals.user) {
         error(401, { message: "Not authenticated" });
@@ -16,9 +12,6 @@ function requireAuth(locals: App.Locals) {
     return locals.user;
 }
 
-/**
- * Fetch settings for the current authenticated user
- */
 export const GET: RequestHandler = async ({ locals, platform }) => {
     const user = requireAuth(locals);
 
@@ -42,9 +35,6 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 
 const ALLOWED_BODY_KEYS = new Set<string>(["contactName", "contactPhone", "merchantId"]);
 
-/**
- * Create or update settings for the current authenticated user
- */
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
     const user = requireAuth(locals);
 
@@ -61,17 +51,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
         error(400, { message: "Invalid JSON body" });
     }
 
-    // Validate body shape: must be a plain object with only expected string fields
     if (typeof rawBody !== "object" || rawBody === null || Array.isArray(rawBody)) {
         error(400, { message: "Invalid request body" });
     }
 
     const bodyObj = rawBody as Record<string, unknown>;
-    for (const key of Object.keys(bodyObj)) {
-        if (!ALLOWED_BODY_KEYS.has(key)) {
-            error(400, { message: "Invalid request body" });
-        }
-        if (bodyObj[key] !== undefined && typeof bodyObj[key] !== "string") {
+    for (const [key, value] of Object.entries(bodyObj)) {
+        if (!ALLOWED_BODY_KEYS.has(key) || typeof value !== "string") {
             error(400, { message: "Invalid request body" });
         }
     }
@@ -84,7 +70,6 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
     const userId = user.id;
     const existing = await db.select().from(brandSettings).where(eq(brandSettings.userId, userId)).get();
-
     const now = new Date();
 
     if (existing) {
@@ -93,7 +78,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             .set({
                 contactName: body.contactName ?? null,
                 contactPhone: body.contactPhone ?? null,
-                merchantId: body.merchantId ?? null,
+                merchantId: body.merchantId,
                 updatedAt: now
             })
             .where(eq(brandSettings.userId, userId));
@@ -103,7 +88,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             userId,
             contactName: body.contactName ?? null,
             contactPhone: body.contactPhone ?? null,
-            merchantId: body.merchantId ?? null,
+            merchantId: body.merchantId,
             createdAt: now,
             updatedAt: now
         });
@@ -111,8 +96,5 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
     const updated = await db.select().from(brandSettings).where(eq(brandSettings.userId, userId)).get();
 
-    return json({
-        success: true,
-        data: updated
-    });
+    return json({ success: true, data: updated });
 };

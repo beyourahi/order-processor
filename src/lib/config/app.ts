@@ -1,18 +1,15 @@
-/**
- * Application metadata and configuration
- * Core application information used throughout the app
- */
+interface AppConfig {
+    name: string;
+    description: string;
+    url: string;
+    repository: { type: string; url: string };
+    author: { name: string; url: string };
+}
 
-import type { AppConfig } from "$lib/types";
-
-/**
- * Application metadata configuration
- * Used for meta tags, headers, and general app information
- */
 export const APP_CONFIG: AppConfig = {
     name: "Order Processor",
     description: "Process and format orders for multiple courier services",
-    url: "https://order-processor.pages.dev",
+    url: "https://order-processor.beyourahi.workers.dev",
     repository: {
         type: "git",
         url: "https://github.com/beyourahi/order-processor"

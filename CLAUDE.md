@@ -28,7 +28,7 @@ All commits go directly to `main`. No feature branches. No PRs for solo work. Wo
 
 ## Project Overview
 
-SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Authorized users (identified by Google OAuth email allowlist) upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions and brand settings.
+SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Any authenticated Google user is authorized — upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions and brand settings.
 
 **Production URL**: `https://order-processor.beyourahi.workers.dev`
 
@@ -37,7 +37,7 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | Layer           | Technology                                                                             |
 | --------------- | -------------------------------------------------------------------------------------- |
 | Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                    |
-| Language        | TypeScript 5.9 (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
+| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
 | Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)                                      |
 | UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA                                  |
 | Auth            | Better Auth with Google OAuth, Drizzle adapter                                         |
@@ -123,8 +123,8 @@ src/
       auth.ts                            -- createAuth() factory
       schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
-      features/                          -- order-processor, upload, download, courier-picker, user, steadfast-settings, session-provider
-      ui/                                -- button, footer, heading, loading-spinner (shadcn-svelte)
+      features/                          -- order-processor, upload, download, courier-picker, user, steadfast-settings
+      ui/                                -- button, footer, heading, input, loading-spinner (shadcn-svelte)
     config/
       app.ts                             -- app metadata
       couriers.ts                        -- courier options with logos
@@ -135,9 +135,11 @@ src/
       courier-service.ts                 -- main orchestrator
       data-processing.ts                 -- CSV prep utilities
       processors/steadfast.ts            -- SteadFast processor
-    stores/app.ts                        -- courierService, hasMerchantId (Svelte writables)
+    stores/
+      app.ts                             -- courierService (writable), hasMerchantId (derived from brandSettings)
+      brand-settings.ts                  -- brandSettings writable store (hydrated from server load)
     hooks/use-current-user.ts            -- derives CurrentUser from email
-    types/                               -- courier.ts, user.ts, ui.ts, config.ts, brand-settings.ts
+    types/                               -- courier.ts, user.ts, ui.ts, brand-settings.ts
     utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts
   hooks.server.ts                        -- auth middleware + security headers
   hooks.client.ts                        -- client-side hooks
@@ -149,13 +151,10 @@ src/
 ### Path Aliases
 
 ```
-$lib     --> src/lib (SvelteKit default)
-$src     --> src
-$components --> src/lib/components
-$config  --> src/lib/config
-$services --> src/lib/services
-$types   --> src/lib/types
+$lib     --> src/lib (SvelteKit default, only configured alias)
 ```
+
+All imports use `$lib/...` — the other aliases (`$src`, `$components`, `$config`, `$services`, `$types`) are not configured and do not exist.
 
 ## Common Commands
 
@@ -179,6 +178,7 @@ bun run cf-typegen       # regenerate worker-configuration.d.ts
 bun run db:generate      # generate migration SQL from schema changes
 bun run db:migrate:local # apply migrations to local D1
 bun run db:migrate       # apply migrations to remote/production D1
+bun run db:migrate:list  # list applied migrations (local)
 bun run db:push          # push schema directly (needs D1 credentials)
 bun run db:studio        # Drizzle Studio GUI (needs D1 credentials)
 bun run db:check         # validate migration state
@@ -341,7 +341,7 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 
 7. **Authorization is authentication-only** -- Any Google user who successfully authenticates is authorized. There is no email allowlist. Brand settings (contact name, phone, merchant ID) are per-user in D1 and editable via the UI. To restrict access, an email allowlist or similar gate would need to be re-added.
 
-8. **drizzle-kit version sensitivity** -- The project previously pinned drizzle-kit to 0.30.0 due to a hang bug in 0.31.x. Current version is 0.31.8. If migration commands hang, check for upstream issues.
+8. **drizzle-kit version sensitivity** -- The project previously pinned drizzle-kit to 0.30.0 due to a hang bug in 0.31.x. Current version is 0.31.10. If migration commands hang, check for upstream issues.
 
 9. **Security headers are applied to all responses** -- `hooks.server.ts` sets a Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. `X-XSS-Protection` was removed (deprecated). The CSP requires `'unsafe-inline'` for SvelteKit hydration scripts and Tailwind styles — do not tighten it without testing. Immutable responses (redirects) are cloned before header application.
 

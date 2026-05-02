@@ -3,16 +3,12 @@
  * Contains courier options with logos for available services
  */
 
-import type { CourierOption } from "$lib/types";
+import { Courier, type CourierOption } from "$lib/types";
 import steadfastLogo from "$lib/assets/steadfast.png";
 
-/**
- * Available courier options for the picker
- * Logos are imported from $lib/assets and processed by Vite
- */
 export const COURIER_OPTIONS: CourierOption[] = [
     {
-        value: "SteadFast",
+        value: Courier.SteadFast,
         label: "SteadFast",
         logo: steadfastLogo
     }

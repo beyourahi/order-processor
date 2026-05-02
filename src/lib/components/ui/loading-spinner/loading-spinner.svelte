@@ -1,8 +1,3 @@
-<!--
-  LoadingSpinner Component
-  Displays an animated loading indicator using Tailwind's animate-spin
-  Supports size variants (sm, md, lg) and a configurable border-top color class
--->
 <script lang="ts">
     import { cn } from "$lib/utils";
 
@@ -30,17 +25,3 @@
 >
     <span class="sr-only">Loading...</span>
 </div>
-
-<style>
-    .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-</style>

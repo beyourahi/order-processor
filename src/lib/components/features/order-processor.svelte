@@ -1,12 +1,7 @@
-<!--
-  OrderProcessor Component
-  Main CSV upload and Excel generation component
-  Handles file input, parsing, processing, and download with error states
--->
 <script lang="ts">
     import { CourierService } from "$lib/services";
     import { generateFileName } from "$lib/constants";
-    import { hasMerchantId } from "$lib/stores";
+    import { brandSettings, hasMerchantId } from "$lib/stores";
     import { Courier } from "$lib/types";
     import type { CurrentUser } from "$lib/types";
     import { cn, parseCSV, generateExcel } from "$lib/utils";
@@ -21,21 +16,16 @@
 
     let { currentUser, selectedCourier }: Props = $props();
 
-    // Component state
     let zoneHover = $state(false);
     let acceptedFile = $state<File | null>(null);
     let isProcessing = $state(false);
     let error = $state<string | null>(null);
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
-    // SteadFast requires merchant ID to be configured
     const isSteadFast = $derived(selectedCourier === Courier.SteadFast);
     const needsMerchantId = $derived(isSteadFast && !$hasMerchantId);
-
-    // Computed: is upload disabled?
     const isDisabled = $derived(selectedCourier === "" || needsMerchantId);
 
-    // Handle file selection
     const handleFileSelect = async (file: File) => {
         if (isDisabled) return;
 
@@ -44,46 +34,21 @@
         error = null;
 
         try {
-            // Parse CSV
             const result = await parseCSV(file);
-
             if (result.errors.length > 0) {
                 console.warn("CSV parsing warnings:", result.errors);
             }
 
-            // Fetch brand settings from database for SteadFast courier
-            let contactName = currentUser.name;
-            let contactPhone = "";
-            let merchantId = "";
-
-            if (selectedCourier === Courier.SteadFast) {
-                try {
-                    const settingsRes = await fetch("/api/brand-settings");
-                    if (settingsRes.ok) {
-                        const apiResult = (await settingsRes.json()) as {
-                            data: { contactName?: string; contactPhone?: string; merchantId?: string };
-                        };
-                        contactName = apiResult.data?.contactName || currentUser.name;
-                        contactPhone = apiResult.data?.contactPhone || "";
-                        merchantId = apiResult.data?.merchantId || "";
-                    }
-                } catch (settingsError) {
-                    console.warn("Failed to fetch brand settings, using defaults:", settingsError);
-                }
-            }
-
-            // Process orders through courier service
+            const settings = $brandSettings;
             const processedOrders = CourierService.processOrders(selectedCourier as Courier, result.data, {
-                name: contactName,
-                phone: contactPhone,
-                merchantId: merchantId
+                name: settings.contactName ?? currentUser.name,
+                phone: settings.contactPhone ?? "",
+                merchantId: settings.merchantId ?? ""
             });
 
-            // Generate and download Excel file
             const fileName = generateFileName(selectedCourier);
             generateExcel(processedOrders, fileName, "Sheet1");
 
-            // Reset state after short delay (so user sees the download preview)
             setTimeout(() => {
                 acceptedFile = null;
                 zoneHover = false;
@@ -97,12 +62,9 @@
         }
     };
 
-    // Handle drag events
     const handleDragOver = (e: DragEvent) => {
         e.preventDefault();
-        if (!isDisabled) {
-            zoneHover = true;
-        }
+        if (!isDisabled) zoneHover = true;
     };
 
     const handleDragLeave = (e: DragEvent) => {
@@ -113,7 +75,6 @@
     const handleDrop = (e: DragEvent) => {
         e.preventDefault();
         zoneHover = false;
-
         if (isDisabled) return;
 
         const files = e.dataTransfer?.files;
@@ -127,7 +88,6 @@
         }
     };
 
-    // Handle click to browse
     const handleClick = () => {
         if (!isDisabled && fileInputRef) {
             fileInputRef.click();
@@ -139,11 +99,9 @@
         const files = input.files;
         if (files && files.length > 0) {
             const file = files[0];
-            if (file) {
-                handleFileSelect(file);
-            }
+            if (file) handleFileSelect(file);
         }
-        // Reset input so same file can be selected again
+        // Reset so the same file can be selected again
         input.value = "";
     };
 </script>
@@ -158,8 +116,8 @@
         "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
         isDisabled
             ? "border-surface-raised cursor-not-allowed opacity-50"
-            : "border-border-strong hover:bg-surface/30 cursor-pointer hover:border-zinc-500",
-        zoneHover && "bg-surface/50 border-zinc-400",
+            : "border-border-strong hover:bg-surface/30 hover:border-border-strong/80 cursor-pointer",
+        zoneHover && "bg-surface/50 border-courier-accent/60",
         error && "border-destructive/50"
     )}
     ondragover={handleDragOver}
@@ -168,7 +126,6 @@
     onclick={handleClick}
     onkeydown={(e) => e.key === "Enter" && handleClick()}
 >
-    <!-- Hidden file input -->
     <input
         bind:this={fileInputRef}
         type="file"
@@ -178,7 +135,6 @@
         disabled={isDisabled}
     />
 
-    <!-- Error display -->
     {#if error}
         <div class="flex flex-col items-center gap-3 px-4 text-center sm:gap-4">
             <p class="text-destructive text-sm sm:text-base">{error}</p>
@@ -189,16 +145,13 @@
                 Try again
             </button>
         </div>
-        <!-- Processing state -->
     {:else if isProcessing}
         <div class="flex flex-col items-center gap-3 sm:gap-4">
             <LoadingSpinner size="lg" colorClass="border-t-white" />
             <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
         </div>
-        <!-- File accepted -->
     {:else if acceptedFile}
         <Download fileName={acceptedFile.name} fileSize={acceptedFile.size} />
-        <!-- Upload prompt -->
     {:else}
         <Upload disabled={isDisabled} {needsMerchantId} />
     {/if}

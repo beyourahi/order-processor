@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Source directories for Tailwind to scan */
 @source "./lib/**/*.{js,ts,svelte}";
 @source "./routes/**/*.{js,ts,svelte}";
 
@@ -13,131 +12,38 @@
 }
 
 @theme {
-    /* Colors */
     --color-background: oklch(0.197 0 0);
-    --color-foreground: hsl(240 10% 3.9%);
 
     /* Dark surface scale — semantic equivalents for zinc-900/800/700 */
     --color-surface: oklch(0.21 0.006 285.885);
     --color-surface-raised: oklch(0.274 0.006 286.033);
+    --color-border: oklch(0.21 0.006 285.885);
     --color-border-strong: oklch(0.37 0.013 285.805);
-
-    --color-card: hsl(0 0% 100%);
-    --color-card-foreground: hsl(240 10% 3.9%);
-
-    --color-popover: hsl(0 0% 100%);
-    --color-popover-foreground: hsl(240 10% 3.9%);
-
-    --color-primary: hsl(240 5.9% 10%);
-    --color-primary-foreground: hsl(0 0% 98%);
-
-    --color-secondary: hsl(240 4.8% 95.9%);
-    --color-secondary-foreground: hsl(240 5.9% 10%);
-
-    --color-muted: hsl(240 4.8% 95.9%);
-    --color-muted-foreground: hsl(240 3.8% 46.1%);
-
-    --color-accent: hsl(240 4.8% 95.9%);
-    --color-accent-foreground: hsl(240 5.9% 10%);
 
     --color-destructive: hsl(0 84.2% 60.2%);
     --color-destructive-foreground: hsl(0 0% 98%);
 
-    --color-border: hsl(240 5.9% 90%);
-    --color-input: hsl(240 5.9% 90%);
-    --color-ring: hsl(240 5.9% 10%);
-
-    --color-chart-1: hsl(12 76% 61%);
-    --color-chart-2: hsl(173 58% 39%);
-    --color-chart-3: hsl(197 37% 24%);
-    --color-chart-4: hsl(43 74% 66%);
-    --color-chart-5: hsl(27 87% 67%);
-
     --color-courier-accent: oklch(0.69 0.17 162);
-
-    /* Border Radius */
-    --radius: 0.5rem;
-    --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* Transition utility */
 .sleek {
     @apply transform-gpu transition-all duration-200 ease-in-out;
 }
 
-/* Loading spinner animation */
-.loader {
-    width: 48px;
-    height: 48px;
-    display: block;
-    margin: 15px auto;
-    position: relative;
-    color: white;
-    box-sizing: border-box;
-    animation: rotation 1s linear infinite;
-}
-
-.loader::after,
-.loader::before {
-    content: "";
-    box-sizing: border-box;
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    top: 0;
-    background-color: white;
-    border-radius: 50%;
-    animation: scale50 1s infinite ease-in-out;
-}
-
-.loader::before {
-    top: auto;
-    bottom: 0;
-    background-color: white;
-    animation-delay: 0.5s;
-}
-
-/* Custom scrollbar styling */
 *::-webkit-scrollbar {
     @apply w-2 bg-transparent;
 }
-
 *::-webkit-scrollbar-thumb {
     @apply rounded-xl bg-white/60;
 }
-
 *::-webkit-scrollbar-track {
     @apply rounded-xl bg-transparent;
 }
 
-/* Keyframe animations */
-@keyframes rotation {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes scale50 {
-    0%,
-    100% {
-        transform: scale(0);
-    }
-    50% {
-        transform: scale(1);
-    }
-}
-
-/* Base layer overrides */
 @layer base {
     * {
         @apply border-border;
     }
-
     body {
         @apply bg-background text-white;
     }
