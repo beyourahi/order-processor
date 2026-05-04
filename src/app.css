@@ -47,13 +47,14 @@
     body {
         @apply bg-background text-white;
     }
+}
 
-    /* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px) */
-    @media screen and (max-width: 768px) {
-        input:not([type="hidden"]),
-        textarea,
-        select {
-            font-size: 16px;
-        }
+/* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px).
+   Must be outside any @layer so it beats @layer utilities where Tailwind's text-sm lives. */
+@media screen and (max-width: 768px) {
+    input:not([type="hidden"]),
+    textarea,
+    select {
+        font-size: 16px;
     }
 }
