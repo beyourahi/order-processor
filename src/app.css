@@ -47,4 +47,13 @@
     body {
         @apply bg-background text-white;
     }
+
+    /* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px) */
+    @media screen and (max-width: 768px) {
+        input:not([type="hidden"]),
+        textarea,
+        select {
+            font-size: 16px;
+        }
+    }
 }
