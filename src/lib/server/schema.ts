@@ -112,6 +112,7 @@ export const brandSettings = sqliteTable(
         contactName: text("contact_name"),
         contactPhone: text("contact_phone"),
         merchantId: text("merchant_id"),
+        selectedCourier: text("selected_courier"),
         createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
         updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
     },

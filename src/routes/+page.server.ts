@@ -2,6 +2,7 @@ import { redirect } from "@sveltejs/kit";
 import { drizzle } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 import { brandSettings } from "$lib/server/schema";
+import type { BrandSettingsState } from "$lib/types";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
@@ -9,10 +10,11 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
         redirect(303, "/login");
     }
 
-    let settings: { contactName: string | null; contactPhone: string | null; merchantId: string | null } = {
+    let settings: BrandSettingsState = {
         contactName: null,
         contactPhone: null,
-        merchantId: null
+        merchantId: null,
+        selectedCourier: null
     };
 
     if (platform?.env?.DB) {
@@ -22,7 +24,8 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
             settings = {
                 contactName: row.contactName,
                 contactPhone: row.contactPhone,
-                merchantId: row.merchantId
+                merchantId: row.merchantId,
+                selectedCourier: row.selectedCourier
             };
         }
     }

@@ -2,7 +2,8 @@ import { json, error } from "@sveltejs/kit";
 import { drizzle } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 import { brandSettings } from "$lib/server/schema";
-import type { BrandSettingsPayload } from "$lib/types";
+import { Courier } from "$lib/types";
+import type { BrandSettingsPatch } from "$lib/types";
 import type { RequestHandler } from "./$types";
 
 function requireAuth(locals: App.Locals) {
@@ -28,21 +29,27 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
             userId: user.id,
             contactName: null,
             contactPhone: null,
-            merchantId: null
+            merchantId: null,
+            selectedCourier: null
         }
     });
 };
 
-const ALLOWED_BODY_KEYS = new Set<string>(["contactName", "contactPhone", "merchantId"]);
+const ALLOWED_KEYS = new Set<keyof BrandSettingsPatch>([
+    "contactName",
+    "contactPhone",
+    "merchantId",
+    "selectedCourier"
+]);
 
-export const POST: RequestHandler = async ({ locals, platform, request }) => {
+const ALLOWED_COURIERS = new Set<string>(Object.values(Courier));
+
+export const PATCH: RequestHandler = async ({ locals, platform, request }) => {
     const user = requireAuth(locals);
 
     if (!platform?.env?.DB) {
         error(503, { message: "Database unavailable" });
     }
-
-    const db = drizzle(platform.env.DB);
 
     let rawBody: unknown;
     try {
@@ -55,46 +62,47 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
         error(400, { message: "Invalid request body" });
     }
 
-    const bodyObj = rawBody as Record<string, unknown>;
-    for (const [key, value] of Object.entries(bodyObj)) {
-        if (!ALLOWED_BODY_KEYS.has(key) || typeof value !== "string") {
-            error(400, { message: "Invalid request body" });
+    const patch: BrandSettingsPatch = {};
+    for (const [key, value] of Object.entries(rawBody as Record<string, unknown>)) {
+        if (!ALLOWED_KEYS.has(key as keyof BrandSettingsPatch)) {
+            error(400, { message: `Unknown field: ${key}` });
         }
+        if (typeof value !== "string") {
+            error(400, { message: `Field ${key} must be a string` });
+        }
+        (patch as Record<string, string>)[key] = value;
     }
 
-    const body = rawBody as BrandSettingsPayload;
-
-    if (!body.merchantId || body.merchantId.trim().length === 0) {
-        error(400, { message: "Merchant ID is required" });
+    if (patch.merchantId !== undefined && patch.merchantId.trim().length === 0) {
+        error(400, { message: "Merchant ID cannot be empty" });
     }
 
-    const userId = user.id;
-    const existing = await db.select().from(brandSettings).where(eq(brandSettings.userId, userId)).get();
+    if (patch.selectedCourier !== undefined && !ALLOWED_COURIERS.has(patch.selectedCourier)) {
+        error(400, { message: `Unknown courier: ${patch.selectedCourier}` });
+    }
+
+    const db = drizzle(platform.env.DB);
     const now = new Date();
 
-    if (existing) {
-        await db
-            .update(brandSettings)
-            .set({
-                contactName: body.contactName ?? null,
-                contactPhone: body.contactPhone ?? null,
-                merchantId: body.merchantId,
-                updatedAt: now
-            })
-            .where(eq(brandSettings.userId, userId));
-    } else {
-        await db.insert(brandSettings).values({
+    // Ensure row exists; insert is a no-op when one is already there.
+    await db
+        .insert(brandSettings)
+        .values({
             id: crypto.randomUUID(),
-            userId,
-            contactName: body.contactName ?? null,
-            contactPhone: body.contactPhone ?? null,
-            merchantId: body.merchantId,
+            userId: user.id,
             createdAt: now,
             updatedAt: now
-        });
-    }
+        })
+        .onConflictDoNothing({ target: brandSettings.userId });
 
-    const updated = await db.select().from(brandSettings).where(eq(brandSettings.userId, userId)).get();
+    // Build selective UPDATE — only fields present in the patch.
+    const updates: Record<string, string | Date> = { updatedAt: now };
+    if (patch.contactName !== undefined) updates.contactName = patch.contactName;
+    if (patch.contactPhone !== undefined) updates.contactPhone = patch.contactPhone;
+    if (patch.merchantId !== undefined) updates.merchantId = patch.merchantId;
+    if (patch.selectedCourier !== undefined) updates.selectedCourier = patch.selectedCourier;
 
-    return json({ success: true, data: updated });
+    await db.update(brandSettings).set(updates).where(eq(brandSettings.userId, user.id));
+
+    return new Response(null, { status: 204 });
 };
