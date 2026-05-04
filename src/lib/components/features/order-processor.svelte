@@ -23,7 +23,7 @@
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
     const isSteadFast = $derived(selectedCourier === Courier.SteadFast);
-    const needsMerchantId = $derived(isSteadFast && !$hasMerchantId);
+    const needsMerchantId = $derived(isSteadFast && !hasMerchantId());
     const isDisabled = $derived(selectedCourier === "" || needsMerchantId);
 
     const handleFileSelect = async (file: File) => {
@@ -39,7 +39,7 @@
                 console.warn("CSV parsing warnings:", result.errors);
             }
 
-            const settings = $brandSettings;
+            const settings = brandSettings.value;
             const processedOrders = CourierService.processOrders(selectedCourier as Courier, result.data, {
                 name: settings.contactName ?? currentUser.name,
                 phone: settings.contactPhone ?? "",

@@ -2,7 +2,6 @@
     import { brandSettings } from "$lib/stores";
     import { LoadingSpinner } from "$lib/components";
     import { Input } from "$lib/components/ui/input";
-    import type { BrandSettingsPayload } from "$lib/types";
 
     interface Props {
         visible: boolean;
@@ -10,25 +9,15 @@
 
     let { visible }: Props = $props();
 
-    let contactName = $state($brandSettings.contactName ?? "");
-    let contactPhone = $state($brandSettings.contactPhone ?? "");
-    let merchantId = $state($brandSettings.merchantId ?? "");
+    const contactName = $derived(brandSettings.value.contactName ?? "");
+    const contactPhone = $derived(brandSettings.value.contactPhone ?? "");
+    const merchantId = $derived(brandSettings.value.merchantId ?? "");
 
-    type SaveState = "idle" | "saving" | "saved" | "error";
-    let saveState: SaveState = $state("idle");
-    let saveError: string | null = $state(null);
-
-    let abortController: AbortController | null = null;
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const MAX_RETRIES = 3;
-    const RETRY_DELAYS = [1000, 2000, 4000];
-
-    const isValid = $derived(merchantId.trim().length > 0);
+    const merchantIdInvalid = $derived(merchantId.length > 0 && merchantId.trim().length === 0);
 
     $effect(() => {
         const handler = (e: BeforeUnloadEvent) => {
-            if (saveState === "saving") {
+            if (brandSettings.saveState === "saving") {
                 e.preventDefault();
                 e.returnValue = "";
             }
@@ -37,62 +26,15 @@
         return () => window.removeEventListener("beforeunload", handler);
     });
 
-    function scheduleAutoSave() {
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            if (isValid) performSave();
-        }, 500);
-    }
-
-    async function performSave(attempt = 0) {
-        if (abortController) abortController.abort();
-        abortController = new AbortController();
-
-        saveState = "saving";
-        saveError = null;
-
-        try {
-            const payload: BrandSettingsPayload = { merchantId };
-            if (contactName) payload.contactName = contactName;
-            if (contactPhone) payload.contactPhone = contactPhone;
-
-            const response = await fetch("/api/brand-settings", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-                signal: abortController.signal
-            });
-
-            if (!response.ok) throw new Error("Failed to save settings");
-
-            brandSettings.set({
-                contactName: contactName || null,
-                contactPhone: contactPhone || null,
-                merchantId
-            });
-
-            saveState = "saved";
-            setTimeout(() => {
-                if (saveState === "saved") saveState = "idle";
-            }, 2000);
-        } catch (e) {
-            if (e instanceof Error && e.name === "AbortError") return;
-
-            if (attempt < MAX_RETRIES) {
-                const delay = RETRY_DELAYS[attempt] ?? 4000;
-                setTimeout(() => performSave(attempt + 1), delay);
-                return;
-            }
-
-            saveError = e instanceof Error ? e.message : "Failed to save settings";
-            saveState = "error";
-        }
-    }
-
-    function dismissError() {
-        saveError = null;
-        saveState = "idle";
-    }
+    const onContactName = (e: Event) => {
+        brandSettings.updateField("contactName", (e.currentTarget as HTMLInputElement).value);
+    };
+    const onContactPhone = (e: Event) => {
+        brandSettings.updateField("contactPhone", (e.currentTarget as HTMLInputElement).value);
+    };
+    const onMerchantId = (e: Event) => {
+        brandSettings.updateField("merchantId", (e.currentTarget as HTMLInputElement).value);
+    };
 </script>
 
 {#if visible}
@@ -105,10 +47,10 @@
 
         <div class="sleek border-surface-raised bg-surface/50 rounded-xl border p-4 backdrop-blur-sm">
             <div class="mb-3 flex items-center justify-end gap-1.5 text-xs" aria-live="polite" aria-atomic="true">
-                {#if saveState === "saving"}
+                {#if brandSettings.saveState === "saving"}
                     <LoadingSpinner size="sm" colorClass="border-t-courier-accent" />
                     <span class="text-zinc-500">Saving...</span>
-                {:else if saveState === "saved"}
+                {:else if brandSettings.saveState === "saved"}
                     <svg
                         class="text-courier-accent h-3 w-3"
                         viewBox="0 0 24 24"
@@ -119,7 +61,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     <span class="text-courier-accent">Saved</span>
-                {:else if saveState === "error"}
+                {:else if brandSettings.saveState === "error"}
                     <svg
                         class="text-destructive h-3 w-3"
                         viewBox="0 0 24 24"
@@ -133,9 +75,9 @@
                             d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                         />
                     </svg>
-                    <span class="text-destructive text-xs">{saveError ?? "Save failed"}</span>
+                    <span class="text-destructive text-xs">{brandSettings.saveError ?? "Save failed"}</span>
                     <button
-                        onclick={dismissError}
+                        onclick={() => brandSettings.dismissError()}
                         class="ml-1 rounded text-xs text-zinc-500 underline hover:text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                     >
                         Dismiss
@@ -150,9 +92,9 @@
                     </label>
                     <Input
                         id="contact-name"
-                        bind:value={contactName}
+                        value={contactName}
                         placeholder="e.g., Lord Voldemort"
-                        oninput={scheduleAutoSave}
+                        oninput={onContactName}
                     />
                 </div>
 
@@ -163,9 +105,9 @@
                     <Input
                         id="contact-phone"
                         type="tel"
-                        bind:value={contactPhone}
+                        value={contactPhone}
                         placeholder="e.g., 1XXXXXXXXX"
-                        oninput={scheduleAutoSave}
+                        oninput={onContactPhone}
                     />
                 </div>
 
@@ -175,12 +117,12 @@
                     </label>
                     <Input
                         id="merchant-id"
-                        bind:value={merchantId}
+                        value={merchantId}
                         placeholder="e.g., 123456"
-                        error={!isValid && merchantId.length > 0}
-                        oninput={scheduleAutoSave}
+                        error={merchantIdInvalid}
+                        oninput={onMerchantId}
                     />
-                    {#if !isValid && merchantId.length > 0}
+                    {#if merchantIdInvalid}
                         <p class="text-destructive mt-1 text-xs">Merchant ID is required</p>
                     {/if}
                 </div>
