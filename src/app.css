@@ -49,12 +49,14 @@
     }
 }
 
-/* Prevent iOS Safari from auto-zooming on input focus (triggered when font-size < 16px).
-   Must be outside any @layer so it beats @layer utilities where Tailwind's text-sm lives. */
-@media screen and (max-width: 768px) {
-    input:not([type="hidden"]),
+/* iOS Safari auto-zooms on focus when font-size < 16px. The only accessible
+   fix is enforcing 1rem on touch devices — viewport user-scalable hacks are
+   deprecated and break WCAG 1.4.4. Scoped to touch screens so desktop keeps
+   the text-sm design token unchanged. */
+@media (hover: none) and (pointer: coarse) {
+    input,
     textarea,
     select {
-        font-size: 16px;
+        font-size: 1rem;
     }
 }
