@@ -1,0 +1,28 @@
+/**
+ * Thin facades over brandSettings for the rest of the app.
+ *
+ * courierService reads/writes selectedCourier on the brand-settings store,
+ * resolving to the SteadFast default when nothing has been persisted. All
+ * mutations route through brandSettings.updateField so they share the same
+ * debounce + retry + onState pipeline used by the contact fields.
+ */
+
+import { Courier } from "$lib/types";
+import { brandSettings } from "./brand-settings.svelte";
+
+const DEFAULT_COURIER: string = Courier.SteadFast;
+
+export const courierService = {
+    get value(): string {
+        return brandSettings.value.selectedCourier ?? DEFAULT_COURIER;
+    },
+    setSelected(courier: string) {
+        brandSettings.updateField("selectedCourier", courier);
+    }
+};
+
+/** True when the merchant has saved a non-empty merchantId. */
+export const hasMerchantId = (): boolean => {
+    const id = brandSettings.value.merchantId;
+    return id !== null && id.trim().length > 0;
+};

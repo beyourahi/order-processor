@@ -1,2 +1,2 @@
-export { courierService, hasMerchantId } from "./app";
-export { brandSettings } from "./brand-settings";
+export { courierService, hasMerchantId } from "./app.svelte";
+export { brandSettings } from "./brand-settings.svelte";
