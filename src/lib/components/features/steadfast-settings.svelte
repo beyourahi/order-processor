@@ -13,7 +13,9 @@
     const contactPhone = $derived(brandSettings.value.contactPhone ?? "");
     const merchantId = $derived(brandSettings.value.merchantId ?? "");
 
-    const merchantIdInvalid = $derived(merchantId.length > 0 && merchantId.trim().length === 0);
+    const merchantIdInvalid = $derived(
+        brandSettings.value.merchantId !== null && brandSettings.value.merchantId.trim().length === 0
+    );
 
     $effect(() => {
         const handler = (e: BeforeUnloadEvent) => {
