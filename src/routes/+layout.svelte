@@ -1,7 +1,3 @@
-<!--
-  Root Layout
-  Provides the app shell with global styles and footer
--->
 <script lang="ts">
     import "../app.css";
     import { Footer } from "$lib/components";

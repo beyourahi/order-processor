@@ -1,2 +1,2 @@
-export { api, debounceSync, sync, flushSync } from "./client";
+export { api, debounceSync } from "./client";
 export type { SyncOptions } from "./client";

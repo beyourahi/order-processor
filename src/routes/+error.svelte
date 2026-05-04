@@ -1,15 +1,7 @@
-<!--
-  Error Page
-  Displays when an error occurs during navigation or data loading
--->
 <script lang="ts">
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
     import { Button } from "$lib/components";
-
-    const handleReset = () => {
-        goto("/");
-    };
 </script>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-4">
@@ -25,5 +17,5 @@
         </p>
     </div>
 
-    <Button onclick={handleReset} variant="outline">Go back home</Button>
+    <Button onclick={() => goto("/")} variant="outline">Go back home</Button>
 </div>

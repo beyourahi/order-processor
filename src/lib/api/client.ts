@@ -1,9 +1,6 @@
 /**
- * Tiny typed fetch + debounce primitives for client-side persistence.
- *
- * Adapted from the invoice-generator pattern. The debounceSync helper
- * coalesces rapid edits per-key so that simultaneous edits to different
- * fields never cancel each other.
+ * The debounceSync helper coalesces rapid edits per-key so simultaneous edits
+ * to different fields never cancel each other.
  */
 
 import type { SaveState } from "$lib/types";
@@ -35,11 +32,6 @@ export const api = {
 };
 
 export interface SyncOptions {
-    /**
-     * Optional callback invoked on save-state transitions: "saving" when the
-     * debounced call begins, "saved" on success, "error" on failure. The
-     * second argument carries the Error on the "error" transition.
-     */
     onState?: (state: SaveState, err?: Error) => void;
 }
 
@@ -48,9 +40,6 @@ const pending = new Map<string, ReturnType<typeof setTimeout>>();
 /**
  * Schedule fn to run after delayMs of quiet on `key`. Subsequent calls with
  * the same key reset the timer; calls with different keys run independently.
- *
- * Errors are logged to the console; callers wanting richer error handling
- * should pass an onState callback.
  */
 export const debounceSync = <T>(
     key: string,
@@ -73,31 +62,4 @@ export const debounceSync = <T>(
         }
     }, delayMs);
     pending.set(key, timer);
-};
-
-/**
- * Fire-and-forget wrapper. Runs fn immediately, returns the result on
- * success or null on failure. Errors are logged to the console.
- */
-export const sync = async <T>(fn: () => Promise<T>, options: SyncOptions = {}): Promise<T | null> => {
-    options.onState?.("saving");
-    try {
-        const result = await fn();
-        options.onState?.("saved");
-        return result;
-    } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        console.error("[sync]", error);
-        options.onState?.("error", error);
-        return null;
-    }
-};
-
-/**
- * Cancel any pending debounced syncs without running them. Useful in tests
- * and during teardown.
- */
-export const flushSync = (): void => {
-    for (const t of pending.values()) clearTimeout(t);
-    pending.clear();
 };

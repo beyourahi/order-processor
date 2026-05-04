@@ -1,12 +1,3 @@
-<!--
-  Heading Component
-  Displays the app title with emoji and tagline
-  Responsive typography scaling across all breakpoints
--->
-<script lang="ts">
-    // No props needed - static component
-</script>
-
 <div class="space-y-4 text-center sm:space-y-6 lg:space-y-8">
     <p class="text-4xl sm:text-5xl">🚀</p>
 

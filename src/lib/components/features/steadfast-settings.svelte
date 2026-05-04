@@ -54,6 +54,7 @@
                     <span class="text-zinc-500">Saving...</span>
                 {:else if brandSettings.saveState === "saved"}
                     <svg
+                        aria-hidden="true"
                         class="text-courier-accent h-3 w-3"
                         viewBox="0 0 24 24"
                         fill="none"
@@ -65,6 +66,7 @@
                     <span class="text-courier-accent">Saved</span>
                 {:else if brandSettings.saveState === "error"}
                     <svg
+                        aria-hidden="true"
                         class="text-destructive h-3 w-3"
                         viewBox="0 0 24 24"
                         fill="none"

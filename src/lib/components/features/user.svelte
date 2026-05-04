@@ -1,8 +1,3 @@
-<!--
-  User Component
-  Floating user badge with avatar and power button logout
-  Fixed position in top-right corner for minimal, elegant design
--->
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
     import { goto } from "$app/navigation";
@@ -36,9 +31,7 @@
     };
 </script>
 
-<!-- Fixed floating container -->
 <div class="fixed top-4 right-4 z-50 flex items-center gap-2 sm:top-6 sm:right-6">
-    <!-- User info (expandable on hover/focus) -->
     <div
         class="group relative flex items-center"
         role="group"
@@ -46,7 +39,6 @@
         onmouseenter={() => (expanded = true)}
         onmouseleave={() => (expanded = false)}
     >
-        <!-- Avatar -->
         <div
             tabindex="0"
             role="button"
@@ -64,6 +56,7 @@
                 <img src={user.image} alt={user.name} class="h-full w-full object-cover" referrerpolicy="no-referrer" />
             {:else}
                 <svg
+                    aria-hidden="true"
                     class="h-4 w-4 sm:h-5 sm:w-5"
                     viewBox="0 0 24 24"
                     fill="none"
@@ -78,13 +71,11 @@
             {/if}
         </div>
 
-        <!-- Expandable name badge -->
         <div
             class={cn(
-                "border-border-strong/50 bg-surface-raised/90 absolute right-0 flex items-center overflow-hidden rounded-full border whitespace-nowrap backdrop-blur-sm transition-all duration-300",
+                "border-border-strong/50 bg-surface-raised/90 absolute right-0 flex h-9 items-center overflow-hidden rounded-full border whitespace-nowrap backdrop-blur-sm transition-all duration-300 sm:h-10",
                 expanded ? "w-auto pr-11 pl-3 opacity-100 sm:pr-12" : "w-0 pr-0 pl-0 opacity-0"
             )}
-            style="height: 2.5rem;"
         >
             <div class="flex flex-col justify-center">
                 <span class="text-xs leading-tight font-medium text-zinc-200 sm:text-sm">
@@ -97,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Power button -->
     <div class="relative">
         <button
             onclick={handleLogout}
@@ -119,6 +109,7 @@
                 <LoadingSpinner size="sm" />
             {:else}
                 <svg
+                    aria-hidden="true"
                     class="text-destructive h-4 w-4 transition-colors group-hover:text-white sm:h-4.5 sm:w-4.5"
                     viewBox="0 0 24 24"
                     fill="none"
@@ -133,7 +124,6 @@
             {/if}
         </button>
 
-        <!-- Tooltip -->
         {#if showTooltip && !isLoggingOut}
             <div
                 class="bg-surface-raised absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-200 shadow-lg"

@@ -1,8 +1,3 @@
-<!--
-  Footer Component
-  Displays developer attribution with link
-  Responsive padding and typography
--->
 <script lang="ts">
     import { APP_CONFIG } from "$lib/config";
 </script>

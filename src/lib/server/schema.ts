@@ -1,14 +1,6 @@
-/**
- * Drizzle ORM schema for Better Auth tables.
- *
- * These schemas match the D1 database tables created in migrations.
- * Column names use snake_case as required by Better Auth's Drizzle adapter.
- */
+// Column names use snake_case as required by Better Auth's Drizzle adapter.
 import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
-/**
- * Users table - stores authenticated user profiles
- */
 export const users = sqliteTable("users", {
     id: text("id").primaryKey(),
     email: text("email").notNull().unique(),
@@ -19,9 +11,6 @@ export const users = sqliteTable("users", {
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull()
 });
 
-/**
- * Sessions table - tracks active user sessions
- */
 export const sessions = sqliteTable(
     "sessions",
     {
@@ -39,9 +28,6 @@ export const sessions = sqliteTable(
     (table) => [index("idx_sessions_user_id").on(table.userId)]
 );
 
-/**
- * Accounts table - stores OAuth provider connections
- */
 export const accounts = sqliteTable(
     "accounts",
     {
@@ -67,9 +53,6 @@ export const accounts = sqliteTable(
     ]
 );
 
-/**
- * Verifications table - for OAuth state and email verification tokens
- */
 export const verifications = sqliteTable(
     "verifications",
     {
@@ -83,10 +66,7 @@ export const verifications = sqliteTable(
     (table) => [index("idx_verifications_identifier").on(table.identifier)]
 );
 
-/**
- * Rate limits table - tracks request counts per IP + path for Better Auth's rate limiter.
- * lastRequest is a Unix millisecond timestamp (not a Date), stored as plain integer.
- */
+// lastRequest is a Unix millisecond timestamp (not a Date), stored as a plain integer.
 export const rateLimits = sqliteTable(
     "rate_limits",
     {
@@ -98,9 +78,6 @@ export const rateLimits = sqliteTable(
     (table) => [index("idx_rate_limits_key").on(table.key)]
 );
 
-/**
- * Brand settings table - stores editable contact info per user
- */
 export const brandSettings = sqliteTable(
     "brand_settings",
     {

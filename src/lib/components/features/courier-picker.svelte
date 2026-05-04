@@ -1,8 +1,3 @@
-<!--
-  CourierPicker Component
-  Premium courier selection with radio-button style indicators
-  Features smooth animations and clear selection states
--->
 <script lang="ts">
     import { COURIER_OPTIONS } from "$lib/config";
     import { cn } from "$lib/utils";
@@ -16,7 +11,6 @@
 </script>
 
 <div class="flex w-full flex-col items-center gap-4 sm:gap-6">
-    <!-- Courier options -->
     <div class="flex w-full max-w-sm flex-col gap-3 sm:gap-4">
         {#each COURIER_OPTIONS as option (option.value)}
             {@const isSelected = selectedCourier === option.value}
@@ -44,6 +38,7 @@
                 >
                     {#if isSelected}
                         <svg
+                            aria-hidden="true"
                             class="h-3 w-3 text-white sm:h-3.5 sm:w-3.5"
                             fill="none"
                             viewBox="0 0 24 24"

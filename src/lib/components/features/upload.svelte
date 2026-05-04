@@ -1,8 +1,3 @@
-<!--
-  Upload Component
-  Displays the drag-and-drop upload zone or disabled state
-  Uses the upload.gif animation with responsive sizing
--->
 <script lang="ts">
     import uploadGif from "$lib/assets/upload.gif";
 
@@ -13,7 +8,6 @@
 
     let { disabled = false, needsMerchantId = false }: Props = $props();
 
-    // Determine the appropriate message based on disabled reason
     const title = $derived(
         needsMerchantId ? "Merchant ID required" : disabled ? "Select a courier first" : "Drop your CSV file here"
     );
@@ -27,11 +21,7 @@
     );
 </script>
 
-<div
-    class="flex flex-col items-center justify-center gap-4 px-4 sm:gap-6"
-    class:opacity-50={disabled}
-    class:cursor-not-allowed={disabled}
->
+<div class="flex flex-col items-center justify-center gap-4 px-4 sm:gap-6">
     <img
         src={uploadGif}
         alt="Upload animation"

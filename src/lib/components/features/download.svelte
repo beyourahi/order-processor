@@ -1,8 +1,3 @@
-<!--
-  Download Component
-  Shows file preview after CSV is selected
-  Displays filename and formatted file size with responsive sizing
--->
 <script lang="ts">
     import downloadGif from "$lib/assets/download.gif";
     import { formatFileSize } from "$lib/utils";
