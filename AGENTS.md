@@ -77,6 +77,26 @@ CourierService (orchestrator)
 
 The `CourierProcessor<T>` interface is generic -- new couriers implement `processOrders(data, user): T[]`.
 
+### Client State & API Layer
+
+```
+$lib/api/client.ts
+  --> api.{get,post,patch,put,delete}<T>()  -- typed fetch wrapper, throws on non-2xx
+  --> debounceSync(key, delayMs, fn, opts)   -- per-key debounce with onState callbacks
+
+$lib/stores/brand-settings.svelte.ts        -- closure-based runes store (NOT writable())
+  --> brandSettings.value                   -- reactive BrandSettingsState
+  --> brandSettings.hydrate(initial)        -- called in root +layout.server.ts
+  --> brandSettings.updateField(key, value) -- debounces PATCH /api/brand-settings with retry
+
+$lib/stores/app.svelte.ts                   -- thin facades over brandSettings
+  --> courierService.value / .setSelected() -- reads/writes selectedCourier via brandSettings
+  --> hasMerchantId()                       -- function (not a derived store)
+```
+
+- Stores use `.svelte.ts` extension and Svelte 5 `$state` runes internally — do not import from `.ts` files that don't use runes context.
+- `brandSettings` is a module singleton; `hydrate()` must be called in `+layout.svelte` `$effect` or server load to seed initial values.
+
 ### Authentication Flow
 
 ```
@@ -101,7 +121,7 @@ Tables in `src/lib/server/schema.ts`:
 - `sessions` -- active sessions (indexed on `user_id`)
 - `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
 - `verifications` -- OAuth state/email verification tokens
-- `brand_settings` -- editable contact info per user (contact_name, contact_phone, merchant_id), linked via `user_id` FK
+- `brand_settings` -- editable contact info per user (contact_name, contact_phone, merchant_id, selected_courier), linked via `user_id` FK
 - `rate_limits` -- request counts per IP+path for Better Auth's D1-backed rate limiter (20 req/60s)
 
 All columns use `snake_case` (required by Better Auth Drizzle adapter with `usePlural: true`).
@@ -115,10 +135,13 @@ src/
     +page.svelte / +page.server.ts       -- main order processing page
     +error.svelte                         -- error boundary
     login/                               -- login page with Google OAuth
-    api/brand-settings/+server.ts        -- brand settings CRUD
+    api/brand-settings/+server.ts        -- brand settings CRUD (GET + PATCH)
     api/logout/+server.ts                -- logout endpoint
   lib/
-    auth-client.ts                       -- Better Auth client instance
+    auth-client.ts                       -- Better Auth client (`authClient`); use authClient.signIn/signOut/useSession directly — no named re-exports
+    assets/                              -- static assets (download.gif, upload.gif, steadfast.png)
+    api/
+      client.ts                          -- typed api object (get/post/patch/put/delete) + debounceSync
     server/
       auth.ts                            -- createAuth() factory
       schema.ts                          -- Drizzle ORM schema (6 tables)
@@ -136,14 +159,14 @@ src/
       data-processing.ts                 -- CSV prep utilities
       processors/steadfast.ts            -- SteadFast processor
     stores/
-      app.ts                             -- courierService (writable), hasMerchantId (derived from brandSettings)
-      brand-settings.ts                  -- brandSettings writable store (hydrated from server load)
+      app.svelte.ts                      -- courierService facade + hasMerchantId() (backed by brandSettings store)
+      brand-settings.svelte.ts           -- closure-based runes store with hydrate, debounce, retry, SaveState
     hooks/use-current-user.ts            -- derives CurrentUser from email
-    types/                               -- courier.ts, user.ts, ui.ts, brand-settings.ts
+    types/                               -- courier.ts, user.ts, ui.ts, brand-settings.ts (includes SaveState)
     utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts
   hooks.server.ts                        -- auth middleware + security headers
   hooks.client.ts                        -- client-side hooks
-  app.css                                -- global Tailwind styles
+  app.css                                -- global Tailwind styles (includes 16px touch-device font floor)
   app.d.ts                               -- App.Locals, App.Platform, App.PageData, App.Error
   app.html                               -- HTML shell
 ```
@@ -235,7 +258,7 @@ For `db:push` and `db:studio`, set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE
 ```
 
 - Use runes (`$state`, `$derived`, `$props`, `$effect`) for Svelte 5 components
-- Svelte `writable` stores only for cross-component global state (`$lib/stores/`)
+- Global state uses closure-based rune stores in `$lib/stores/*.svelte.ts` — not Svelte `writable()`
 - Tailwind CSS for all styling -- no inline styles, no CSS modules
 - Use `cn()` from `$lib/utils` for conditional/merged Tailwind classes
 - JSDoc on complex business logic functions
@@ -341,13 +364,15 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 
 7. **Authorization is authentication-only** -- Any Google user who successfully authenticates is authorized. There is no email allowlist. Brand settings (contact name, phone, merchant ID) are per-user in D1 and editable via the UI. To restrict access, an email allowlist or similar gate would need to be re-added.
 
-8. **drizzle-kit version sensitivity** -- The project previously pinned drizzle-kit to 0.30.0 due to a hang bug in 0.31.x. Current version is 0.31.10. If migration commands hang, check for upstream issues.
+8. **drizzle-kit version sensitivity** -- Previously pinned to 0.30.0 due to a hang bug in early 0.31.x. Current version is `0.31.10` (stable). If migration commands hang, check for upstream regressions before upgrading.
 
 9. **Security headers are applied to all responses** -- `hooks.server.ts` sets a Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. `X-XSS-Protection` was removed (deprecated). The CSP requires `'unsafe-inline'` for SvelteKit hydration scripts and Tailwind styles — do not tighten it without testing. Immutable responses (redirects) are cloned before header application.
 
 10. **Never commit `.env` or `.dev.vars`** -- These contain auth secrets and API tokens. Only `.env.example` is tracked. Use `wrangler secret put <NAME>` for production secrets.
 
 11. **Cookie cache version is a global session kill-switch** -- Bumping `cookieCache.version` in `createAuth()` instantly invalidates all cached sessions across all users/edge nodes. Use in security incidents. Current value: `"1"`.
+
+12. **Mobile anti-zoom rule uses `@media (pointer: coarse)`** -- `app.css` enforces a 16px minimum font size on touch devices to prevent iOS auto-zoom on input focus. The rule is placed outside `@layer` so it outranks Tailwind utilities. Do not move it inside a layer or lower its specificity.
 
 ---
 
