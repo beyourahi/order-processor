@@ -5,4 +5,4 @@ export type { CurrentUser, UserInfo } from "./user";
 
 export type { CSVParseResult } from "./ui";
 
-export type { BrandSettings, BrandSettingsState, BrandSettingsPatch, SaveState } from "./brand-settings";
+export type { BrandSettingsState, BrandSettingsPatch, SaveState } from "./brand-settings";

@@ -1,17 +1,7 @@
-export interface BrandSettings {
-    id: string;
-    userId: string;
-    contactName: string | null;
-    contactPhone: string | null;
-    merchantId: string | null;
-    selectedCourier: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
 /**
- * Subset of BrandSettings persisted in the client store and returned by
- * the page server load. `id`, `userId`, and timestamps live server-side.
+ * Subset of the brand_settings table persisted in the client store and
+ * returned by the page server load. `id`, `userId`, and timestamps are
+ * server-side only.
  */
 export interface BrandSettingsState {
     contactName: string | null;
