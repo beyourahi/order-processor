@@ -86,7 +86,7 @@ $lib/api/client.ts
 
 $lib/stores/brand-settings.svelte.ts        -- closure-based runes store (NOT writable())
   --> brandSettings.value                   -- reactive BrandSettingsState
-  --> brandSettings.hydrate(initial)        -- called in root +layout.server.ts
+  --> brandSettings.hydrate(initial)        -- called synchronously in +page.svelte via untrack()
   --> brandSettings.updateField(key, value) -- debounces PATCH /api/brand-settings with retry
 
 $lib/stores/app.svelte.ts                   -- thin facades over brandSettings
@@ -95,7 +95,7 @@ $lib/stores/app.svelte.ts                   -- thin facades over brandSettings
 ```
 
 - Stores use `.svelte.ts` extension and Svelte 5 `$state` runes internally — do not import from `.ts` files that don't use runes context.
-- `brandSettings` is a module singleton; `hydrate()` must be called in `+layout.svelte` `$effect` or server load to seed initial values.
+- `brandSettings` is a module singleton. `hydrate()` is called synchronously via `untrack()` in `+page.svelte` so children read canonical server values during their own mount — do NOT move hydration into `$effect`, that race was fixed in `6d9d68b`.
 
 ### Authentication Flow
 
@@ -132,7 +132,7 @@ All columns use `snake_case` (required by Better Auth Drizzle adapter with `useP
 src/
   routes/
     +layout.svelte / +layout.server.ts   -- root layout, loads user/session
-    +page.svelte / +page.server.ts       -- main order processing page
+    +page.svelte / +page.server.ts       -- main page; loads brandSettings from D1 + hydrates store
     +error.svelte                         -- error boundary
     login/                               -- login page with Google OAuth
     api/brand-settings/+server.ts        -- brand settings CRUD (GET + PATCH)
@@ -304,13 +304,12 @@ docs:     documentation changes
 
 ### Environment Setup
 
-1. Copy `.env.example` to `.env` and `.dev.vars`
-2. Fill in required values:
+1. Create `.dev.vars` (used by `wrangler dev` / `bun run preview`):
     - `BETTER_AUTH_SECRET` -- generate with `openssl rand -base64 32`
     - `BETTER_AUTH_URL` -- `http://localhost:5173` for dev
     - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- from Google Cloud Console
-3. For D1 operations, also set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, `CLOUDFLARE_D1_TOKEN`
-4. Run `bun install` and `bun run dev`
+2. Create `.env` for D1 CLI operations (`db:push`, `db:studio`): `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, `CLOUDFLARE_D1_TOKEN`
+3. Run `bun install` and `bun run dev`
 
 ### Cloudflare Bindings
 
@@ -368,7 +367,7 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 
 9. **Security headers are applied to all responses** -- `hooks.server.ts` sets a Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. `X-XSS-Protection` was removed (deprecated). The CSP requires `'unsafe-inline'` for SvelteKit hydration scripts and Tailwind styles — do not tighten it without testing. Immutable responses (redirects) are cloned before header application.
 
-10. **Never commit `.env` or `.dev.vars`** -- These contain auth secrets and API tokens. Only `.env.example` is tracked. Use `wrangler secret put <NAME>` for production secrets.
+10. **Never commit `.env` or `.dev.vars`** -- These contain auth secrets and API tokens. No example file is tracked. Use `wrangler secret put <NAME>` for production secrets.
 
 11. **Cookie cache version is a global session kill-switch** -- Bumping `cookieCache.version` in `createAuth()` instantly invalidates all cached sessions across all users/edge nodes. Use in security incidents. Current value: `"1"`.
 
