@@ -6,6 +6,9 @@ const config = {
     preprocess: vitePreprocess({ script: true }),
     kit: {
         adapter: adapter({
+            platformProxy: {
+                configPath: "wrangler.jsonc"
+            },
             routes: {
                 include: ["/*"],
                 exclude: ["<all>"]

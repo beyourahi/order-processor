@@ -15,19 +15,17 @@
                 {APP_CONFIG.author.name}
             </span>
         </a>
-        {#each APP_CONFIG.siblings as sibling (sibling.url)}
-            <span class="mx-2 opacity-50">·</span>
-            <a
-                href={sibling.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="group sleek rounded focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
-            >
-                Also check out
-                <span class="underline-offset-4 group-hover:text-white group-hover:underline">
-                    {sibling.name.toLowerCase()}
-                </span>
-            </a>
-        {/each}
+        <span class="mx-2 opacity-50">·</span>
+        <a
+            href="https://dropoutstudio.co/tools"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group sleek rounded focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+        >
+            Check out
+            <span class="underline-offset-4 group-hover:text-white group-hover:underline">
+                other tools
+            </span>
+        </a>
     </p>
 </footer>
