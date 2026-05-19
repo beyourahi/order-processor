@@ -10,8 +10,8 @@
     let { selectedCourier, onSelect }: Props = $props();
 </script>
 
-<div class="flex w-full flex-col items-center gap-4 sm:gap-6">
-    <div class="flex w-full max-w-sm flex-col gap-3 sm:gap-4">
+<div class="flex w-full max-w-sm flex-col items-center gap-4 sm:gap-6">
+    <div class="flex w-full flex-col gap-3 sm:gap-4">
         {#each COURIER_OPTIONS as option (option.value)}
             {@const isSelected = selectedCourier === option.value}
 
