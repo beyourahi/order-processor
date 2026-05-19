@@ -102,7 +102,7 @@
                 "focus-visible:ring-destructive/50 focus:outline-none focus-visible:ring-2",
                 isLoggingOut
                     ? "border-border-strong bg-surface-raised/90 cursor-wait"
-                    : "border-destructive/40 bg-destructive/10 hover:border-destructive hover:bg-destructive active:scale-95"
+                    : "border-destructive/40 bg-destructive/10 pointer-fine:hover:border-destructive pointer-fine:hover:bg-destructive active:scale-95"
             )}
         >
             {#if isLoggingOut}
@@ -110,7 +110,7 @@
             {:else}
                 <svg
                     aria-hidden="true"
-                    class="text-destructive h-4 w-4 transition-colors group-hover:text-white sm:h-4.5 sm:w-4.5"
+                    class="text-destructive h-4 w-4 transition-colors sm:h-4.5 sm:w-4.5 pointer-fine:group-hover:text-white"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

@@ -43,7 +43,9 @@
     <div class="animate-in fade-in slide-in-from-top-2 w-full max-w-sm duration-300">
         <div class="mb-4 flex items-center gap-3">
             <div class="bg-surface-raised h-px flex-1"></div>
-            <span class="text-xs font-medium tracking-wider text-zinc-500 uppercase">SteadFast Settings</span>
+            <span class="text-xs font-medium tracking-wider whitespace-nowrap text-zinc-500 uppercase"
+                >SteadFast Settings</span
+            >
             <div class="bg-surface-raised h-px flex-1"></div>
         </div>
 
@@ -51,7 +53,7 @@
             <div class="mb-3 flex items-center justify-end gap-1.5 text-xs" aria-live="polite" aria-atomic="true">
                 {#if brandSettings.saveState === "saving"}
                     <LoadingSpinner size="sm" colorClass="border-t-courier-accent" />
-                    <span class="text-zinc-500">Saving...</span>
+                    <span class="whitespace-nowrap text-zinc-500">Saving...</span>
                 {:else if brandSettings.saveState === "saved"}
                     <svg
                         aria-hidden="true"
@@ -63,7 +65,7 @@
                     >
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-courier-accent">Saved</span>
+                    <span class="text-courier-accent whitespace-nowrap">Saved</span>
                 {:else if brandSettings.saveState === "error"}
                     <svg
                         aria-hidden="true"
@@ -79,10 +81,10 @@
                             d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
                         />
                     </svg>
-                    <span class="text-destructive text-xs">{brandSettings.saveError ?? "Save failed"}</span>
+                    <span class="text-destructive text-xs text-pretty">{brandSettings.saveError ?? "Save failed"}</span>
                     <button
                         onclick={() => brandSettings.dismissError()}
-                        class="ml-1 rounded text-xs text-zinc-500 underline hover:text-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                        class="ml-1 cursor-pointer rounded text-xs text-zinc-500 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 pointer-fine:hover:text-zinc-300"
                     >
                         Dismiss
                     </button>
@@ -133,6 +135,6 @@
             </div>
         </div>
 
-        <p class="mt-3 text-center text-xs text-zinc-500">Your personal SteadFast delivery settings</p>
+        <p class="mt-3 text-center text-xs text-pretty text-zinc-500">Your personal SteadFast delivery settings</p>
     </div>
 {/if}

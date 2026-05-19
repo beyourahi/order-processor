@@ -9,10 +9,10 @@
         <p class="text-destructive text-6xl font-bold" aria-label="HTTP status code {page.status}">
             {page.status}
         </p>
-        <h1 class="text-2xl font-semibold text-zinc-300">
+        <h1 class="text-2xl font-semibold text-balance text-zinc-300">
             {page.error?.message || "Something went wrong"}
         </h1>
-        <p class="max-w-md text-zinc-400">
+        <p class="max-w-md text-pretty text-zinc-400">
             An unexpected error occurred. Please try again or contact support if the problem persists.
         </p>
     </div>

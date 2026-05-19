@@ -173,7 +173,7 @@
     <button
         type="button"
         onclick={onAddRow}
-        class="border-border-strong/30 hover:bg-surface-raised/40 hover:text-courier-accent flex min-h-[44px] w-full items-center justify-center gap-2 border-t border-dashed text-sm text-zinc-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:min-h-11"
+        class="border-border-strong/30 pointer-fine:hover:bg-surface-raised/40 pointer-fine:hover:text-courier-accent flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-t border-dashed text-sm whitespace-nowrap text-zinc-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:min-h-11"
         aria-label="Add row"
     >
         <svg

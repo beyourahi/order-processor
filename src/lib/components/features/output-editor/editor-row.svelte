@@ -52,7 +52,7 @@
                 class={cn(
                     "sleek flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10",
                     glassBase,
-                    "focus-within:ring-2 focus-within:ring-white/50 hover:border-white/20 hover:bg-white/15"
+                    "focus-within:ring-2 focus-within:ring-white/50 pointer-fine:hover:border-white/20 pointer-fine:hover:bg-white/15"
                 )}
                 aria-label="Select row {rowIndex + 1}"
             >
@@ -98,9 +98,9 @@
                 type="button"
                 onclick={onDuplicate}
                 class={cn(
-                    "sleek flex h-auto min-h-[44px] w-auto min-w-[44px] items-center justify-center rounded-md text-zinc-400 sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md text-zinc-400 sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     glassBase,
-                    "hover:border-white/20 hover:bg-white/15 hover:text-white active:bg-white/20",
+                    "active:bg-white/20 pointer-fine:hover:border-white/20 pointer-fine:hover:bg-white/15 pointer-fine:hover:text-white",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 )}
                 title="Duplicate row"
@@ -122,9 +122,9 @@
                 type="button"
                 onclick={onDelete}
                 class={cn(
-                    "sleek flex h-auto min-h-[44px] w-auto min-w-[44px] items-center justify-center rounded-md text-zinc-400 sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md text-zinc-400 sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     glassBase,
-                    "hover:bg-destructive/15 hover:border-destructive/30 hover:text-destructive active:bg-destructive/25",
+                    "pointer-fine:hover:bg-destructive/15 pointer-fine:hover:border-destructive/30 pointer-fine:hover:text-destructive active:bg-destructive/25",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                 )}
                 title="Delete row"

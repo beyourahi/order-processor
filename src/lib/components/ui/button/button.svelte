@@ -4,17 +4,18 @@
 
     export const buttonVariants = cva(
         [
-            "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium",
+            "inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-md text-sm font-medium",
             "transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/50",
-            "disabled:pointer-events-none disabled:opacity-50"
+            "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
         ].join(" "),
         {
             variants: {
                 variant: {
                     outline:
-                        "border border-border-strong bg-background text-zinc-200 shadow-xs hover:bg-surface-raised hover:text-white",
-                    ghost: "text-zinc-300 hover:bg-surface-raised hover:text-white",
-                    destructive: "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90"
+                        "border border-border-strong bg-background text-zinc-200 shadow-xs pointer-fine:hover:bg-surface-raised pointer-fine:hover:text-white",
+                    ghost: "text-zinc-300 pointer-fine:hover:bg-surface-raised pointer-fine:hover:text-white",
+                    destructive:
+                        "bg-destructive text-destructive-foreground shadow-xs pointer-fine:hover:bg-destructive/90"
                 },
                 size: {
                     default: "h-9 px-4 py-2",

@@ -49,7 +49,7 @@
     <Heading />
 
     {#if error}
-        <p class="text-destructive max-w-xs text-center text-sm sm:max-w-sm">
+        <p class="text-destructive max-w-xs text-center text-sm text-pretty sm:max-w-sm">
             {error}
         </p>
     {/if}
@@ -57,7 +57,7 @@
     <button
         onclick={handleGoogleLogin}
         disabled={isLoading}
-        class="sleek group flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-medium text-zinc-200 backdrop-blur-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5 xl:hover:border-white/20 xl:hover:bg-white/5"
+        class="sleek group flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-medium whitespace-nowrap text-zinc-200 backdrop-blur-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5 xl:pointer-fine:hover:border-white/20 xl:pointer-fine:hover:bg-white/5"
     >
         {#if isLoading}
             <LoadingSpinner size="sm" colorClass="border-t-transparent" />
@@ -84,7 +84,7 @@
         <span>Continue with Google</span>
     </button>
 
-    <p class="max-w-xs text-center text-xs text-zinc-500 sm:max-w-none sm:text-sm">
+    <p class="max-w-xs text-center text-xs text-pretty text-zinc-500 sm:max-w-none sm:text-sm">
         Sign in with your Google account to get started
     </p>
 </div>

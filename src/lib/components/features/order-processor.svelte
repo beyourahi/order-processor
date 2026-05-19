@@ -153,7 +153,7 @@
             "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
             isDisabled
                 ? "border-surface-raised cursor-not-allowed opacity-50"
-                : "border-border-strong hover:bg-surface/30 hover:border-border-strong/80 cursor-pointer",
+                : "border-border-strong pointer-fine:hover:bg-surface/30 pointer-fine:hover:border-border-strong/80 cursor-pointer",
             zoneHover && "bg-surface/50 border-courier-accent/60",
             error && "border-destructive/50"
         )}
@@ -174,13 +174,13 @@
 
         {#if error}
             <div class="flex flex-col items-center gap-3 px-4 text-center sm:gap-4">
-                <p class="text-destructive text-sm sm:text-base">{error}</p>
+                <p class="text-destructive text-sm text-pretty sm:text-base">{error}</p>
                 <button
                     onclick={(e) => {
                         e.stopPropagation();
                         error = null;
                     }}
-                    class="sleek hover:bg-surface-raised rounded-lg px-4 py-2 text-sm text-zinc-400 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95"
+                    class="sleek pointer-fine:hover:bg-surface-raised cursor-pointer rounded-lg px-4 py-2 text-sm text-zinc-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 pointer-fine:hover:text-white"
                 >
                     Try again
                 </button>

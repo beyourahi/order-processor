@@ -11,7 +11,7 @@
             class="group sleek rounded focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
         >
             Designed by
-            <span class="underline-offset-4 group-hover:text-white group-hover:underline">
+            <span class="underline-offset-4 pointer-fine:group-hover:text-white pointer-fine:group-hover:underline">
                 {APP_CONFIG.author.name}
             </span>
         </a>
@@ -23,7 +23,9 @@
             class="group sleek rounded focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
         >
             Check out
-            <span class="underline-offset-4 group-hover:text-white group-hover:underline"> other tools </span>
+            <span class="underline-offset-4 pointer-fine:group-hover:text-white pointer-fine:group-hover:underline">
+                other tools
+            </span>
         </a>
     </p>
 </footer>

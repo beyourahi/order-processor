@@ -29,10 +29,10 @@
         class:grayscale={disabled}
     />
     <div class="flex flex-col items-center gap-1.5 text-center sm:gap-2">
-        <p class="text-base font-medium text-zinc-300 sm:text-lg">
+        <p class="text-base font-medium text-balance text-zinc-300 sm:text-lg">
             {title}
         </p>
-        <p class="text-xs text-zinc-500 sm:text-sm">
+        <p class="text-xs text-pretty text-zinc-500 sm:text-sm">
             {subtitle}
         </p>
     </div>
