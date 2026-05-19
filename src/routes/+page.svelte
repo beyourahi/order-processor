@@ -41,7 +41,7 @@
     >
         <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} bind:editorOpen />
 
-        <div class={["flex w-full flex-col items-center gap-6", editorOpen && "lg:flex-row lg:items-start lg:gap-8"]}>
+        <div class="flex w-full flex-col items-center gap-6">
             <CourierPicker selectedCourier={courierService.value} onSelect={handleCourierSelect} />
             <SteadFastSettings visible={showSteadFastSettings} />
         </div>
