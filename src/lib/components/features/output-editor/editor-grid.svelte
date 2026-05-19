@@ -124,7 +124,7 @@
 <div
     bind:this={gridRef}
     aria-label="Editable orders table"
-    class="border-border-strong/40 bg-surface/30 max-h-[50vh] overflow-auto rounded-lg border sm:max-h-[60vh]"
+    class="no-scrollbar border-border-strong/40 bg-surface/30 max-h-[50vh] overflow-auto rounded-lg border sm:max-h-[60vh] lg:max-h-[72vh] lg:min-h-[62vh]"
 >
     <Table.Root class="w-full text-base">
         <Table.Header class="bg-surface-raised/95 sticky top-0 z-20 backdrop-blur">

@@ -40,6 +40,19 @@
     @apply rounded-xl bg-transparent;
 }
 
+/* Hide scrollbars on the element AND any nested scroll containers
+   (e.g. Table.svelte's inner overflow-x-auto wrapper). scrollbar-width
+   on non-scroll descendants is a no-op, so the cascade is safe. */
+.no-scrollbar,
+.no-scrollbar * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar,
+.no-scrollbar *::-webkit-scrollbar {
+    display: none;
+}
+
 @layer base {
     * {
         @apply border-border;
