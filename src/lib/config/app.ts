@@ -4,6 +4,7 @@ interface AppConfig {
     url: string;
     repository: { type: string; url: string };
     author: { name: string; url: string };
+    siblings: Array<{ name: string; url: string }>;
 }
 
 export const APP_CONFIG: AppConfig = {
@@ -17,5 +18,11 @@ export const APP_CONFIG: AppConfig = {
     author: {
         name: "Rahi Khan",
         url: "https://beyourahi.com"
-    }
+    },
+    siblings: [
+        {
+            name: "Invoice Generator",
+            url: "https://invoice-generator.beyourahi.workers.dev"
+        }
+    ]
 };
