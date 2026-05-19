@@ -16,6 +16,11 @@
 
     const showSteadFastSettings = $derived(courierService.value === Courier.SteadFast);
 
+    // Bound by OrderProcessor — true while the output editor is mounted in
+    // place of the upload zone. Drives the outer layout: when the editor is
+    // open, picker + settings stack above it so the editor gets full width.
+    let editorOpen = $state(false);
+
     const handleCourierSelect = (courier: string) => {
         courierService.setSelected(courier);
     };
@@ -27,11 +32,16 @@
     <User user={data.user!} currentUser={data.currentUser!} />
 
     <div
-        class="flex w-full max-w-md flex-col-reverse items-center justify-center gap-8 sm:max-w-xl sm:gap-10 lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
+        class={[
+            "flex w-full max-w-md items-center justify-center gap-8 sm:max-w-xl sm:gap-10",
+            editorOpen
+                ? "flex-col lg:max-w-5xl xl:max-w-6xl"
+                : "flex-col-reverse lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
+        ]}
     >
-        <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} />
+        <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} bind:editorOpen />
 
-        <div class="flex w-full flex-col items-center gap-6">
+        <div class={["flex w-full flex-col items-center gap-6", editorOpen && "lg:flex-row lg:items-start lg:gap-8"]}>
             <CourierPicker selectedCourier={courierService.value} onSelect={handleCourierSelect} />
             <SteadFastSettings visible={showSteadFastSettings} />
         </div>

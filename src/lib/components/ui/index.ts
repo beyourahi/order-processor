@@ -12,3 +12,6 @@ export * from "./footer";
 
 // Input
 export * from "./input/index.js";
+
+// Table
+export * as Table from "./table";
