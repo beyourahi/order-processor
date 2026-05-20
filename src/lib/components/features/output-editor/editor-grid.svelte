@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import type { SteadFastOrder } from "$lib/types";
     import { Table } from "$lib/components/ui";
     import { cn } from "$lib/utils";
@@ -11,6 +12,7 @@
 
     interface Props {
         rows: SteadFastOrder[];
+        rowIds: string[];
         batchDefaults: BatchDefaults;
         showBatchColumns: boolean;
         selection: ReadonlySet<number>;
@@ -24,6 +26,7 @@
 
     let {
         rows,
+        rowIds,
         batchDefaults,
         showBatchColumns,
         selection,
@@ -36,6 +39,14 @@
     }: Props = $props();
 
     let gridRef = $state<HTMLDivElement | null>(null);
+
+    // Suppress row entry transitions for the rows present at editor mount —
+    // the PRD wants the editor mount itself instant; only rows the user
+    // adds/duplicates afterwards slide in (UX §Motion).
+    let mounted = $state(false);
+    onMount(() => {
+        mounted = true;
+    });
 
     const visibleColumns = $derived(showBatchColumns ? STEADFAST_COLUMNS : PER_ROW_COLUMNS);
     const visibleColumnKeys = $derived(visibleColumns.map((c) => c.key));
@@ -124,7 +135,7 @@
 <div
     bind:this={gridRef}
     aria-label="Editable orders table"
-    class="no-scrollbar border-border-strong/40 bg-surface/30 max-h-[50vh] overflow-auto rounded-lg border sm:max-h-[60vh] lg:max-h-[72vh] lg:min-h-[62vh]"
+    class="no-scrollbar border-border-strong/40 bg-surface/30 max-h-[50vh] overflow-auto rounded-lg border sm:max-h-[60vh]"
 >
     <Table.Root class="w-full text-base">
         <Table.Header class="bg-surface-raised/95 sticky top-0 z-20 backdrop-blur">
@@ -152,12 +163,13 @@
             </Table.Row>
         </Table.Header>
         <Table.Body>
-            {#each rows as row, rowIndex (rowIndex)}
+            {#each rows as row, rowIndex (rowIds[rowIndex])}
                 <EditorRow
                     {row}
                     {rowIndex}
                     columns={visibleColumns}
                     {batchDefaults}
+                    animateEntry={mounted}
                     warningMessages={warningsByRow.get(rowIndex) ?? EMPTY_WARNING_MAP}
                     isSelected={selection.has(rowIndex)}
                     onCellCommit={(column, value) => onCellCommit(rowIndex, column, value)}
@@ -166,6 +178,15 @@
                     onDelete={() => onDeleteRow(rowIndex)}
                     onDuplicate={() => onDuplicateRow(rowIndex)}
                 />
+            {:else}
+                <tr>
+                    <td
+                        colspan={visibleColumns.length + 3}
+                        class="px-4 py-12 text-center text-sm text-pretty text-zinc-500"
+                    >
+                        No orders yet — click Add row to create the first.
+                    </td>
+                </tr>
             {/each}
         </Table.Body>
     </Table.Root>

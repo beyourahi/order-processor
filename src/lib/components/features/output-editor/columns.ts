@@ -19,6 +19,12 @@ export interface ColumnDescriptor {
     kind: ColumnKind;
     inputmode: ColumnInputMode;
     required: boolean;
+    /**
+     * When true the cell edits in a `<textarea>` that wraps long text and
+     * auto-grows on focus (FR-8). Address and Note carry free-form text that
+     * routinely overflows a single line; every other column is single-line.
+     */
+    multiline: boolean;
 }
 
 /**
@@ -27,16 +33,16 @@ export interface ColumnDescriptor {
  * columns are toggled visible.
  */
 export const STEADFAST_COLUMNS: readonly ColumnDescriptor[] = [
-    { key: "Name", kind: "per-row", inputmode: "text", required: true },
-    { key: "Address", kind: "per-row", inputmode: "text", required: true },
-    { key: "Phone", kind: "per-row", inputmode: "tel", required: true },
-    { key: "Amount", kind: "per-row", inputmode: "decimal", required: true },
-    { key: "Note", kind: "per-row", inputmode: "text", required: false },
-    { key: "Invoice", kind: "batch-constant", inputmode: "text", required: false },
-    { key: "Contact Name", kind: "batch-constant", inputmode: "text", required: false },
-    { key: "Contact Phone", kind: "batch-constant", inputmode: "tel", required: false },
-    { key: "Delivery Type", kind: "batch-constant", inputmode: "text", required: false },
-    { key: "Lot", kind: "batch-constant", inputmode: "text", required: false }
+    { key: "Name", kind: "per-row", inputmode: "text", required: true, multiline: false },
+    { key: "Address", kind: "per-row", inputmode: "text", required: true, multiline: true },
+    { key: "Phone", kind: "per-row", inputmode: "tel", required: true, multiline: false },
+    { key: "Amount", kind: "per-row", inputmode: "decimal", required: true, multiline: false },
+    { key: "Note", kind: "per-row", inputmode: "text", required: false, multiline: true },
+    { key: "Invoice", kind: "batch-constant", inputmode: "text", required: false, multiline: false },
+    { key: "Contact Name", kind: "batch-constant", inputmode: "text", required: false, multiline: false },
+    { key: "Contact Phone", kind: "batch-constant", inputmode: "tel", required: false, multiline: false },
+    { key: "Delivery Type", kind: "batch-constant", inputmode: "text", required: false, multiline: false },
+    { key: "Lot", kind: "batch-constant", inputmode: "text", required: false, multiline: false }
 ] as const;
 
 export const PER_ROW_COLUMNS: readonly ColumnDescriptor[] = STEADFAST_COLUMNS.filter(

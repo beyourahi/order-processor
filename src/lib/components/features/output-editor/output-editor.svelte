@@ -24,6 +24,10 @@
     // may be a Svelte $state proxy from the parent, which structuredClone
     // refuses to walk.
     let rows = $state<SteadFastOrder[]>(untrack(() => initialRows.map((row) => ({ ...row }))));
+    // Stable per-row identity, kept in lockstep with `rows`. Keying the grid
+    // by id (not array index) lets a row insert/delete animate exactly one
+    // row, and preserves a row's component across a cell commit.
+    let rowIds = $state<string[]>(untrack(() => initialRows.map(() => crypto.randomUUID())));
     let defaults = $state<BatchDefaults>(untrack(() => ({ ...initialDefaults })));
     let selection = new SvelteSet<number>();
     let showBatchColumns = $state(false);
@@ -31,7 +35,11 @@
     let showDiscardConfirm = $state(false);
     let gridComponent = $state<EditorGrid | null>(null);
 
-    type UndoEntry = { kind: "delete-rows"; rows: { row: SteadFastOrder; index: number }[]; label: string } | null;
+    type UndoEntry = {
+        kind: "delete-rows";
+        rows: { row: SteadFastOrder; id: string; index: number }[];
+        label: string;
+    } | null;
 
     let undoEntry = $state<UndoEntry>(null);
     let undoTimer: ReturnType<typeof setTimeout> | null = null;
@@ -124,6 +132,7 @@
             "Contact Phone": defaults["Contact Phone"]
         };
         rows.push(newRow);
+        rowIds.push(crypto.randomUUID());
         clearUndo();
         gridComponent?.focusNameCell(rows.length - 1);
         liveAnnounce(`Added row ${rows.length}`);
@@ -133,6 +142,7 @@
         const source = rows[rowIndex];
         if (!source) return;
         rows.splice(rowIndex + 1, 0, { ...source });
+        rowIds.splice(rowIndex + 1, 0, crypto.randomUUID());
         // shift selection indexes >= rowIndex+1 by +1 (mutate in place)
         const snapshot = [...selection];
         selection.clear();
@@ -144,8 +154,10 @@
 
     const deleteRow = (rowIndex: number) => {
         const removed = rows[rowIndex];
-        if (!removed) return;
+        const removedId = rowIds[rowIndex];
+        if (!removed || removedId === undefined) return;
         rows.splice(rowIndex, 1);
+        rowIds.splice(rowIndex, 1);
         // recompute selection (shift indexes > rowIndex by -1) — mutate in place
         const snapshot = [...selection];
         selection.clear();
@@ -155,7 +167,7 @@
         }
         undoEntry = {
             kind: "delete-rows",
-            rows: [{ row: removed, index: rowIndex }],
+            rows: [{ row: removed, id: removedId, index: rowIndex }],
             label: `delete row ${rowIndex + 1}`
         };
         scheduleUndoExpiry(5000);
@@ -165,15 +177,17 @@
     const bulkDelete = () => {
         if (selection.size === 0) return;
         const sortedIndexes = [...selection].sort((a, b) => a - b);
-        const removed: { row: SteadFastOrder; index: number }[] = [];
+        const removed: { row: SteadFastOrder; id: string; index: number }[] = [];
         // delete in reverse to keep indexes stable
         for (let i = sortedIndexes.length - 1; i >= 0; i--) {
             const idx = sortedIndexes[i];
             if (idx === undefined) continue;
             const row = rows[idx];
-            if (!row) continue;
-            removed.unshift({ row, index: idx });
+            const id = rowIds[idx];
+            if (!row || id === undefined) continue;
+            removed.unshift({ row, id, index: idx });
             rows.splice(idx, 1);
+            rowIds.splice(idx, 1);
         }
         const count = removed.length;
         selection.clear();
@@ -193,6 +207,7 @@
             const sorted = [...undoEntry.rows].sort((a, b) => a.index - b.index);
             for (const item of sorted) {
                 rows.splice(item.index, 0, item.row);
+                rowIds.splice(item.index, 0, item.id);
             }
             liveAnnounce(`Restored ${sorted.length} row${sorted.length === 1 ? "" : "s"}`);
         }
@@ -301,6 +316,23 @@
         }, 2000);
     };
 
+    // ---- a11y: announce validation-state changes (NFR-8) ----
+    // Row add/delete announce themselves; this covers the other half — a cell
+    // commit that fixes or introduces a problem. `lastWarningCount` is a plain
+    // tracker (never rendered, so not $state); -1 primes the first run so the
+    // editor's starting warning count is not announced. Announcing to a live
+    // region is a genuine side effect, hence $effect rather than $derived.
+    let lastWarningCount = -1;
+    $effect(() => {
+        const count = allWarnings.length;
+        if (lastWarningCount === -1) {
+            lastWarningCount = count;
+        } else if (count !== lastWarningCount) {
+            lastWarningCount = count;
+            liveAnnounce(count === 0 ? "All warnings resolved" : `${count} warning${count === 1 ? "" : "s"}`);
+        }
+    });
+
     // ---- Cmd/Ctrl+Z global ----
     const handleKeydown = (event: KeyboardEvent) => {
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
@@ -323,6 +355,7 @@
     <EditorGrid
         bind:this={gridComponent}
         {rows}
+        {rowIds}
         batchDefaults={defaults}
         {showBatchColumns}
         {selection}

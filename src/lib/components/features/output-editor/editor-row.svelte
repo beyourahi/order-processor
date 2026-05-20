@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { slide } from "svelte/transition";
+    import { cubicOut } from "svelte/easing";
     import type { SteadFastOrder } from "$lib/types";
     import { Table } from "$lib/components/ui";
     import { cn } from "$lib/utils";
@@ -10,6 +12,7 @@
         rowIndex: number;
         columns: readonly ColumnDescriptor[];
         batchDefaults: BatchDefaults;
+        animateEntry: boolean;
         warningMessages: ReadonlyMap<CellColumn, string>;
         isSelected: boolean;
         onCellCommit: (column: CellColumn, value: string) => void;
@@ -24,6 +27,7 @@
         rowIndex,
         columns,
         batchDefaults,
+        animateEntry,
         warningMessages,
         isSelected,
         onCellCommit,
@@ -43,9 +47,33 @@
     // Glassmorphism: opaque fallback for no-backdrop-filter browsers, translucent + blur where supported.
     const glassBase =
         "border border-white/10 bg-zinc-800/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_-2px_rgba(0,0,0,0.35)] supports-[backdrop-filter]:bg-white/8 supports-[backdrop-filter]:backdrop-blur-md supports-[backdrop-filter]:backdrop-saturate-150";
+
+    // Row insertion/deletion motion (UX §Motion): 100ms slide + fade. Entry is
+    // gated by `animateEntry` so the rows present at editor mount appear
+    // instantly; only rows added/duplicated afterwards animate in. Deletion
+    // always animates.
+    const ROW_MOTION_MS = 100;
+    const rowMotion = (node: Element, { animate }: { animate: boolean }) => {
+        if (!animate) return { duration: 0 };
+        const collapse = slide(node, { duration: ROW_MOTION_MS, easing: cubicOut, axis: "y" });
+        return {
+            duration: ROW_MOTION_MS,
+            easing: cubicOut,
+            css: (t: number, u: number) => `${collapse.css ? collapse.css(t, u) : ""} opacity: ${t};`
+        };
+    };
 </script>
 
-<Table.Row data-selected={isSelected ? "true" : undefined} class={cn(isSelected && "bg-surface-raised/30")}>
+<tr
+    data-slot="table-row"
+    data-selected={isSelected ? "true" : undefined}
+    in:rowMotion={{ animate: animateEntry }}
+    out:rowMotion={{ animate: true }}
+    class={cn(
+        "border-border-strong/40 pointer-fine:hover:bg-surface/40 border-b transition-colors",
+        isSelected && "bg-surface-raised/30"
+    )}
+>
     <Table.Cell class="sticky left-0 z-10 w-14 bg-inherit p-0 align-middle">
         <div class="flex items-center justify-center gap-1">
             <label
@@ -82,6 +110,7 @@
                 value={row[column.key as keyof SteadFastOrder] ?? ""}
                 column={column.key}
                 inputmode={column.inputmode}
+                multiline={column.multiline}
                 {rowIndex}
                 warning={warningMessages.get(column.key) ?? null}
                 isOverride={isOverride(column.key)}
@@ -143,4 +172,4 @@
             </button>
         </div>
     </Table.Cell>
-</Table.Row>
+</tr>
