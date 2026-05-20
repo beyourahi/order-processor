@@ -32,7 +32,7 @@ cd order-processor
 bun install
 ```
 
-Copy `.dev.vars.example` to `.dev.vars`:
+Create `.dev.vars`:
 
 ```dotenv
 BETTER_AUTH_SECRET=    # openssl rand -base64 32

@@ -57,11 +57,10 @@ cd order-processor
 # 2. Install dependencies
 bun install
 
-# 3. Copy environment files
-cp .env.example .env
-cp .env.example .dev.vars
+# 3. Create the local environment file
+#    .dev.vars is read by `wrangler dev` and `bun run preview`
 
-# 4. Fill in required values in both files:
+# 4. Fill in required values in .dev.vars:
 #    BETTER_AUTH_SECRET  — generate: openssl rand -base64 32
 #    BETTER_AUTH_URL     — http://localhost:5173 for local dev
 #    GOOGLE_CLIENT_ID    — from Google Cloud Console
@@ -113,6 +112,7 @@ src/
     api/logout/+server.ts                # Logout endpoint
   lib/
     auth-client.ts                  # Better Auth browser client
+    api/client.ts                   # Typed fetch wrapper + per-key debounceSync
     server/
       auth.ts                       # createAuth() factory (per-request, NOT singleton)
       schema.ts                     # Drizzle ORM schema (6 tables)
@@ -121,7 +121,6 @@ src/
       ui/                           # shadcn-svelte generated components (DO NOT EDIT MANUALLY)
     config/
       app.ts                        # App metadata
-      brands.ts                     # Email authorization config
       couriers.ts                   # Courier options and logos
     constants/
       files.ts                      # File-related constants
@@ -130,9 +129,9 @@ src/
       courier-service.ts            # Main orchestrator (format detection → processing → export)
       data-processing.ts            # CSV cleaning, deduplication, extraction utilities
       processors/steadfast.ts       # SteadFast courier processor
-    stores/app.ts                   # Global Svelte writables (courierService, hasMerchantId)
+    stores/                         # Closure-based runes stores (*.svelte.ts): brandSettings, courierService facade
     hooks/use-current-user.ts       # Derives CurrentUser from Better Auth session
-    types/                          # Shared TypeScript interfaces (courier, user, ui, config)
+    types/                          # Shared TypeScript interfaces (courier, user, ui, brand-settings)
     utils/                          # cn(), csv.ts, excel.ts
   hooks.server.ts                   # Auth middleware + security headers (CSP, HSTS, etc.)
   hooks.client.ts                   # Client-side hooks
@@ -143,16 +142,11 @@ migrations/                         # Drizzle-generated SQL migrations (never ed
 
 ### Path Aliases
 
-| Alias         | Maps to              |
-| ------------- | -------------------- |
-| `$lib`        | `src/lib`            |
-| `$src`        | `src`                |
-| `$components` | `src/lib/components` |
-| `$config`     | `src/lib/config`     |
-| `$services`   | `src/lib/services`   |
-| `$types`      | `src/lib/types`      |
+| Alias  | Maps to   |
+| ------ | --------- |
+| `$lib` | `src/lib` |
 
-Always use aliases — never use relative paths from route files.
+`$lib` is the only configured alias (the SvelteKit default). Always use it — never use relative paths from route files.
 
 ---
 
@@ -218,7 +212,7 @@ All components must use Svelte 5 runes syntax. Legacy reactivity (`$: reactive`,
 </script>
 ```
 
-Use `writable` stores only for cross-component global state in `src/lib/stores/`.
+Cross-component global state lives in closure-based rune stores in `src/lib/stores/*.svelte.ts` — not Svelte `writable()` stores.
 
 ### Styling
 
@@ -244,7 +238,7 @@ Flat config in `eslint.config.js`. Key rules:
 
 - Unused variables with `_` prefix are allowed (`argsIgnorePattern: "^_"`)
 - `svelte/no-navigation-without-resolve` is disabled (no base path in use)
-- Ignored paths: `build/`, `.svelte-kit/`, `dist/`, `node_modules/`, `scripts/`
+- Ignored paths: `build/`, `.svelte-kit/`, `dist/`, `node_modules/`, `scripts/`, `worker-configuration.d.ts`
 
 ### Comments
 
