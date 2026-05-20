@@ -133,65 +133,71 @@
     };
 </script>
 
-{#if isEditorOpen && editorRows && editorDefaults}
-    <div class="w-full max-w-full xl:max-w-5xl">
+<!-- Stable wrapper straddles the editor/dropzone swap so `max-width`
+     interpolates smoothly (~150ms) when the editor opens — UX §Layout. -->
+<div
+    class={cn(
+        "w-full transition-[max-width] duration-150 ease-out",
+        isEditorOpen ? "max-w-2xl lg:max-w-3xl xl:max-w-4xl" : "lg:max-w-md xl:max-w-lg"
+    )}
+>
+    {#if isEditorOpen && editorRows && editorDefaults}
         <OutputEditor
             initialRows={editorRows}
             initialDefaults={editorDefaults}
             fileName={editorFileName}
             onDiscard={handleEditorDiscard}
         />
-    </div>
-{:else}
-    <div
-        role="button"
-        tabindex={isDisabled ? -1 : 0}
-        class={cn(
-            "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
-            "h-56 sm:h-64 md:h-72 lg:h-80",
-            "lg:w-full lg:max-w-md xl:max-w-lg",
-            "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
-            isDisabled
-                ? "border-surface-raised cursor-not-allowed opacity-50"
-                : "border-border-strong pointer-fine:hover:bg-surface/30 pointer-fine:hover:border-border-strong/80 cursor-pointer",
-            zoneHover && "bg-surface/50 border-courier-accent/60",
-            error && "border-destructive/50"
-        )}
-        ondragover={handleDragOver}
-        ondragleave={handleDragLeave}
-        ondrop={handleDrop}
-        onclick={handleClick}
-        onkeydown={(e) => e.key === "Enter" && handleClick()}
-    >
-        <input
-            bind:this={fileInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            class="hidden"
-            onchange={handleInputChange}
-            disabled={isDisabled}
-        />
+    {:else}
+        <div
+            role="button"
+            tabindex={isDisabled ? -1 : 0}
+            class={cn(
+                "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
+                "h-56 sm:h-64 md:h-72 lg:h-80",
+                "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
+                isDisabled
+                    ? "border-surface-raised cursor-not-allowed opacity-50"
+                    : "border-border-strong pointer-fine:hover:bg-surface/30 pointer-fine:hover:border-border-strong/80 cursor-pointer",
+                zoneHover && "bg-surface/50 border-courier-accent/60",
+                error && "border-destructive/50"
+            )}
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            ondrop={handleDrop}
+            onclick={handleClick}
+            onkeydown={(e) => e.key === "Enter" && handleClick()}
+        >
+            <input
+                bind:this={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                class="hidden"
+                onchange={handleInputChange}
+                disabled={isDisabled}
+            />
 
-        {#if error}
-            <div class="flex flex-col items-center gap-3 px-4 text-center sm:gap-4">
-                <p class="text-destructive text-sm text-pretty sm:text-base">{error}</p>
-                <button
-                    onclick={(e) => {
-                        e.stopPropagation();
-                        error = null;
-                    }}
-                    class="sleek pointer-fine:hover:bg-surface-raised cursor-pointer rounded-lg px-4 py-2 text-sm text-zinc-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 pointer-fine:hover:text-white"
-                >
-                    Try again
-                </button>
-            </div>
-        {:else if isProcessing}
-            <div class="flex flex-col items-center gap-3 sm:gap-4">
-                <LoadingSpinner size="lg" colorClass="border-t-white" />
-                <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
-            </div>
-        {:else}
-            <Upload disabled={isDisabled} {needsMerchantId} />
-        {/if}
-    </div>
-{/if}
+            {#if error}
+                <div class="flex flex-col items-center gap-3 px-4 text-center sm:gap-4">
+                    <p class="text-destructive text-sm text-pretty sm:text-base">{error}</p>
+                    <button
+                        onclick={(e) => {
+                            e.stopPropagation();
+                            error = null;
+                        }}
+                        class="sleek pointer-fine:hover:bg-surface-raised cursor-pointer rounded-lg px-4 py-2 text-sm text-zinc-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 pointer-fine:hover:text-white"
+                    >
+                        Try again
+                    </button>
+                </div>
+            {:else if isProcessing}
+                <div class="flex flex-col items-center gap-3 sm:gap-4">
+                    <LoadingSpinner size="lg" colorClass="border-t-white" />
+                    <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
+                </div>
+            {:else}
+                <Upload disabled={isDisabled} {needsMerchantId} />
+            {/if}
+        </div>
+    {/if}
+</div>
