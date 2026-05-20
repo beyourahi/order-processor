@@ -46,7 +46,7 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | Excel Export    | SheetJS (`xlsx`)                                                                       |
 | Deployment      | Cloudflare Workers (adapter-cloudflare)                                                |
 | Package Manager | Bun                                                                                    |
-| Linting         | ESLint 9 flat config + Prettier                                                        |
+| Linting         | ESLint 10 flat config + Prettier                                                       |
 
 ## Core Architecture
 
@@ -146,7 +146,8 @@ src/
       auth.ts                            -- createAuth() factory
       schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
-      features/                          -- order-processor, upload, output-editor, courier-picker, user, steadfast-settings
+      features/                          -- order-processor, upload, courier-picker, user, steadfast-settings
+      features/output-editor/            -- editable courier-batch grid (action-bar, batch-defaults-strip, editor-grid/row/cell, columns.ts)
       ui/                                -- button, footer, heading, input, loading-spinner, table (shadcn-svelte)
     config/
       app.ts                             -- app metadata
@@ -161,7 +162,7 @@ src/
     stores/
       app.svelte.ts                      -- courierService facade + hasMerchantId() (backed by brandSettings store)
       brand-settings.svelte.ts           -- closure-based runes store with hydrate, debounce, retry, SaveState
-    hooks/use-current-user.ts            -- derives CurrentUser from email
+    hooks/use-current-user.ts            -- getCurrentUser() derives CurrentUser from the session user
     types/                               -- courier.ts, user.ts, ui.ts, brand-settings.ts (includes SaveState)
     utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
   hooks.server.ts                        -- auth middleware + security headers
@@ -345,7 +346,7 @@ When encountering unfamiliar patterns, check these sources in order:
 5. **Cloudflare Workers docs** -- D1 bindings, `wrangler.jsonc` config, `nodejs_compat`
 6. **shadcn-svelte docs** -- component installation, `components.json` config, new-york style
 
-For extended documentation, create an `agent_docs/` directory at the project root. Store courier-specific business rules, onboarding guides, or API references there. Reference from this file when needed.
+Extended documentation lives in the `docs/` directory — e.g. `docs/output-editor-prd.md` (in-app output editor PRD). Store courier-specific business rules, feature specs, or API references there.
 
 ## Project-Specific Warnings
 
