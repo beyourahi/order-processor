@@ -139,15 +139,15 @@ src/
     api/logout/+server.ts                -- logout endpoint
   lib/
     auth-client.ts                       -- Better Auth client (`authClient`); use authClient.signIn/signOut/useSession directly — no named re-exports
-    assets/                              -- static assets (download.gif, upload.gif, steadfast.png)
+    assets/                              -- static assets (upload.gif, steadfast.png)
     api/
       client.ts                          -- typed api object (get/post/patch/put/delete) + debounceSync
     server/
       auth.ts                            -- createAuth() factory
       schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
-      features/                          -- order-processor, upload, download, courier-picker, user, steadfast-settings
-      ui/                                -- button, footer, heading, input, loading-spinner (shadcn-svelte)
+      features/                          -- order-processor, upload, output-editor, courier-picker, user, steadfast-settings
+      ui/                                -- button, footer, heading, input, loading-spinner, table (shadcn-svelte)
     config/
       app.ts                             -- app metadata
       couriers.ts                        -- courier options with logos
@@ -163,7 +163,7 @@ src/
       brand-settings.svelte.ts           -- closure-based runes store with hydrate, debounce, retry, SaveState
     hooks/use-current-user.ts            -- derives CurrentUser from email
     types/                               -- courier.ts, user.ts, ui.ts, brand-settings.ts (includes SaveState)
-    utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts
+    utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
   hooks.server.ts                        -- auth middleware + security headers
   hooks.client.ts                        -- client-side hooks
   app.css                                -- global Tailwind styles (includes 16px touch-device font floor)
@@ -355,7 +355,7 @@ For extended documentation, create an `agent_docs/` directory at the project roo
 
 3. **Better Auth column names must be snake_case** -- The Drizzle adapter with `usePlural: true` expects `snake_case` column names in the schema. Deviation causes silent auth failures.
 
-4. **Phone number normalization is Bangladesh-specific** -- `SteadFastProcessor` strips `+880`, removes leading zeros, and ensures numbers start with `1`. This is correct only for Bangladesh mobile numbers.
+4. **Phone number normalization is Bangladesh-specific** -- `normalizePhoneNumber()` in `$lib/utils/phone.ts` strips `+880`, removes leading zeros, and ensures numbers start with `1`. This is correct only for Bangladesh mobile numbers. `SteadFastProcessor` and the output editor's download path both call it.
 
 5. **Shopify CSV column indexes are hardcoded** -- Column positions (34 for Shipping Name, 36/37/39 for address parts, 43 for phone, 44 for notes, 11 for total) are based on Shopify's current export format. If Shopify changes their export schema, these break silently.
 
