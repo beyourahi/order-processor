@@ -54,7 +54,7 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 
 ```
 CSV Upload --> PapaParse --> Auto-detect Shopify format --> Extract/deduplicate columns
-  --> Normalize phone numbers (BD +880 format) --> CourierProcessor --> xlsx export
+  --> Normalize phone numbers (BD +880 format) --> CourierProcessor --> in-app output editor --> xlsx export
 ```
 
 1. **Upload**: User uploads CSV, parsed client-side via PapaParse
@@ -63,7 +63,8 @@ CSV Upload --> PapaParse --> Auto-detect Shopify format --> Extract/deduplicate 
     - `prepareSteadFastOrderData()` -- standard CSV with known column indexes
     - `prepareShopifySteadFastOrderData()` -- Shopify export with address concatenation (cols 36+37+39)
 4. **Processing**: `SteadFastProcessor.processOrders()` maps to courier schema
-5. **Export**: SheetJS generates `.xlsx` file for download
+5. **Review** (optional): User edits the mapped batch in the in-app output editor grid before download
+6. **Export**: SheetJS generates `.xlsx` file for download
 
 ### Service Layer
 
@@ -72,7 +73,7 @@ CourierService (orchestrator)
   --> isShopifyExport() -- format detection
   --> processors Map<Courier, CourierProcessor<T>>
       --> SteadFastProcessor -- implements CourierProcessor<SteadFastOrder>
-  --> data-processing.ts -- removeDuplicatesAndExtractIndexes(), extractInvoices()
+  --> data-processing.ts -- prepareSteadFastOrderData() / prepareShopifySteadFastOrderData() -- dedup + column extraction
 ```
 
 The `CourierProcessor<T>` interface is generic -- new couriers implement `processOrders(data, user): T[]`.
@@ -147,7 +148,7 @@ src/
       schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
       features/                          -- order-processor, upload, courier-picker, user, steadfast-settings
-      features/output-editor/            -- editable courier-batch grid (action-bar, batch-defaults-strip, editor-grid/row/cell, columns.ts)
+      features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-grid/row/cell, columns.ts
       ui/                                -- button, footer, heading, input, loading-spinner, table (shadcn-svelte)
     config/
       app.ts                             -- app metadata
@@ -346,8 +347,6 @@ When encountering unfamiliar patterns, check these sources in order:
 5. **Cloudflare Workers docs** -- D1 bindings, `wrangler.jsonc` config, `nodejs_compat`
 6. **shadcn-svelte docs** -- component installation, `components.json` config, new-york style
 
-Extended documentation lives in the `docs/` directory — e.g. `docs/output-editor-prd.md` (in-app output editor PRD). Store courier-specific business rules, feature specs, or API references there.
-
 ## Project-Specific Warnings
 
 1. **Auth instance is per-request** -- Cloudflare Workers provide D1 binding per-request. `createAuth()` in `$lib/server/auth.ts` is a factory, not a singleton. Never cache the auth instance at module scope.
@@ -373,6 +372,10 @@ Extended documentation lives in the `docs/` directory — e.g. `docs/output-edit
 11. **Cookie cache version is a global session kill-switch** -- Bumping `cookieCache.version` in `createAuth()` instantly invalidates all cached sessions across all users/edge nodes. Use in security incidents. Current value: `"1"`.
 
 12. **Mobile anti-zoom rule uses `@media (pointer: coarse)`** -- `app.css` enforces a 16px minimum font size on touch devices to prevent iOS auto-zoom on input focus. The rule is placed outside `@layer` so it outranks Tailwind utilities. Do not move it inside a layer or lower its specificity.
+
+13. **Svelte's `slide` transition is invalid on `<tr>`** -- table rows have no overflow clipping and ignore padding/margin, so Svelte rejects `slide` (`transition_slide_display`). The output editor's row transitions use `fade` instead.
+
+14. **Editor/dark-background body text must be `zinc-400` or lighter** -- `text-zinc-500` is only 3.77:1 on the dark background, below WCAG 2.2 AA for normal text; `zinc-400` is 6.93:1. Applies to all informational and control text in the output editor.
 
 ---
 
