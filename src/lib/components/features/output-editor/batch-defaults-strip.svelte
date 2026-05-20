@@ -16,7 +16,7 @@
 <section aria-label="Batch defaults" class="border-border-strong/40 bg-surface/40 rounded-xl border p-3 sm:p-4">
     <div class="mb-3 flex items-center justify-between gap-3">
         <h2 class="text-xs font-medium tracking-wider whitespace-nowrap text-zinc-400 uppercase">Batch defaults</h2>
-        <p class="text-[11px] text-pretty text-zinc-600 italic">
+        <p class="text-[11px] text-pretty text-zinc-400 italic">
             Applies to every row · not saved to your brand settings
         </p>
     </div>
@@ -50,7 +50,7 @@
                         type="button"
                         onclick={() => onResetOverrides(fieldKey)}
                         class={cn(
-                            "mt-1 cursor-pointer self-start py-2 text-[10px] whitespace-nowrap text-zinc-500 underline-offset-2 sm:py-1 pointer-fine:hover:text-zinc-300 pointer-fine:hover:underline",
+                            "mt-1 cursor-pointer self-start py-2 text-[10px] whitespace-nowrap text-zinc-400 underline-offset-2 sm:py-1 pointer-fine:hover:text-zinc-200 pointer-fine:hover:underline",
                             "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
                         )}
                     >

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { slide } from "svelte/transition";
+    import { fade } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
     import type { SteadFastOrder } from "$lib/types";
     import { Table } from "$lib/components/ui";
@@ -48,20 +48,16 @@
     const glassBase =
         "border border-white/10 bg-zinc-800/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_-2px_rgba(0,0,0,0.35)] supports-[backdrop-filter]:bg-white/8 supports-[backdrop-filter]:backdrop-blur-md supports-[backdrop-filter]:backdrop-saturate-150";
 
-    // Row insertion/deletion motion (UX §Motion): 100ms slide + fade. Entry is
-    // gated by `animateEntry` so the rows present at editor mount appear
-    // instantly; only rows added/duplicated afterwards animate in. Deletion
-    // always animates.
+    // Row insertion/deletion motion (UX §Motion): a 100ms fade. Svelte's
+    // `slide` is explicitly unsupported on `display: table-row` elements
+    // (transition_slide_display) — table rows have no overflow clipping and
+    // ignore padding/margin — so a fade is the correct transition for rows in
+    // the <table>-based grid. Entry is gated by `animateEntry` so the rows
+    // present at editor mount appear instantly; only rows added afterwards
+    // animate in. Deletion always animates.
     const ROW_MOTION_MS = 100;
-    const rowMotion = (node: Element, { animate }: { animate: boolean }) => {
-        if (!animate) return { duration: 0 };
-        const collapse = slide(node, { duration: ROW_MOTION_MS, easing: cubicOut, axis: "y" });
-        return {
-            duration: ROW_MOTION_MS,
-            easing: cubicOut,
-            css: (t: number, u: number) => `${collapse.css ? collapse.css(t, u) : ""} opacity: ${t};`
-        };
-    };
+    const rowMotion = (node: Element, { animate }: { animate: boolean }) =>
+        animate ? fade(node, { duration: ROW_MOTION_MS, easing: cubicOut }) : { duration: 0 };
 </script>
 
 <tr
@@ -100,7 +96,7 @@
         </div>
     </Table.Cell>
 
-    <Table.Cell class="w-10 px-2 text-xs text-zinc-500 tabular-nums">
+    <Table.Cell class="w-10 px-2 text-xs text-zinc-400 tabular-nums">
         {rowIndex + 1}
     </Table.Cell>
 

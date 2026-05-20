@@ -44,7 +44,7 @@
             aria-live="polite"
         >
             {rowCount}
-            <span class="ml-1 text-zinc-500">{rowCount === 1 ? "order" : "orders"}</span>
+            <span class="ml-1 text-zinc-400">{rowCount === 1 ? "order" : "orders"}</span>
         </span>
 
         {#if warningCount > 0}
@@ -103,7 +103,7 @@
                     <path d="M4 8a4 4 0 014-4h4M4 8l-2-2m2 2l2-2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 Undo
-                <span class="text-zinc-500">{undoLabel}</span>
+                <span class="text-zinc-400">{undoLabel}</span>
             </button>
         {/if}
     </div>

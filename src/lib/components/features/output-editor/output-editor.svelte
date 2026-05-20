@@ -76,6 +76,12 @@
         return map;
     });
 
+    // Warning count the live region last reflected. Row operations resync it
+    // (via announceRowChange) after announcing themselves, so the validation
+    // $effect only speaks for commit-driven validation changes — not the
+    // warnings that simply appear when a blank row is added.
+    let lastWarningCount = -1;
+
     // ---- derived: override counts (per batch-constant column) ----
     const overrideCountByColumn = $derived.by(() => {
         const counts: Record<keyof BatchDefaults, number> = {
@@ -135,7 +141,7 @@
         rowIds.push(crypto.randomUUID());
         clearUndo();
         gridComponent?.focusNameCell(rows.length - 1);
-        liveAnnounce(`Added row ${rows.length}`);
+        announceRowChange(`Added row ${rows.length}`);
     };
 
     const duplicateRow = (rowIndex: number) => {
@@ -149,7 +155,7 @@
         for (const i of snapshot) selection.add(i >= rowIndex + 1 ? i + 1 : i);
         clearUndo();
         gridComponent?.focusNameCell(rowIndex + 1);
-        liveAnnounce(`Duplicated row ${rowIndex + 1}`);
+        announceRowChange(`Duplicated row ${rowIndex + 1}`);
     };
 
     const deleteRow = (rowIndex: number) => {
@@ -171,7 +177,7 @@
             label: `delete row ${rowIndex + 1}`
         };
         scheduleUndoExpiry(5000);
-        liveAnnounce(`Deleted row ${rowIndex + 1}`);
+        announceRowChange(`Deleted row ${rowIndex + 1}`);
     };
 
     const bulkDelete = () => {
@@ -197,7 +203,7 @@
             label: `delete ${count} row${count === 1 ? "" : "s"}`
         };
         scheduleUndoExpiry(count > 1 ? 10000 : 5000);
-        liveAnnounce(`Deleted ${count} row${count === 1 ? "" : "s"}`);
+        announceRowChange(`Deleted ${count} row${count === 1 ? "" : "s"}`);
     };
 
     const undo = () => {
@@ -209,7 +215,7 @@
                 rows.splice(item.index, 0, item.row);
                 rowIds.splice(item.index, 0, item.id);
             }
-            liveAnnounce(`Restored ${sorted.length} row${sorted.length === 1 ? "" : "s"}`);
+            announceRowChange(`Restored ${sorted.length} row${sorted.length === 1 ? "" : "s"}`);
         }
         clearUndo();
     };
@@ -316,13 +322,19 @@
         }, 2000);
     };
 
+    // Announce a row-level change and resync the warning baseline, so the
+    // validation $effect below does not also speak for the same change.
+    const announceRowChange = (msg: string) => {
+        liveAnnounce(msg);
+        lastWarningCount = allWarnings.length;
+    };
+
     // ---- a11y: announce validation-state changes (NFR-8) ----
-    // Row add/delete announce themselves; this covers the other half — a cell
-    // commit that fixes or introduces a problem. `lastWarningCount` is a plain
-    // tracker (never rendered, so not $state); -1 primes the first run so the
-    // editor's starting warning count is not announced. Announcing to a live
-    // region is a genuine side effect, hence $effect rather than $derived.
-    let lastWarningCount = -1;
+    // Row add/delete announce themselves (announceRowChange); this covers the
+    // other half — a cell commit that fixes or introduces a problem. The -1
+    // sentinel on lastWarningCount primes the first run so the editor's
+    // starting warning count is not announced. Announcing to a live region is
+    // a genuine side effect, hence $effect rather than $derived.
     $effect(() => {
         const count = allWarnings.length;
         if (lastWarningCount === -1) {
