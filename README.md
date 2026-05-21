@@ -1,6 +1,6 @@
 # Order Processor
 
-Converts Shopify order export CSVs into courier-ready Excel files for the [SteadFast](https://steadfast.com.bd) delivery service in Bangladesh. Sign in with Google, upload a CSV, download a `.xlsx` file — no manual reformatting.
+Converts Shopify order export CSVs into courier-ready Excel files for the [SteadFast](https://steadfast.com.bd) delivery service in Bangladesh. Sign in with Google, upload a CSV, review and edit the parsed orders in-app, then download a `.xlsx` file — no manual reformatting. An AI copilot can edit the batch for you through natural-language commands.
 
 **Live**: https://order-processor.beyourahi.workers.dev
 
@@ -17,6 +17,7 @@ Converts Shopify order export CSVs into courier-ready Excel files for the [Stead
 | Database      | Cloudflare D1 + Drizzle ORM    |
 | CSV Parsing   | PapaParse                      |
 | Excel Export  | SheetJS                        |
+| AI Copilot    | Cloudflare Workers AI          |
 | Deployment    | Cloudflare Workers             |
 | Package mgr   | Bun                            |
 
@@ -32,17 +33,16 @@ cd order-processor
 bun install
 ```
 
-Create `.dev.vars`:
+Create `.dev.vars` (read by the Workers runtime for authentication):
 
 ```dotenv
 BETTER_AUTH_SECRET=    # openssl rand -base64 32
 BETTER_AUTH_URL=http://localhost:5173
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-CLOUDFLARE_ACCOUNT_ID=       # from Cloudflare dashboard
-CLOUDFLARE_DATABASE_ID=      # from Cloudflare D1 dashboard
-CLOUDFLARE_D1_TOKEN=         # Cloudflare API token with D1 edit permission
 ```
+
+The `CLOUDFLARE_*` variables are only needed for the optional `db:push` / `db:studio` / `db:pull` commands. If you use those, put them in a separate `.env` file — see [Environment Variables](#environment-variables).
 
 Apply migrations and start:
 
@@ -55,17 +55,17 @@ bun run dev              # http://localhost:5173
 
 ## Environment Variables
 
-| Variable                 | Required | Description                                  |
-| ------------------------ | -------- | -------------------------------------------- |
-| `BETTER_AUTH_SECRET`     | Yes      | Random secret for session signing            |
-| `BETTER_AUTH_URL`        | Yes      | Deployed URL (also set in `wrangler.jsonc`)  |
-| `GOOGLE_CLIENT_ID`       | Yes      | Google OAuth client ID                       |
-| `GOOGLE_CLIENT_SECRET`   | Yes      | Google OAuth client secret                   |
-| `CLOUDFLARE_ACCOUNT_ID`  | Yes      | Cloudflare account ID                        |
-| `CLOUDFLARE_DATABASE_ID` | Yes      | D1 database ID                               |
-| `CLOUDFLARE_D1_TOKEN`    | Yes      | Cloudflare API token with D1 edit permission |
+| Variable                 | Required | Description                                                         |
+| ------------------------ | -------- | ------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`     | Yes      | Random secret for session signing                                   |
+| `BETTER_AUTH_URL`        | Yes      | Deployed URL (also set in `wrangler.jsonc`)                         |
+| `GOOGLE_CLIENT_ID`       | Yes      | Google OAuth client ID                                              |
+| `GOOGLE_CLIENT_SECRET`   | Yes      | Google OAuth client secret                                          |
+| `CLOUDFLARE_ACCOUNT_ID`  | No       | Cloudflare account ID — `db:push`/`db:studio`/`db:pull` only        |
+| `CLOUDFLARE_DATABASE_ID` | No       | D1 database ID — `db:push`/`db:studio`/`db:pull` only               |
+| `CLOUDFLARE_D1_TOKEN`    | No       | Cloudflare API token with D1 edit — `db:push`/`db:studio`/`db:pull` |
 
-`BETTER_AUTH_URL` is also a non-secret binding in `wrangler.jsonc` for production. All others are secrets — never commit them.
+The auth variables go in `.dev.vars`; the `CLOUDFLARE_*` variables (D1 CLI only) go in `.env`. Both files are gitignored — never commit them. `BETTER_AUTH_URL` is also a non-secret binding in `wrangler.jsonc` for production.
 
 ---
 
@@ -109,6 +109,10 @@ bun run deploy
     - `https://order-processor.beyourahi.workers.dev/api/auth/callback/google` (production)
 
 ---
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, architecture guidelines, coding standards, and the commit and PR workflow.
 
 ## License
 

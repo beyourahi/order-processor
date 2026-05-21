@@ -109,15 +109,19 @@ src/
     +error.svelte                        # Error boundary
     login/                               # Google OAuth login page
     api/brand-settings/+server.ts        # Brand settings CRUD API
+    api/copilot/chat/+server.ts          # AI Copilot streaming chat endpoint (SSE, Workers AI)
     api/logout/+server.ts                # Logout endpoint
   lib/
     auth-client.ts                  # Better Auth browser client
     api/client.ts                   # Typed fetch wrapper + per-key debounceSync
+    ai/                             # AI Copilot: Zod schemas, tools catalog, prompts, Workers AI client, executor, safety
     server/
       auth.ts                       # createAuth() factory (per-request, NOT singleton)
       schema.ts                     # Drizzle ORM schema (6 tables)
     components/
-      features/                     # Business-logic components (upload, download, etc.)
+      features/                     # Feature components: upload, courier-picker, order-processor, steadfast-settings, user
+      features/output-editor/       # In-app editable courier-batch grid (the review step before export)
+      features/copilot/             # AI Copilot UI: chat sidebar, tool cards, confirmation dialog
       ui/                           # shadcn-svelte generated components (DO NOT EDIT MANUALLY)
     config/
       app.ts                        # App metadata
@@ -129,10 +133,10 @@ src/
       courier-service.ts            # Main orchestrator (format detection → processing → export)
       data-processing.ts            # CSV cleaning, deduplication, extraction utilities
       processors/steadfast.ts       # SteadFast courier processor
-    stores/                         # Closure-based runes stores (*.svelte.ts): brandSettings, courierService facade
+    stores/                         # Closure-based runes stores (*.svelte.ts): brandSettings, courierService facade, copilot, copilot-bridge
     hooks/use-current-user.ts       # Derives CurrentUser from Better Auth session
     types/                          # Shared TypeScript interfaces (courier, user, ui, brand-settings)
-    utils/                          # cn(), csv.ts, excel.ts
+    utils/                          # cn(), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
   hooks.server.ts                   # Auth middleware + security headers (CSP, HSTS, etc.)
   hooks.client.ts                   # Client-side hooks
   app.css                           # Global Tailwind styles
@@ -158,7 +162,7 @@ Changes to the CSV processing pipeline must preserve this flow:
 
 ```
 CSV Upload → PapaParse → isShopifyExport() → Column extraction/deduplication
-  → Phone normalization (BD +880 format) → CourierProcessor → .xlsx export
+  → Phone normalization (BD +880 format) → CourierProcessor → in-app output editor → .xlsx export
 ```
 
 - `CourierService` is the orchestrator; do not add business logic directly to route files
@@ -175,6 +179,15 @@ CSV Upload → PapaParse → isShopifyExport() → Column extraction/deduplicati
 
 - `src/lib/components/ui/` contains **auto-generated shadcn-svelte components**. Do not edit these manually. Use `bunx shadcn-svelte@latest add <component>` to add or update them, then wrap in `features/` if customization is needed.
 - Feature components live in `src/lib/components/features/`. Each should be self-contained with a clear, single responsibility.
+
+### AI Copilot
+
+The AI Copilot (`src/lib/ai/`) is a conversational assistant that edits the courier batch through natural-language tool calls.
+
+- **Tool execution is client-side.** `/api/copilot/chat` only _decides_ tool calls; `executor.ts` _runs_ them in the browser against the editor's `$state`. Never move mutation logic server-side.
+- Grid tools operate through `copilotBridge` and require a mounted output editor — they fail gracefully with a friendly error when no CSV is loaded.
+- The `AI` binding in `wrangler.jsonc` is required; rerun `bun run cf-typegen` after changing it. The chat endpoint returns 503 if the binding is absent.
+- Copilot conversations are in-memory only — no D1 tables. They clear on reload, matching the ephemeral CSV batch.
 
 ### Database Schema
 
