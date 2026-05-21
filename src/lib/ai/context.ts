@@ -27,7 +27,9 @@ const renderRawCsv = (raw: RawCsv): string => {
 export const projectBatchState = (
     editor: EditorController | null,
     brand: BrandSettingsState,
-    rawCsv: RawCsv | null = null
+    rawCsv: RawCsv | null = null,
+    /** True when a prior Copilot change can still be reverted with `undoLastChange`. */
+    undoAvailable = false
 ): string => {
     const brandLine = `Brand settings: contactName=${brand.contactName ?? "(unset)"}, contactPhone=${brand.contactPhone ?? "(unset)"}, merchantId=${brand.merchantId ?? "(unset)"}.`;
     const rawSuffix = rawCsv ? renderRawCsv(rawCsv) : "";
@@ -73,6 +75,9 @@ export const projectBatchState = (
         `Totals: Amount sum=${total}, ${collectCount} row(s) with a collection amount, ${rows.length - collectCount} with amount 0 or blank.`
     );
     lines.push(`Validation: ${warnings.length} warning(s) across ${warningsByRow.size} row(s).`);
+    if (undoAvailable) {
+        lines.push("A change you applied earlier this session can still be reverted with undoLastChange.");
+    }
 
     if (rows.length === 0) {
         lines.push("The grid is empty — add rows with addRows or tell the user to add them manually.");

@@ -58,7 +58,8 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
     const contextText = projectBatchState(
         copilotBridge.editor,
         brandSettings.value,
-        copilotBridge.ingestion?.getRawCsv() ?? null
+        copilotBridge.ingestion?.getRawCsv() ?? null,
+        copilot.undoStack.some((entry) => !entry.undone)
     );
 
     const assistantId = crypto.randomUUID();
