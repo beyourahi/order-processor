@@ -12,6 +12,20 @@ import { streamFrames } from "./streaming";
 import { executeToolCall, type ConfirmationRequest, type ExecutorContext } from "./executor";
 import type { ChatRequestBody, ParsedToolCall } from "./types";
 
+/** Maps an HTTP failure to a friendly, actionable, plain-language message. */
+const friendlyHttpError = (status: number): string => {
+    switch (status) {
+        case 401:
+            return "Your session has expired. Please refresh the page and sign in again.";
+        case 429:
+            return "The Copilot is handling a lot of requests right now. Wait a few seconds and try again.";
+        case 503:
+            return "The Copilot is temporarily unavailable. Please try again in a moment.";
+        default:
+            return "Something went wrong reaching the Copilot. Please try again.";
+    }
+};
+
 /** Bridges the executor's confirmation request to the store's dialog queue. */
 const requestConfirmation = (req: ConfirmationRequest): Promise<boolean> =>
     new Promise((resolve) => {
@@ -65,15 +79,9 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
         });
 
         if (!response.ok || !response.body) {
-            let message = `Request failed (${response.status})`;
-            try {
-                const payload = (await response.json()) as { message?: string };
-                if (payload?.message) message = payload.message;
-            } catch {
-                /* non-JSON error body */
-            }
-            copilot.appendAssistantDelta(assistantId, message);
-            copilot.setError(message);
+            // Surface a friendly message via the error banner only — never leak
+            // a raw status code or server payload into the assistant bubble.
+            copilot.setError(friendlyHttpError(response.status));
             copilot.finalizeAssistantMessage(assistantId);
             copilot.setStreaming(false);
             return;
@@ -87,13 +95,11 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
                 collectedToolCalls.push(call);
                 copilot.attachToolCall(assistantId, call);
             } else if (frame.t === "error") {
-                copilot.setError(frame.message);
+                copilot.setError("The Copilot ran into a problem completing that. Please try again.");
             }
         }
-    } catch (err) {
-        const message = err instanceof Error ? err.message : "Stream failed";
-        copilot.setError(message);
-        copilot.appendAssistantDelta(assistantId, `\n\n[error: ${message}]`);
+    } catch {
+        copilot.setError("The connection was interrupted before the Copilot finished. Please try again.");
     }
 
     copilot.finalizeAssistantMessage(assistantId);
