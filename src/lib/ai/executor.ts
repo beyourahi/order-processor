@@ -519,13 +519,13 @@ export const executeToolCall = async (call: ParsedToolCall, ctx: ExecutorContext
         copilot.updateToolCall(ctx.messageId, call.id, { status: "failed", error: message });
 
     if (!isKnownToolName(call.name)) {
-        fail(`Unknown tool: ${call.name}`);
+        fail("The Copilot tried an action that isn't available. Please rephrase your request.");
         return;
     }
 
     const parsed = argSchemas[call.name].safeParse(call.args ?? {});
     if (!parsed.success) {
-        fail(`Invalid arguments: ${parsed.error.issues[0]?.message ?? "schema mismatch"}`);
+        fail("The Copilot couldn't complete that action. Please try rephrasing your request.");
         return;
     }
     const data = parsed.data;
