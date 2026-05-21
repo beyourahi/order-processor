@@ -105,7 +105,7 @@ export const detectAnomalies = (rows: SteadFastOrder[]): AnomalyResult[] => {
         out.push({
             kind: "duplicate_recipient",
             rowIndex: i,
-            reason: `Same phone as row ${firstIdx} (${rows[firstIdx]?.Name || "unnamed"}) — possible duplicate order.`
+            reason: `Same phone as row ${firstIdx + 1} (${rows[firstIdx]?.Name || "unnamed"}) — possible duplicate order.`
         });
     });
 
