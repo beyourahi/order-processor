@@ -90,11 +90,9 @@
                                 {/each}
                             </ul>
                         {:else if block.type === "codeblock"}
-                            <pre
-                                class="ai-scroll border-border-strong/50 bg-background overflow-x-auto rounded-lg border p-2.5"><code
-                                    class="text-muted-foreground font-mono text-[11px] leading-relaxed"
-                                    >{block.value}</code
-                                ></pre>
+                            <!-- A stray fenced block is downgraded to plain text: the
+                                 Copilot's replies are conversational, never code panels. -->
+                            <p class="text-pretty whitespace-pre-wrap">{block.value}</p>
                         {/if}
                     {/each}
                 </div>
