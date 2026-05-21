@@ -61,6 +61,27 @@ const correctiveMessage = (invalid: ValidatedCall[]): string =>
         "Re-issue the corrected tool call(s) now. Argument names and types must exactly match each tool's schema. If you cannot produce a valid call, reply with a short plain-text explanation instead."
     ].join("\n");
 
+/** Sent when the model wrote a tool call as chat text instead of calling it. */
+const LEAK_RETRY_MESSAGE =
+    "Your previous response wrote the action as a chat message instead of calling a tool, so nothing happened. Re-issue it now as a real tool call through the tool interface. If you genuinely cannot, reply with one short plain-language sentence — never JSON or code.";
+
+/**
+ * Detects a tool call the model leaked into its chat text — it emitted the
+ * arguments as a JSON object in the reply instead of through the tool channel.
+ * Such a "reply" both leaks raw JSON to the user and silently runs nothing.
+ */
+const looksLikeLeakedToolCall = (text: string): boolean => {
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start === -1 || end <= start) return false;
+    try {
+        const parsed: unknown = JSON.parse(text.slice(start, end + 1));
+        return typeof parsed === "object" && parsed !== null;
+    } catch {
+        return false;
+    }
+};
+
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
     if (!locals.user) {
         error(401, { message: "Not authenticated" });
@@ -103,13 +124,14 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     return sseStream(async (push) => {
         let errored: string | null = null;
 
-        const consume = async (gen: ReturnType<typeof runChatFrames>, streamText: boolean) => {
+        // The turn is buffered, not streamed live: the model's text is inspected
+        // before any of it reaches the user, so a tool call the model leaked as
+        // chat text is caught and never shown.
+        const consume = async (gen: ReturnType<typeof runChatFrames>) => {
             let step = await gen.next();
             while (!step.done) {
                 const frame = step.value;
-                if (frame.t === "text" && streamText) {
-                    push(frame);
-                } else if (frame.t === "error") {
+                if (frame.t === "error") {
                     errored = frame.message;
                     push(frame);
                 }
@@ -125,39 +147,50 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                     history: withFewShots,
                     userMessage,
                     tools: TOOLS_CATALOG
-                }),
-                true
+                })
             );
 
             let validated = validateToolCalls(first.toolCalls);
+            let replyText = first.text;
             const invalid = validated.filter((v) => !v.valid);
+            const leakedAsText = first.toolCalls.length === 0 && looksLikeLeakedToolCall(first.text);
 
-            // One corrective retry when the model emits a malformed tool call.
-            if (invalid.length > 0 && !errored) {
-                const retryHistory = [
-                    ...withFewShots,
-                    { role: "user" as const, content: userMessage },
-                    {
-                        role: "assistant" as const,
-                        content: `${first.text}\n\n[Attempted tool calls: ${JSON.stringify(
-                            first.toolCalls.map((c) => ({ name: c.name, args: c.args }))
-                        )}]`
-                    }
-                ];
+            // One corrective retry when the model emits a malformed tool call, or
+            // writes a tool call as chat text instead of calling it.
+            if ((invalid.length > 0 || leakedAsText) && !errored) {
                 const retry = await consume(
                     runChatFrames(aiBinding, {
                         systemContext,
-                        history: retryHistory,
-                        userMessage: correctiveMessage(invalid),
+                        history: [
+                            ...withFewShots,
+                            { role: "user" as const, content: userMessage },
+                            {
+                                role: "assistant" as const,
+                                content: "[The assistant did not produce a valid tool call.]"
+                            }
+                        ],
+                        userMessage:
+                            leakedAsText && invalid.length === 0 ? LEAK_RETRY_MESSAGE : correctiveMessage(invalid),
                         tools: TOOLS_CATALOG
-                    }),
-                    false
+                    })
                 );
                 validated = validateToolCalls(retry.toolCalls);
+                const retryLeaked = retry.toolCalls.length === 0 && looksLikeLeakedToolCall(retry.text);
+                replyText = retryLeaked ? "" : retry.text;
             }
 
-            for (const entry of validated) {
-                if (!entry.valid) continue;
+            const validCalls = validated.filter((entry) => entry.valid);
+
+            // A leaked tool call must never surface as text. If the retry could
+            // not recover it into a real call, tell the user plainly.
+            let outText = looksLikeLeakedToolCall(replyText) ? "" : replyText;
+            if (leakedAsText && validCalls.length === 0 && outText.trim().length === 0) {
+                outText = "I couldn't apply that change — could you rephrase your request?";
+            }
+            if (outText.trim().length > 0) {
+                push({ t: "text", delta: outText });
+            }
+            for (const entry of validCalls) {
                 push({
                     t: "tool_call",
                     id: entry.call.id,
