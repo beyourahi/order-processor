@@ -1,14 +1,56 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
+    import { tick } from "svelte";
     import { copilot } from "$lib/stores/copilot.svelte";
     import { X } from "@lucide/svelte";
     import CopilotSidebar from "./copilot-sidebar.svelte";
 
+    let panel = $state<HTMLDivElement | null>(null);
+    let wasOpen = false;
+
     const close = () => copilot.setMobileOpen(false);
 
+    const focusable = () =>
+        panel
+            ? Array.from(
+                  panel.querySelectorAll<HTMLElement>(
+                      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                  )
+              ).filter((el) => el.offsetParent !== null)
+            : [];
+
     const onKeydown = (event: KeyboardEvent) => {
-        if (copilot.mobileOpen && event.key === "Escape") close();
+        if (!copilot.mobileOpen) return;
+        if (event.key === "Escape") {
+            close();
+            return;
+        }
+        if (event.key !== "Tab") return;
+        const items = focusable();
+        const first = items[0];
+        const last = items.at(-1);
+        if (!first || !last) return;
+        const active = document.activeElement;
+        const outside = !panel?.contains(active);
+        if (event.shiftKey && (active === first || outside)) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (active === last || outside)) {
+            event.preventDefault();
+            first.focus();
+        }
     };
+
+    // Trap focus within the sheet while open; restore it to the FAB on close.
+    $effect(() => {
+        if (copilot.mobileOpen) {
+            wasOpen = true;
+            void tick().then(() => focusable()[0]?.focus());
+        } else if (wasOpen) {
+            wasOpen = false;
+            void tick().then(() => document.querySelector<HTMLElement>('[aria-label="Open AI Copilot"]')?.focus());
+        }
+    });
 </script>
 
 <svelte:window onkeydown={onKeydown} />
@@ -23,6 +65,7 @@
             transition:fade={{ duration: 200 }}
         ></button>
         <div
+            bind:this={panel}
             class="bg-background absolute inset-x-0 bottom-0 flex h-[100dvh] flex-col"
             transition:fly={{ y: 420, duration: 260, opacity: 1 }}
         >
