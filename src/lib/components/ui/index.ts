@@ -1,5 +1,5 @@
 // Button
-export * from "./button";
+export { Button, buttonVariants, type ButtonProps, type ButtonSize, type ButtonVariant } from "./button";
 
 // Loading Spinner
 export * from "./loading-spinner";
@@ -11,7 +11,7 @@ export * from "./heading";
 export * from "./footer";
 
 // Input
-export * from "./input/index.js";
+export { Input } from "./input/index.js";
 
 // Table
 export * as Table from "./table";

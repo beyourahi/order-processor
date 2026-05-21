@@ -42,18 +42,18 @@
 {#if visible}
     <div class="animate-in fade-in slide-in-from-top-2 w-full max-w-sm duration-300">
         <div class="mb-4 flex items-center gap-3">
-            <div class="bg-surface-raised h-px flex-1"></div>
-            <span class="text-xs font-medium tracking-wider whitespace-nowrap text-zinc-500 uppercase"
+            <div class="bg-border h-px flex-1"></div>
+            <span class="text-muted-foreground text-xs font-medium tracking-wider whitespace-nowrap uppercase"
                 >SteadFast Settings</span
             >
-            <div class="bg-surface-raised h-px flex-1"></div>
+            <div class="bg-border h-px flex-1"></div>
         </div>
 
-        <div class="sleek border-surface-raised bg-surface/50 rounded-xl border p-4 backdrop-blur-sm">
+        <div class="sleek border-border bg-card rounded-xl border border-solid p-4 shadow-sm">
             <div class="mb-3 flex items-center justify-end gap-1.5 text-xs" aria-live="polite" aria-atomic="true">
                 {#if brandSettings.saveState === "saving"}
                     <LoadingSpinner size="sm" colorClass="border-t-courier-accent" />
-                    <span class="whitespace-nowrap text-zinc-500">Saving...</span>
+                    <span class="text-muted-foreground whitespace-nowrap">Saving...</span>
                 {:else if brandSettings.saveState === "saved"}
                     <svg
                         aria-hidden="true"
@@ -84,7 +84,7 @@
                     <span class="text-destructive text-xs text-pretty">{brandSettings.saveError ?? "Save failed"}</span>
                     <button
                         onclick={() => brandSettings.dismissError()}
-                        class="ml-1 cursor-pointer rounded text-xs text-zinc-500 underline focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 pointer-fine:hover:text-zinc-300"
+                        class="text-muted-foreground hover:text-foreground focus-visible:ring-ring ml-1 cursor-pointer rounded text-xs underline focus:outline-none focus-visible:ring-2"
                     >
                         Dismiss
                     </button>
@@ -93,8 +93,8 @@
 
             <div class="space-y-4">
                 <div>
-                    <label for="contact-name" class="mb-1.5 block text-xs font-medium text-zinc-400">
-                        Contact Name <span class="text-zinc-600">(optional)</span>
+                    <label for="contact-name" class="text-muted-foreground mb-1.5 block text-xs font-medium">
+                        Contact Name <span class="text-muted-foreground/70">(optional)</span>
                     </label>
                     <Input
                         id="contact-name"
@@ -105,8 +105,8 @@
                 </div>
 
                 <div>
-                    <label for="contact-phone" class="mb-1.5 block text-xs font-medium text-zinc-400">
-                        Contact Phone <span class="text-zinc-600">(optional)</span>
+                    <label for="contact-phone" class="text-muted-foreground mb-1.5 block text-xs font-medium">
+                        Contact Phone <span class="text-muted-foreground/70">(optional)</span>
                     </label>
                     <Input
                         id="contact-phone"
@@ -118,7 +118,7 @@
                 </div>
 
                 <div>
-                    <label for="merchant-id" class="mb-1.5 block text-xs font-medium text-zinc-400">
+                    <label for="merchant-id" class="text-muted-foreground mb-1.5 block text-xs font-medium">
                         Merchant ID <span class="text-destructive">*</span>
                     </label>
                     <Input
@@ -135,6 +135,8 @@
             </div>
         </div>
 
-        <p class="mt-3 text-center text-xs text-pretty text-zinc-500">Your personal SteadFast delivery settings</p>
+        <p class="text-muted-foreground mt-3 text-center text-xs text-pretty">
+            Your personal SteadFast delivery settings
+        </p>
     </div>
 {/if}

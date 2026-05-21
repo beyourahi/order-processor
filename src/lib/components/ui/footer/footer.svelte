@@ -2,16 +2,18 @@
     import { APP_CONFIG } from "$lib/config";
 </script>
 
-<footer class="flex items-center justify-center px-4 py-6 text-center text-xs text-zinc-500 sm:px-6 sm:py-8 sm:text-sm">
+<footer
+    class="text-muted-foreground flex items-center justify-center px-4 py-6 text-center text-xs sm:px-6 sm:py-8 sm:text-sm"
+>
     <p>
         <a
             href={APP_CONFIG.author.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="group sleek rounded focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+            class="group sleek focus-visible:ring-ring rounded focus-visible:ring-2 focus-visible:outline-none"
         >
             Designed by
-            <span class="underline-offset-4 pointer-fine:group-hover:text-white pointer-fine:group-hover:underline">
+            <span class="group-hover:text-foreground underline-offset-4 group-hover:underline">
                 {APP_CONFIG.author.name}
             </span>
         </a>
@@ -20,12 +22,10 @@
             href="https://dropoutstudio.co/tools"
             target="_blank"
             rel="noopener noreferrer"
-            class="group sleek rounded focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+            class="group sleek focus-visible:ring-ring rounded focus-visible:ring-2 focus-visible:outline-none"
         >
             Check out
-            <span class="underline-offset-4 pointer-fine:group-hover:text-white pointer-fine:group-hover:underline">
-                other tools
-            </span>
+            <span class="group-hover:text-foreground underline-offset-4 group-hover:underline"> other tools </span>
         </a>
     </p>
 </footer>

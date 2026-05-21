@@ -57,7 +57,7 @@
     <button
         onclick={handleGoogleLogin}
         disabled={isLoading}
-        class="sleek group flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-medium whitespace-nowrap text-zinc-200 backdrop-blur-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5 xl:pointer-fine:hover:border-white/20 xl:pointer-fine:hover:bg-white/5"
+        class="sleek group border-border bg-card text-foreground focus-visible:ring-ring hover:bg-muted flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-solid px-6 py-3 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5"
     >
         {#if isLoading}
             <LoadingSpinner size="sm" colorClass="border-t-transparent" />
@@ -84,7 +84,7 @@
         <span>Continue with Google</span>
     </button>
 
-    <p class="max-w-xs text-center text-xs text-pretty text-zinc-500 sm:max-w-none sm:text-sm">
+    <p class="text-muted-foreground max-w-xs text-center text-xs text-pretty sm:max-w-none sm:text-sm">
         Sign in with your Google account to get started
     </p>
 </div>

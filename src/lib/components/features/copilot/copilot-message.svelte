@@ -52,7 +52,7 @@
                 <img
                     src={message.image}
                     alt="Attached"
-                    class="border-border-strong/50 max-h-44 rounded-2xl rounded-br-md border object-cover"
+                    class="border-border-strong/50 max-h-44 rounded-2xl rounded-br-md border border-solid object-cover"
                 />
             {/if}
             {#if message.content}
@@ -64,7 +64,7 @@
             {/if}
         {:else if message.content}
             <div
-                class="border-border-strong/50 bg-card text-muted-foreground rounded-2xl rounded-bl-md border px-4 py-2.5 text-sm"
+                class="border-border-strong/50 bg-card text-muted-foreground rounded-2xl rounded-bl-md border border-solid px-4 py-2.5 text-sm"
             >
                 <div class="space-y-2.5 leading-relaxed">
                     {#each blocks as block, bi (bi)}
@@ -99,7 +99,7 @@
             </div>
         {:else if message.streaming}
             <div
-                class="bg-card border-border-strong/50 flex items-end gap-[3px] rounded-2xl rounded-bl-md border px-4 py-3"
+                class="bg-card border-border-strong/50 flex items-end gap-[3px] rounded-2xl rounded-bl-md border border-solid px-4 py-3"
                 role="status"
                 aria-label="Generating response"
             >

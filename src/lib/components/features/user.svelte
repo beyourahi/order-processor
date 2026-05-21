@@ -46,8 +46,8 @@
             onblur={() => (expanded = false)}
             class={cn(
                 "sleek relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-all duration-300 sm:h-10 sm:w-10",
-                "border-border-strong/50 bg-surface-raised/90 border text-zinc-300 backdrop-blur-sm",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+                "border-border bg-secondary text-muted-foreground border border-solid shadow-sm",
+                "focus-visible:ring-ring focus:outline-none focus-visible:ring-2",
                 user.image && "overflow-hidden p-0"
             )}
             aria-label={currentUser.name}
@@ -73,15 +73,15 @@
 
         <div
             class={cn(
-                "border-border-strong/50 bg-surface-raised/90 absolute right-0 flex h-9 items-center overflow-hidden rounded-full border whitespace-nowrap backdrop-blur-sm transition-all duration-300 sm:h-10",
+                "border-border bg-secondary absolute right-0 flex h-9 items-center overflow-hidden rounded-full border border-solid whitespace-nowrap shadow-sm transition-all duration-300 sm:h-10",
                 expanded ? "w-auto pr-11 pl-3 opacity-100 sm:pr-12" : "w-0 pr-0 pl-0 opacity-0"
             )}
         >
             <div class="flex flex-col justify-center">
-                <span class="text-xs leading-tight font-medium text-zinc-200 sm:text-sm">
+                <span class="text-foreground text-xs leading-tight font-medium sm:text-sm">
                     {currentUser.name}
                 </span>
-                <span class="text-xs leading-tight text-zinc-500">
+                <span class="text-muted-foreground text-xs leading-tight">
                     {user.email}
                 </span>
             </div>
@@ -98,11 +98,11 @@
             onblur={() => (showTooltip = false)}
             aria-label="Sign out"
             class={cn(
-                "sleek group flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border backdrop-blur-sm transition-all duration-200 sm:h-10 sm:w-10",
+                "sleek group flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-solid transition-all duration-200 sm:h-10 sm:w-10",
                 "focus-visible:ring-destructive/50 focus:outline-none focus-visible:ring-2",
                 isLoggingOut
-                    ? "border-border-strong bg-surface-raised/90 cursor-wait"
-                    : "border-destructive/40 bg-destructive/10 pointer-fine:hover:border-destructive pointer-fine:hover:bg-destructive active:scale-95"
+                    ? "border-border bg-secondary cursor-wait"
+                    : "border-destructive/40 bg-destructive/10 hover:border-destructive hover:bg-destructive/20 active:scale-95"
             )}
         >
             {#if isLoggingOut}
@@ -110,7 +110,7 @@
             {:else}
                 <svg
                     aria-hidden="true"
-                    class="text-destructive h-4 w-4 transition-colors sm:h-4.5 sm:w-4.5 pointer-fine:group-hover:text-white"
+                    class="text-destructive h-4 w-4 transition-colors sm:h-4.5 sm:w-4.5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -126,12 +126,12 @@
 
         {#if showTooltip && !isLoggingOut}
             <div
-                class="bg-surface-raised absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-200 shadow-lg"
+                class="bg-popover text-popover-foreground absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 rounded-md px-2.5 py-1.5 text-xs font-medium whitespace-nowrap shadow-lg"
                 role="tooltip"
             >
                 Sign out
                 <div
-                    class="border-b-surface-raised absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent"
+                    class="border-b-popover absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-solid border-transparent"
                 ></div>
             </div>
         {/if}

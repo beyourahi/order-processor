@@ -96,17 +96,17 @@
 <section
     class={cn(
         "bg-background flex h-full min-h-[30rem] flex-col overflow-hidden",
-        !bare && "border-border-strong/60 rounded-xl border shadow-2xl"
+        !bare && "border-border-strong/60 rounded-xl border border-solid shadow-2xl"
     )}
     aria-label="AI Copilot"
 >
     <!-- Header -->
-    <div class="border-border-strong/40 border-b p-2">
+    <div class="border-border-strong/40 border-b border-solid p-2">
         <div class={cn("flex items-center gap-2", bare && "mr-12")}>
             <button
                 type="button"
                 onclick={onNewChat}
-                class="bg-card border-border-strong/50 text-muted-foreground pointer-fine:hover:text-foreground pointer-fine:hover:bg-muted flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition-colors"
+                class="bg-card border-border-strong/50 text-muted-foreground hover:text-foreground hover:bg-muted flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-solid px-3 py-2 text-xs transition-colors"
             >
                 <MessageSquarePlus class="size-3.5 shrink-0" aria-hidden="true" />
                 <span>New chat</span>
@@ -116,10 +116,10 @@
                 onclick={copilot.toggleRail}
                 aria-expanded={copilot.railOpen}
                 class={cn(
-                    "bg-card border-border-strong/50 flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition-colors",
+                    "bg-card border-border-strong/50 flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-solid px-3 py-2 text-xs transition-colors",
                     copilot.railOpen
                         ? "bg-primary/10 text-foreground font-medium"
-                        : "text-muted-foreground pointer-fine:hover:text-foreground pointer-fine:hover:bg-muted"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
             >
                 <History class="size-3.5 shrink-0" aria-hidden="true" />
@@ -166,7 +166,7 @@
                         <button
                             type="button"
                             onclick={() => onSubmit(example.text)}
-                            class="ai-rise group border-border-strong/40 bg-card pointer-fine:hover:border-border-strong/70 pointer-fine:hover:bg-muted flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors"
+                            class="ai-rise group border-border-strong/40 bg-card hover:border-border-strong/70 hover:bg-muted flex w-full items-center gap-3 rounded-xl border border-solid px-3.5 py-2.5 text-left transition-colors"
                             style="animation-delay: {300 + i * 80}ms"
                         >
                             <span
@@ -188,7 +188,7 @@
         {/if}
 
         {#if copilot.error}
-            <p class="ai-enter text-center text-xs text-pretty text-red-400/80" role="alert">
+            <p class="ai-enter text-destructive text-center text-xs text-pretty" role="alert">
                 {copilot.error}
             </p>
         {/if}
@@ -196,27 +196,27 @@
 
     <!-- Input -->
     <form
-        class="border-border-strong/40 border-t p-2.5"
+        class="border-border-strong/40 border-t border-solid p-2.5"
         onsubmit={(e) => {
             e.preventDefault();
             void onSubmit();
         }}
     >
         <div
-            class="border-border-strong/50 bg-card focus-within:border-border-strong flex flex-col gap-1.5 rounded-2xl border p-1.5 transition-colors"
+            class="border-border-strong/50 bg-card focus-within:border-border-strong flex flex-col gap-1.5 rounded-2xl border border-solid p-1.5 transition-colors"
         >
             {#if pendingImage}
                 <div class="ai-enter flex items-center gap-2 px-1 pt-1">
                     <img
                         src={pendingImage}
                         alt="Attached preview"
-                        class="border-border-strong/50 size-12 rounded-lg border object-cover"
+                        class="border-border-strong/50 size-12 rounded-lg border border-solid object-cover"
                     />
                     <span class="text-muted-foreground flex-1 text-xs">Image attached</span>
                     <button
                         type="button"
                         onclick={() => (pendingImage = null)}
-                        class="text-muted-foreground pointer-fine:hover:text-foreground pointer-fine:hover:bg-muted rounded-md p-1 transition-colors"
+                        class="text-muted-foreground hover:text-foreground hover:bg-muted rounded-md p-1 transition-colors"
                         aria-label="Remove attached image"
                     >
                         <X class="size-3.5" aria-hidden="true" />
@@ -229,7 +229,7 @@
                     type="button"
                     onclick={() => fileInput?.click()}
                     disabled={copilot.inputBusy}
-                    class="text-muted-foreground pointer-fine:hover:text-foreground pointer-fine:hover:bg-muted inline-flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    class="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Attach an image"
                     title="Attach an image"
                 >
@@ -254,7 +254,7 @@
                         copilot.inputBusy && "cursor-wait",
                         copilot.inputBusy || (input.trim().length === 0 && !pendingImage)
                             ? "text-muted-foreground"
-                            : "bg-primary/10 text-foreground pointer-fine:hover:bg-muted active:scale-95"
+                            : "bg-primary/10 text-foreground hover:bg-muted active:scale-95"
                     )}
                     aria-label="Send"
                 >
@@ -274,12 +274,12 @@
             </div>
         </div>
         <div class="text-muted-foreground mt-1.5 hidden items-center gap-1 px-1 text-[10px] sm:flex">
-            <kbd class="border-border-strong/50 bg-card rounded border px-1 py-px font-sans">Enter</kbd>
+            <kbd class="border-border-strong/50 bg-card rounded border border-solid px-1 py-px font-sans">Enter</kbd>
             <span>to send</span>
             <span class="text-muted-foreground/40">·</span>
-            <kbd class="border-border-strong/50 bg-card rounded border px-1 py-px font-sans">Shift</kbd>
+            <kbd class="border-border-strong/50 bg-card rounded border border-solid px-1 py-px font-sans">Shift</kbd>
             <span>+</span>
-            <kbd class="border-border-strong/50 bg-card rounded border px-1 py-px font-sans">Enter</kbd>
+            <kbd class="border-border-strong/50 bg-card rounded border border-solid px-1 py-px font-sans">Enter</kbd>
             <span>for a new line</span>
         </div>
     </form>

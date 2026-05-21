@@ -1,59 +1,87 @@
 <script lang="ts" module>
-    import { cva, type VariantProps } from "class-variance-authority";
-    import type { HTMLButtonAttributes } from "svelte/elements";
+    import { cn, type WithElementRef } from "$lib/utils";
+    import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
+    import { type VariantProps, tv } from "tailwind-variants";
 
-    export const buttonVariants = cva(
-        [
-            "inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-md text-sm font-medium",
-            "transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/50",
-            "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-        ].join(" "),
-        {
-            variants: {
-                variant: {
-                    outline:
-                        "border border-border-strong bg-background text-zinc-200 shadow-xs pointer-fine:hover:bg-surface-raised pointer-fine:hover:text-white",
-                    ghost: "text-zinc-300 pointer-fine:hover:bg-surface-raised pointer-fine:hover:text-white",
-                    destructive:
-                        "bg-destructive text-destructive-foreground shadow-xs pointer-fine:hover:bg-destructive/90"
-                },
-                size: {
-                    default: "h-9 px-4 py-2",
-                    sm: "h-8 rounded-md px-3 text-xs",
-                    lg: "h-10 rounded-md px-8",
-                    icon: "h-9 w-9"
-                }
+    export const buttonVariants = tv({
+        base: "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium active:scale-[0.98] active:translate-y-px aria-invalid:ring-3 [&_svg:not([class*='size-'])]:size-4 group/button inline-flex shrink-0 items-center justify-center whitespace-nowrap transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        variants: {
+            variant: {
+                default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+                outline:
+                    "border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground",
+                secondary:
+                    "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+                ghost: "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground",
+                destructive:
+                    "bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-red-300 focus-visible:border-destructive/40",
+                link: "text-primary underline-offset-4 hover:underline"
             },
-            defaultVariants: {
-                variant: "outline",
-                size: "default"
+            size: {
+                default: "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+                xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+                sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+                lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+                xl: "h-12 gap-2 px-5 text-sm font-semibold",
+                icon: "size-8",
+                "icon-xs":
+                    "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+                "icon-sm": "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+                "icon-lg": "size-9"
             }
+        },
+        defaultVariants: {
+            variant: "default",
+            size: "default"
         }
-    );
+    });
 
     export type ButtonVariant = VariantProps<typeof buttonVariants>["variant"];
     export type ButtonSize = VariantProps<typeof buttonVariants>["size"];
 
-    export interface ButtonProps extends Omit<HTMLButtonAttributes, "class"> {
-        variant?: ButtonVariant;
-        size?: ButtonSize;
-        class?: string;
-    }
+    export type ButtonProps = WithElementRef<HTMLButtonAttributes> &
+        WithElementRef<HTMLAnchorAttributes> & {
+            variant?: ButtonVariant;
+            size?: ButtonSize;
+        };
 </script>
 
 <script lang="ts">
-    import type { Snippet } from "svelte";
-    import { cn } from "$lib/utils";
-
     let {
-        variant = "outline",
-        size = "default",
         class: className,
+        variant = "default",
+        size = "default",
+        ref = $bindable(null),
+        href = undefined,
+        type = "button",
+        disabled,
         children,
         ...restProps
-    }: ButtonProps & { children?: Snippet } = $props();
+    }: ButtonProps = $props();
 </script>
 
-<button class={cn(buttonVariants({ variant, size, className }))} {...restProps}>
-    {@render children?.()}
-</button>
+{#if href}
+    <a
+        bind:this={ref}
+        data-slot="button"
+        class={cn(buttonVariants({ variant, size }), className)}
+        href={disabled ? undefined : href}
+        aria-disabled={disabled}
+        role={disabled ? "link" : undefined}
+        tabindex={disabled ? -1 : undefined}
+        {...restProps}
+    >
+        {@render children?.()}
+    </a>
+{:else}
+    <button
+        bind:this={ref}
+        data-slot="button"
+        class={cn(buttonVariants({ variant, size }), className)}
+        {type}
+        {disabled}
+        {...restProps}
+    >
+        {@render children?.()}
+    </button>
+{/if}

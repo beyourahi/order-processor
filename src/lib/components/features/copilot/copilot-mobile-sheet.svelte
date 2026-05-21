@@ -29,7 +29,7 @@
             <button
                 type="button"
                 onclick={close}
-                class="text-muted-foreground pointer-fine:hover:text-foreground pointer-fine:hover:bg-muted absolute top-3 right-3 z-10 inline-flex size-9 items-center justify-center rounded-lg transition-colors"
+                class="text-muted-foreground hover:text-foreground hover:bg-muted absolute top-3 right-3 z-10 inline-flex size-9 items-center justify-center rounded-lg transition-colors"
                 aria-label="Close Copilot"
             >
                 <X class="size-5" aria-hidden="true" />

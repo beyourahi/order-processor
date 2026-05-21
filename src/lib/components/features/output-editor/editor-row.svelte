@@ -44,9 +44,8 @@
         return false;
     };
 
-    // Glassmorphism: opaque fallback for no-backdrop-filter browsers, translucent + blur where supported.
-    const glassBase =
-        "border border-white/10 bg-zinc-800/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_8px_-2px_rgba(0,0,0,0.35)] supports-[backdrop-filter]:bg-white/8 supports-[backdrop-filter]:backdrop-blur-md supports-[backdrop-filter]:backdrop-saturate-150";
+    // Raised control surface — separation via a solid fill, a subtle border and a shadow.
+    const controlBase = "border border-solid border-border bg-secondary shadow-sm";
 
     // Row insertion/deletion motion (UX §Motion): a 100ms fade. Svelte's
     // `slide` is explicitly unsupported on `display: table-row` elements
@@ -66,8 +65,8 @@
     in:rowMotion={{ animate: animateEntry }}
     out:rowMotion={{ animate: true }}
     class={cn(
-        "border-border-strong/40 pointer-fine:hover:bg-surface/40 border-b transition-colors",
-        isSelected && "bg-surface-raised/30"
+        "border-border hover:bg-muted/40 border-b border-solid transition-colors",
+        isSelected && "bg-secondary/40"
     )}
 >
     <Table.Cell class="sticky left-0 z-10 w-14 bg-inherit p-0 align-middle">
@@ -75,8 +74,8 @@
             <label
                 class={cn(
                     "sleek flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10",
-                    glassBase,
-                    "focus-within:ring-2 focus-within:ring-white/50 pointer-fine:hover:border-white/20 pointer-fine:hover:bg-white/15"
+                    controlBase,
+                    "focus-within:ring-ring hover:border-border-strong hover:bg-muted focus-within:ring-2"
                 )}
                 aria-label="Select row {rowIndex + 1}"
             >
@@ -96,12 +95,12 @@
         </div>
     </Table.Cell>
 
-    <Table.Cell class="w-10 px-2 text-xs text-zinc-400 tabular-nums">
+    <Table.Cell class="text-muted-foreground w-10 px-2 text-xs tabular-nums">
         {rowIndex + 1}
     </Table.Cell>
 
     {#each columns as column (column.key)}
-        <Table.Cell class="border-border-strong/30 border-l p-0 align-middle">
+        <Table.Cell class="border-border border-l border-solid p-0 align-middle">
             <EditorCell
                 value={row[column.key as keyof SteadFastOrder] ?? ""}
                 column={column.key}
@@ -117,16 +116,16 @@
         </Table.Cell>
     {/each}
 
-    <Table.Cell class="border-border-strong/30 sticky right-0 z-10 w-20 border-l bg-inherit p-0 align-middle">
+    <Table.Cell class="border-border sticky right-0 z-10 w-20 border-l border-solid bg-inherit p-0 align-middle">
         <div class="flex min-h-[44px] items-center justify-center gap-0.5 sm:min-h-10">
             <button
                 type="button"
                 onclick={onDuplicate}
                 class={cn(
-                    "sleek flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md text-zinc-400 sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
-                    glassBase,
-                    "active:bg-white/20 pointer-fine:hover:border-white/20 pointer-fine:hover:bg-white/15 pointer-fine:hover:text-white",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    "sleek text-muted-foreground flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    controlBase,
+                    "hover:border-border-strong hover:bg-muted hover:text-foreground active:bg-muted",
+                    "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
                 )}
                 title="Duplicate row"
                 aria-label="Duplicate row {rowIndex + 1}"
@@ -147,10 +146,10 @@
                 type="button"
                 onclick={onDelete}
                 class={cn(
-                    "sleek flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md text-zinc-400 sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
-                    glassBase,
-                    "pointer-fine:hover:bg-destructive/15 pointer-fine:hover:border-destructive/30 pointer-fine:hover:text-destructive active:bg-destructive/25",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                    "sleek text-muted-foreground flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    controlBase,
+                    "hover:bg-destructive/15 hover:border-destructive/30 hover:text-destructive active:bg-destructive/25",
+                    "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
                 )}
                 title="Delete row"
                 aria-label="Delete row {rowIndex + 1}"

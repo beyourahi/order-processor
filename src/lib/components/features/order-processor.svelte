@@ -219,12 +219,12 @@
             class={cn(
                 "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
                 "h-56 sm:h-64 md:h-72 lg:h-80",
-                "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
+                "ring-offset-background focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 isDisabled
-                    ? "border-surface-raised cursor-not-allowed opacity-50"
-                    : "border-border-strong pointer-fine:hover:bg-surface/30 pointer-fine:hover:border-border-strong/80 cursor-pointer",
-                zoneHover && "bg-surface/50 border-courier-accent/60",
-                error && "border-destructive/50"
+                    ? "border-border cursor-not-allowed opacity-50"
+                    : "border-border-strong hover:bg-card/60 hover:border-border-strong/80 cursor-pointer",
+                zoneHover && "bg-card border-courier-accent/60",
+                error && "border-destructive/60"
             )}
             ondragover={handleDragOver}
             ondragleave={handleDragLeave}
@@ -249,15 +249,15 @@
                             e.stopPropagation();
                             error = null;
                         }}
-                        class="sleek pointer-fine:hover:bg-surface-raised cursor-pointer rounded-lg px-4 py-2 text-sm text-zinc-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 active:scale-95 pointer-fine:hover:text-white"
+                        class="sleek text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-ring cursor-pointer rounded-lg px-4 py-2 text-sm focus:outline-none focus-visible:ring-2 active:scale-95"
                     >
                         Try again
                     </button>
                 </div>
             {:else if isProcessing}
                 <div class="flex flex-col items-center gap-3 sm:gap-4">
-                    <LoadingSpinner size="lg" colorClass="border-t-white" />
-                    <p class="text-sm text-zinc-400 sm:text-base">Processing...</p>
+                    <LoadingSpinner size="lg" colorClass="border-t-foreground" />
+                    <p class="text-muted-foreground text-sm sm:text-base">Processing...</p>
                 </div>
             {:else}
                 <Upload disabled={isDisabled} {needsMerchantId} />

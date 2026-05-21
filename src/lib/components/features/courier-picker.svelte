@@ -19,27 +19,27 @@
                 onclick={() => onSelect(option.value)}
                 class={cn(
                     "sleek group relative flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
-                    "border transition-all duration-200",
-                    "ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",
+                    "border border-solid transition-all duration-200",
+                    "ring-offset-background focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                     isSelected
                         ? "border-courier-accent/60 bg-courier-accent/10 shadow-courier-accent/10 shadow-lg"
-                        : "border-surface-raised bg-surface/40 pointer-fine:hover:border-border-strong pointer-fine:hover:bg-surface-raised/60",
+                        : "border-border bg-card hover:border-border-strong hover:bg-secondary/60",
                     "active:scale-[0.97]"
                 )}
             >
                 <!-- Selection indicator (radio style) -->
                 <div
                     class={cn(
-                        "absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all duration-200 sm:h-6 sm:w-6",
+                        "absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-solid transition-all duration-200 sm:h-6 sm:w-6",
                         isSelected
                             ? "border-courier-accent bg-courier-accent"
-                            : "border-zinc-600 bg-transparent pointer-fine:group-hover:border-zinc-500"
+                            : "border-border-strong group-hover:border-muted-foreground bg-transparent"
                     )}
                 >
                     {#if isSelected}
                         <svg
                             aria-hidden="true"
-                            class="h-3 w-3 text-white sm:h-3.5 sm:w-3.5"
+                            class="text-background h-3 w-3 sm:h-3.5 sm:w-3.5"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -54,7 +54,7 @@
                 <div
                     class={cn(
                         "flex h-14 w-14 items-center justify-center rounded-xl p-2 transition-all duration-200 sm:h-16 sm:w-16",
-                        isSelected ? "bg-white/10" : "bg-surface-raised/50 pointer-fine:group-hover:bg-border-strong/50"
+                        isSelected ? "bg-courier-accent/15" : "bg-secondary/50 group-hover:bg-border-strong/50"
                     )}
                 >
                     <img
@@ -62,7 +62,7 @@
                         alt={option.label}
                         class={cn(
                             "h-full w-full object-contain transition-all duration-200",
-                            !isSelected && "opacity-70 pointer-fine:group-hover:opacity-100"
+                            !isSelected && "opacity-70 group-hover:opacity-100"
                         )}
                     />
                 </div>
@@ -71,7 +71,7 @@
                 <span
                     class={cn(
                         "text-sm font-semibold whitespace-nowrap transition-colors duration-200 sm:text-base",
-                        isSelected ? "text-white" : "text-zinc-300 pointer-fine:group-hover:text-white"
+                        isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
                     )}
                 >
                     {option.label}

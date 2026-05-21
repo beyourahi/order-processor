@@ -135,20 +135,18 @@
 <div
     bind:this={gridRef}
     aria-label="Editable orders table"
-    class="no-scrollbar border-border-strong/40 bg-surface/30 max-h-[50vh] overflow-auto rounded-lg border sm:max-h-[60vh]"
+    class="no-scrollbar border-border bg-card max-h-[50vh] overflow-auto rounded-lg border border-solid sm:max-h-[60vh]"
 >
     <Table.Root class="w-full text-base">
-        <Table.Header class="bg-surface-raised/95 sticky top-0 z-20 backdrop-blur">
-            <Table.Row class="border-border-strong/50">
-                <Table.Head
-                    class="bg-surface-raised/95 sticky left-0 z-30 w-14 text-center text-[10px]"
-                    aria-label="Select"
+        <Table.Header class="bg-secondary sticky top-0 z-20 backdrop-blur">
+            <Table.Row class="border-border">
+                <Table.Head class="bg-secondary sticky left-0 z-30 w-14 text-center text-[10px]" aria-label="Select"
                 ></Table.Head>
                 <Table.Head class="w-10 text-right text-[10px]" aria-label="Row number">#</Table.Head>
                 {#each visibleColumns as column (column.key)}
                     <Table.Head
                         class={cn(
-                            "border-border-strong/30 min-w-[10rem] border-l text-[11px]",
+                            "border-border min-w-[10rem] border-l border-solid text-[11px]",
                             column.kind === "batch-constant" && "text-courier-accent/80"
                         )}
                     >
@@ -158,8 +156,7 @@
                         {/if}
                     </Table.Head>
                 {/each}
-                <Table.Head class="bg-surface-raised/95 sticky right-0 z-30 w-20 text-center" aria-label="Actions"
-                ></Table.Head>
+                <Table.Head class="bg-secondary sticky right-0 z-30 w-20 text-center" aria-label="Actions"></Table.Head>
             </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -182,7 +179,7 @@
                 <tr>
                     <td
                         colspan={visibleColumns.length + 3}
-                        class="px-4 py-12 text-center text-sm text-pretty text-zinc-400"
+                        class="text-muted-foreground px-4 py-12 text-center text-sm text-pretty"
                     >
                         No orders yet — click Add row to create the first.
                     </td>
@@ -194,7 +191,7 @@
     <button
         type="button"
         onclick={onAddRow}
-        class="border-border-strong/30 pointer-fine:hover:bg-surface-raised/40 pointer-fine:hover:text-courier-accent flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-t border-dashed text-sm whitespace-nowrap text-zinc-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 sm:min-h-11"
+        class="border-border text-muted-foreground hover:bg-secondary/60 hover:text-courier-accent focus-visible:ring-ring flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-t border-dashed text-sm whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 sm:min-h-11"
         aria-label="Add row"
     >
         <svg

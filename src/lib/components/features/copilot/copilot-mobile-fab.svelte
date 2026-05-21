@@ -10,7 +10,7 @@
         <button
             type="button"
             onclick={() => copilot.setMobileOpen(true)}
-            class="group border-border-strong/60 bg-card pointer-fine:hover:border-border-strong pointer-fine:hover:bg-muted relative z-10 flex size-14 items-center justify-center rounded-full border shadow-2xl transition-all duration-300 ease-out active:scale-95"
+            class="group border-border-strong/60 bg-card hover:border-border-strong hover:bg-muted relative z-10 flex size-14 items-center justify-center rounded-full border border-solid shadow-2xl transition-all duration-300 ease-out active:scale-95"
             aria-label="Open AI Copilot"
         >
             <CopilotLauncherIcon variant="grid" class="size-6" />

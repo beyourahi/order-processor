@@ -1,46 +1,56 @@
-<!--
-  Input Component
-  A styled text input with error state, focus ring, and disabled state support.
-  Supports bind:value via $bindable().
--->
 <script lang="ts">
-    import { cn } from "$lib/utils";
+    import type { HTMLInputAttributes, HTMLInputTypeAttribute } from "svelte/elements";
+    import { cn, type WithElementRef } from "$lib/utils";
 
-    interface Props {
-        value?: string;
-        placeholder?: string;
-        disabled?: boolean;
+    type InputType = Exclude<HTMLInputTypeAttribute, "file">;
+
+    type Props = WithElementRef<
+        Omit<HTMLInputAttributes, "type"> &
+            ({ type: "file"; files?: FileList } | { type?: InputType; files?: undefined })
+    > & {
         error?: boolean;
-        class?: string;
-        id?: string;
-        type?: string;
-        oninput?: (e: Event) => void;
-    }
+    };
 
     let {
-        value = $bindable(""),
-        placeholder,
-        disabled,
-        error,
+        ref = $bindable(null),
+        value = $bindable(),
+        type,
+        files = $bindable(),
+        error = false,
         class: className,
-        id,
-        type = "text",
-        oninput
+        ...restProps
     }: Props = $props();
 </script>
 
-<input
-    {id}
-    {type}
-    {placeholder}
-    {disabled}
-    {oninput}
-    bind:value
-    class={cn(
-        "bg-surface w-full rounded-lg border px-3 py-2 text-sm text-zinc-200 transition-colors placeholder:text-zinc-500",
-        "focus-visible:ring-courier-accent/50 focus-visible:ring-2 focus-visible:outline-none",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        error ? "border-destructive/50" : "border-border-strong/50",
-        className
-    )}
-/>
+{#if type === "file"}
+    <input
+        bind:this={ref}
+        data-slot="input"
+        aria-invalid={error || undefined}
+        class={cn(
+            "selection:bg-primary dark:bg-input/30 selection:text-primary-foreground border-input ring-offset-background placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border border-solid bg-transparent px-3 py-2 text-sm font-medium shadow-xs transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+            "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+            className
+        )}
+        type="file"
+        bind:files
+        bind:value
+        {...restProps}
+    />
+{:else}
+    <input
+        bind:this={ref}
+        data-slot="input"
+        aria-invalid={error || undefined}
+        class={cn(
+            "border-input bg-background selection:bg-primary dark:bg-input/30 selection:text-primary-foreground ring-offset-background placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border border-solid px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+            "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+            className
+        )}
+        {type}
+        bind:value
+        {...restProps}
+    />
+{/if}

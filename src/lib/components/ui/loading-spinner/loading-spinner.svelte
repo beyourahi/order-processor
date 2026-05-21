@@ -15,11 +15,16 @@
         lg: "h-6 w-6"
     };
 
-    let { size = "md", colorClass = "border-t-zinc-400", class: className = "" }: Props = $props();
+    let { size = "md", colorClass = "border-t-muted-foreground", class: className = "" }: Props = $props();
 </script>
 
 <div
-    class={cn("animate-spin rounded-full border-2 border-zinc-500", sizeClasses[size], colorClass, className)}
+    class={cn(
+        "border-border-strong animate-spin rounded-full border-2 border-solid",
+        sizeClasses[size],
+        colorClass,
+        className
+    )}
     role="status"
     aria-label="Loading"
 >

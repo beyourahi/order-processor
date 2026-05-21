@@ -1,78 +1,286 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-@source "./lib/**/*.{js,ts,svelte}";
-@source "./routes/**/*.{js,ts,svelte}";
+@custom-variant dark (&:is(.dark *));
+
+@custom-variant hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+            @slot;
+        }
+    }
+}
+
+@custom-variant group-hover {
+    @media (hover: hover) and (pointer: fine) {
+        &:is(:where(.group):hover *) {
+            @slot;
+        }
+    }
+}
+
+@font-face {
+    font-family: "Google Sans Flex Fallback";
+    src: local("Arial");
+    size-adjust: 98%;
+    ascent-override: 95%;
+    descent-override: 25%;
+    line-gap-override: 0%;
+}
 
 :root {
-    --font-sans: Inter, sans-serif;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+
+    --surface: oklch(0.97 0 0);
+    --surface-raised: oklch(0.99 0 0);
+    --border-strong: oklch(0.85 0 0);
+    --courier-accent: oklch(0.69 0.17 162);
+
+    --font-sans:
+        "Google Sans Flex", "Google Sans Flex Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "Google Sans Code", ui-monospace, "SF Mono", Consolas, "Courier New", monospace;
+    --radius: 1rem;
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+}
+
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.371 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(0.275 0 0);
+    --input: oklch(0.325 0 0);
+    --ring: oklch(0.556 0 0);
+
+    --surface: oklch(0.205 0 0);
+    --surface-raised: oklch(0.269 0 0);
+    --border-strong: oklch(0.371 0 0);
+    --courier-accent: oklch(0.69 0.17 162);
 }
 
 @theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-surface: var(--surface);
+    --color-surface-raised: var(--surface-raised);
+    --color-border-strong: var(--border-strong);
+    --color-courier-accent: var(--courier-accent);
+
     --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+
+    --shadow-xs: var(--shadow-xs);
+    --shadow-sm: var(--shadow-sm);
+    --shadow: var(--shadow);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+    --shadow-2xl: var(--shadow-2xl);
+
+    --text-micro: 0.625rem;
+    --text-caption: 0.75rem;
+    --text-label: 0.875rem;
+    --text-body: 1rem;
+    --text-body-lg: 1.0625rem;
+    --text-lead: 1.125rem;
+    --text-subtitle: 1.5rem;
+    --text-title-sm: 1.875rem;
+    --text-title: 2.25rem;
+    --text-title-lg: 3rem;
+    --text-display: 3.75rem;
+    --leading-tight-custom: 1.2;
+    --leading-heading: 1.25;
+    --leading-body: 1.625;
+    --tracking-tight-custom: -0.025em;
+    --tracking-caption-custom: 0.1em;
 }
 
-@theme {
-    --color-background: oklch(0.197 0 0);
+@layer base {
+    * {
+        @apply border-none;
+    }
+    body {
+        @apply bg-background text-foreground;
+        touch-action: pan-y;
+        position: relative;
+    }
+    html {
+        scroll-behavior: auto;
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: auto;
+        touch-action: manipulation;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        font-optical-sizing: auto;
+    }
+}
 
-    /* Dark surface scale — semantic equivalents for zinc-900/800/700 */
-    --color-surface: oklch(0.21 0.006 285.885);
-    --color-surface-raised: oklch(0.274 0.006 286.033);
-    --color-border: oklch(0.21 0.006 285.885);
-    --color-border-strong: oklch(0.37 0.013 285.805);
+@layer base {
+    button,
+    [data-slot="button"],
+    [data-slot="tabs-trigger"],
+    [data-slot="accordion-trigger"],
+    [data-slot="dialog-close"] {
+        @apply select-none;
+    }
 
-    --color-destructive: hsl(0 84.2% 60.2%);
-    --color-destructive-foreground: hsl(0 0% 98%);
+    button:not(:disabled),
+    [type="button"]:not(:disabled),
+    [type="submit"]:not(:disabled),
+    [type="reset"]:not(:disabled),
+    a[href],
+    [role="button"]:not([aria-disabled="true"]),
+    [role="tab"],
+    [role="radio"],
+    [role="menuitem"],
+    [role="option"],
+    [role="switch"],
+    [role="link"],
+    summary,
+    select:not(:disabled),
+    label[for],
+    input[type="checkbox"]:not(:disabled),
+    input[type="radio"]:not(:disabled),
+    input[type="range"]:not(:disabled),
+    input[type="file"]:not(:disabled),
+    [data-slot="accordion-trigger"],
+    [data-slot="dialog-close"],
+    [data-slot="tabs-trigger"] {
+        cursor: pointer;
+    }
+}
 
-    --color-courier-accent: oklch(0.69 0.17 162);
+@layer base {
+    * {
+        outline: none;
+    }
 
-    /* shadcn-style semantic aliases — let the AI Copilot components (ported
-       from the reference app) read naturally without per-class rewrites.
-       Mapped onto the existing dark palette. `muted-foreground` is held at a
-       zinc-400 equivalent (6.93:1 on the background) so informational copy
-       clears WCAG 2.2 AA — zinc-500 would fail. */
-    --color-foreground: oklch(0.985 0 0);
-    --color-card: oklch(0.21 0.006 285.885);
-    --color-card-foreground: oklch(0.985 0 0);
-    --color-popover: oklch(0.21 0.006 285.885);
-    --color-popover-foreground: oklch(0.985 0 0);
-    --color-primary: oklch(0.985 0 0);
-    --color-primary-foreground: oklch(0.21 0.006 285.885);
-    --color-muted: oklch(0.274 0.006 286.033);
-    --color-muted-foreground: oklch(0.705 0.015 286);
-    --color-accent: oklch(0.274 0.006 286.033);
-    --color-accent-foreground: oklch(0.985 0 0);
+    :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
+}
+
+*::-webkit-scrollbar {
+    @apply w-2 bg-[#0F0F10];
+}
+
+*::-webkit-scrollbar-thumb {
+    @apply rounded-[10px] bg-[#0F0F10];
+}
+
+*::-webkit-scrollbar-track {
+    @apply rounded-[10px] bg-[#0F0F10];
+}
+
+.scrollbar-hide,
+.no-scrollbar,
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar *::-webkit-scrollbar {
+    display: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+    user-select: auto;
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    * {
+        cursor: auto !important;
+    }
+}
+
+@supports (-webkit-touch-callout: none) {
+    @media (hover: none) and (pointer: coarse) {
+        input,
+        textarea,
+        select {
+            font-size: 1rem;
+        }
+    }
 }
 
 .sleek {
     @apply transform-gpu transition-all duration-200 ease-in-out;
 }
 
-*::-webkit-scrollbar {
-    @apply w-2 bg-transparent;
-}
-*::-webkit-scrollbar-thumb {
-    @apply rounded-xl bg-white/60;
-}
-*::-webkit-scrollbar-track {
-    @apply rounded-xl bg-transparent;
-}
-
-/* Hide scrollbars on the element AND any nested scroll containers
-   (e.g. Table.svelte's inner overflow-x-auto wrapper). scrollbar-width
-   on non-scroll descendants is a no-op, so the cascade is safe. */
-.no-scrollbar,
-.no-scrollbar * {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-.no-scrollbar::-webkit-scrollbar,
-.no-scrollbar *::-webkit-scrollbar {
-    display: none;
-}
-
 /* ───────────────────────────────  AI Copilot  ─────────────────────────────── */
 
-/* Bubble + element entrances */
 @keyframes ai-in-up {
     from {
         opacity: 0;
@@ -95,7 +303,6 @@
     }
 }
 
-/* Streaming "thinking" equalizer */
 @keyframes ai-wave {
     0%,
     100% {
@@ -108,7 +315,6 @@
     }
 }
 
-/* Send-button working dots */
 @keyframes ai-dot {
     0%,
     100% {
@@ -142,10 +348,9 @@
     animation: ai-dot 1.1s ease-in-out infinite;
 }
 
-/* Thin scrollbar for the message stream — overrides the global white thumb */
 .ai-scroll {
     scrollbar-width: thin;
-    scrollbar-color: oklch(from var(--color-muted-foreground) l c h / 0.4) transparent;
+    scrollbar-color: oklch(from var(--muted-foreground) l c h / 0.4) transparent;
 }
 
 .ai-scroll::-webkit-scrollbar {
@@ -154,16 +359,41 @@
 }
 
 .ai-scroll::-webkit-scrollbar-thumb {
-    background: oklch(from var(--color-muted-foreground) l c h / 0.4);
+    background: oklch(from var(--muted-foreground) l c h / 0.4);
     border-radius: 4px;
 }
 
 .ai-scroll::-webkit-scrollbar-thumb:hover {
-    background: oklch(from var(--color-muted-foreground) l c h / 0.6);
+    background: oklch(from var(--muted-foreground) l c h / 0.6);
 }
 
 .ai-scroll::-webkit-scrollbar-track {
     background: transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    background: transparent;
+}
+
+.chat-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: oklch(0.3 0 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: oklch(0.4 0 0);
+    }
+}
+
+.chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.3 0 0) transparent;
 }
 
 /* ── Identity mark — the dancing 4-box launcher ── */
@@ -304,7 +534,7 @@
 }
 
 .launcher-icon > div {
-    background: oklch(from var(--color-foreground) l c h / 0.8);
+    background: oklch(from var(--foreground) l c h / 0.8);
     border-radius: var(--launcher-radius);
     will-change: transform;
 }
@@ -363,7 +593,7 @@
 }
 
 .launcher-icon-row > div {
-    background: oklch(from var(--color-foreground) l c h / 0.8);
+    background: oklch(from var(--foreground) l c h / 0.8);
     border-radius: var(--launcher-radius-row);
     will-change: transform;
 }
@@ -387,7 +617,6 @@
     animation-delay: calc(var(--launcher-stagger-row) * 3);
 }
 
-/* Mobile launcher ripple rings */
 @keyframes chat-btn-ripple {
     0% {
         transform: scale(1);
@@ -403,7 +632,7 @@
     position: absolute;
     inset: 0;
     border-radius: 9999px;
-    border: 1.5px solid oklch(from var(--color-muted-foreground) l c h / 0.4);
+    border: 1.5px solid oklch(from var(--muted-foreground) l c h / 0.4);
     pointer-events: none;
     animation: chat-btn-ripple 3s ease-out infinite;
 }
@@ -422,26 +651,5 @@
         animation: none;
         transform: scaleY(0.7);
         opacity: 0.6;
-    }
-}
-
-@layer base {
-    * {
-        @apply border-border;
-    }
-    body {
-        @apply bg-background text-white;
-    }
-}
-
-/* iOS Safari auto-zooms on focus when font-size < 16px. The only accessible
-   fix is enforcing 1rem on touch devices — viewport user-scalable hacks are
-   deprecated and break WCAG 1.4.4. Scoped to touch screens so desktop keeps
-   the text-sm design token unchanged. */
-@media (hover: none) and (pointer: coarse) {
-    input,
-    textarea,
-    select {
-        font-size: 1rem;
     }
 }

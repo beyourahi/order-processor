@@ -217,9 +217,9 @@
     onkeydown={handleCellKeydown}
     onclick={handleCellClick}
     class={cn(
-        "ring-offset-background group relative min-h-[44px] min-w-[10rem] cursor-text px-3 text-base focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-white/50 sm:min-h-10",
+        "ring-offset-background focus-visible:ring-ring group relative min-h-[44px] min-w-[10rem] cursor-text px-3 text-base focus:outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-10",
         "flex items-center transition-colors",
-        isSelected && "bg-surface-raised/40",
+        isSelected && "bg-secondary/40",
         warning && "ring-1 ring-amber-500/60 ring-inset",
         isOverride &&
             "before:bg-courier-accent/80 before:absolute before:top-1 before:bottom-1 before:left-0 before:w-[2px] before:rounded-r"
@@ -237,7 +237,7 @@
                 onblur={commit}
                 onkeydown={handleInputKeydown}
                 oninput={handleTextareaInput}
-                class="block max-h-[40vh] w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-base leading-snug text-white outline-none focus:ring-0"
+                class="text-foreground block max-h-[40vh] w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-base leading-snug outline-none focus:ring-0"
                 aria-label="Editing {column}, row {rowIndex + 1}"
             ></textarea>
         {:else}
@@ -251,12 +251,12 @@
                 onblur={commit}
                 onbeforeinput={handleBeforeInput}
                 onkeydown={handleInputKeydown}
-                class="block h-full w-full border-0 bg-transparent p-0 text-base text-white outline-none focus:ring-0"
+                class="text-foreground block h-full w-full border-0 bg-transparent p-0 text-base outline-none focus:ring-0"
                 aria-label="Editing {column}, row {rowIndex + 1}"
             />
         {/if}
     {:else}
-        <span class={cn("block w-full truncate", value ? "text-white/90" : "text-zinc-400 italic")}>
+        <span class={cn("block w-full truncate", value ? "text-foreground/90" : "text-muted-foreground italic")}>
             {value || "—"}
         </span>
         {#if warning}
