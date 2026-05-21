@@ -1,12 +1,16 @@
 <script lang="ts">
     /** A single tool-call card inside an assistant message. */
-    import type { CopilotToolCall } from "$lib/ai/types";
+    import type { CopilotToolCall, ToolName } from "$lib/ai/types";
+    import { TOOL_LABELS } from "$lib/ai/tools-catalog";
     import { undoAction } from "$lib/ai/chat-client";
     import { CheckCircle2, CircleX, Loader2, ShieldAlert, Undo2 } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import CopilotAnomalyWarning from "./copilot-anomaly-warning.svelte";
 
     let { call }: { call: CopilotToolCall } = $props();
+
+    // Human-readable card title — the raw tool name is never shown to the user.
+    const label = $derived(TOOL_LABELS[call.name as ToolName] ?? "Copilot action");
 
     const statusLabel = $derived.by(() => {
         switch (call.status) {
@@ -63,7 +67,7 @@
                 <ShieldAlert class="size-3.5" aria-hidden="true" />
             {/if}
         </span>
-        <span class="font-mono font-medium break-all">{call.name}</span>
+        <span class="font-medium break-words">{label}</span>
         <span class="text-muted-foreground tabular-nums">· {statusLabel}</span>
         {#if canUndo}
             <button

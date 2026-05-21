@@ -3,7 +3,7 @@
  * passed verbatim in the OpenAI-style `tools` payload. Keep descriptions terse
  * and concrete — the model leans on them to pick the right tool and shape args.
  */
-import type { ToolCatalogEntry } from "./types";
+import type { ToolCatalogEntry, ToolName } from "./types";
 
 const CELL_COLUMNS = [
     "Name",
@@ -187,3 +187,21 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
         parameters: { type: "object", properties: {} }
     }
 ];
+
+/**
+ * Human-readable card titles for tool calls. The raw tool name (e.g. "editCells")
+ * is an internal identifier and must never be shown to the user.
+ */
+export const TOOL_LABELS: Record<ToolName, string> = {
+    getBatchSummary: "Batch summary",
+    getRows: "Looked up orders",
+    flagAnomalies: "Risk scan",
+    editCells: "Edit cells",
+    setBatchDefaults: "Batch defaults",
+    addRows: "Add orders",
+    deleteRows: "Delete orders",
+    autoFixWarnings: "Auto-fix warnings",
+    updateBrandSettings: "Brand settings",
+    proposeCsvColumnMapping: "Column mapping",
+    undoLastChange: "Undo change"
+};
