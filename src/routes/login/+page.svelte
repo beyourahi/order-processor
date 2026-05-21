@@ -7,7 +7,7 @@
     import { authClient } from "$lib/auth-client";
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
-    import { Heading, LoadingSpinner } from "$lib/components";
+    import { Heading } from "$lib/components";
 
     let isLoading = $state(false);
     let error = $state<string | null>(null);
@@ -49,18 +49,24 @@
     <Heading />
 
     {#if error}
-        <p class="text-destructive max-w-xs text-center text-sm text-pretty sm:max-w-sm">
+        <div
+            class="bg-destructive/10 text-destructive max-w-sm rounded-lg px-4 py-2.5 text-center text-sm text-pretty"
+            role="alert"
+        >
             {error}
-        </p>
+        </div>
     {/if}
 
     <button
         onclick={handleGoogleLogin}
         disabled={isLoading}
-        class="sleek group border-border bg-card text-foreground focus-visible:ring-ring hover:bg-muted flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-solid px-6 py-3 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5"
+        class={`border-border bg-card text-foreground pointer-fine:hover:bg-accent pointer-fine:hover:text-accent-foreground focus-visible:ring-ring sleek group focus-visible:ring-offset-background flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-solid px-6 py-3 text-sm font-medium whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:gap-3 sm:px-8 sm:py-3.5 ${isLoading ? "cursor-wait" : ""}`}
     >
         {#if isLoading}
-            <LoadingSpinner size="sm" colorClass="border-t-transparent" />
+            <div
+                class="border-muted-foreground h-4 w-4 animate-spin rounded-full border-2 border-t-transparent sm:h-5 sm:w-5"
+                aria-hidden="true"
+            ></div>
         {:else}
             <svg aria-hidden="true" class="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24">
                 <path
@@ -84,7 +90,7 @@
         <span>Continue with Google</span>
     </button>
 
-    <p class="text-muted-foreground max-w-xs text-center text-xs text-pretty sm:max-w-none sm:text-sm">
+    <p class="text-muted-foreground max-w-sm text-center text-sm text-pretty">
         Sign in with your Google account to get started
     </p>
 </div>
