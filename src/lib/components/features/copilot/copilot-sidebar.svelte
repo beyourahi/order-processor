@@ -182,9 +182,26 @@
                 </div>
             </div>
         {:else}
-            {#each copilot.messages as msg (msg.id)}
-                <CopilotMessage message={msg} />
-            {/each}
+            <svelte:boundary>
+                {#each copilot.messages as msg (msg.id)}
+                    <CopilotMessage message={msg} />
+                {/each}
+                {#snippet failed(_error, reset)}
+                    <div class="ai-enter flex flex-col items-center gap-2 py-6 text-center" role="alert">
+                        <p class="text-destructive text-sm font-medium">The Copilot hit a display error.</p>
+                        <p class="text-muted-foreground max-w-xs text-xs text-pretty">
+                            Something went wrong showing this conversation. Retry to reload it.
+                        </p>
+                        <button
+                            type="button"
+                            onclick={reset}
+                            class="border-border-strong/50 bg-card text-foreground hover:bg-muted mt-1 rounded-lg border border-solid px-3 py-1.5 text-xs font-medium transition-colors"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                {/snippet}
+            </svelte:boundary>
         {/if}
 
         {#if copilot.error}
