@@ -425,6 +425,8 @@ When encountering unfamiliar patterns, check these sources in order:
 
 18. **Copilot AI undo is separate from the editor's Cmd+Z** -- `copilot.undoStack` holds full-editor snapshots; reverting an AI action restores the snapshot (and will also revert any manual edits made since). This is intentional — the editor's native `undoEntry` is untouched by Copilot mutations.
 
+19. **The chat model leaks artifacts** -- `@cf/openai/gpt-oss-120b` intermittently emits reasoning text, stray code fences, and tool calls as plain chat text. The Copilot defends in layers: `prompts.ts` hardens the system prompt, the message renderer downgrades stray code blocks to plain text, and `chat-client.ts` maps every failure to a friendly message via `friendlyHttpError`. Raw model output, raw errors, and internal tool names must never reach the user — do not strip these guards as redundant.
+
 ---
 
 ## Frontend UI Visual Verification (REQUIRED)
