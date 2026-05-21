@@ -46,13 +46,15 @@
         "wrangler": "^4.93.0"
     },
     "dependencies": {
+        "@lucide/svelte": "^1.16.0",
         "better-auth": "^1.6.11",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "drizzle-orm": "^0.45.2",
         "papaparse": "^5.5.3",
         "tailwind-merge": "^3.6.0",
-        "xlsx": "^0.18.5"
+        "xlsx": "^0.18.5",
+        "zod": "^4.4.3"
     },
     "type": "module"
 }

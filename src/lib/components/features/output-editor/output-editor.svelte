@@ -7,6 +7,8 @@
     import EditorGrid from "./editor-grid.svelte";
     import ActionBar from "./action-bar.svelte";
     import { BATCH_CONSTANT_COLUMNS, type BatchDefaults, type CellColumn } from "./columns";
+    import { copilotBridge } from "$lib/stores/copilot-bridge.svelte";
+    import type { CellEdit, EditorController, EditorSnapshot } from "$lib/ai/types";
 
     interface Props {
         initialRows: SteadFastOrder[];
@@ -259,6 +261,90 @@
             }
         }
     };
+
+    // ---- AI Copilot bridge ----
+    // The editor publishes this controller so the Copilot's tool layer can read
+    // and mutate the grid. These methods deliberately do NOT touch the native
+    // `undoEntry` — the Copilot owns a separate snapshot-based undo stack.
+    const aiGetRows = (): SteadFastOrder[] => rows.map((row) => ({ ...row }));
+    const aiGetDefaults = (): BatchDefaults => ({ ...defaults });
+    const aiGetWarnings = (): CellWarning[] => [...allWarnings];
+    const aiGetFileName = (): string => fileName;
+
+    const aiSnapshot = (): EditorSnapshot => ({
+        rows: rows.map((row) => ({ ...row })),
+        rowIds: [...rowIds],
+        defaults: { ...defaults }
+    });
+
+    const aiRestore = (snap: EditorSnapshot) => {
+        rows = snap.rows.map((row) => ({ ...row }));
+        rowIds = [...snap.rowIds];
+        defaults = { ...snap.defaults };
+        selection.clear();
+        clearUndo();
+    };
+
+    const aiApplyCellEdits = (edits: CellEdit[]) => {
+        for (const edit of edits) {
+            const row = rows[edit.rowIndex];
+            if (!row) continue;
+            rows[edit.rowIndex] = { ...row, [edit.column]: edit.value } as SteadFastOrder;
+        }
+    };
+
+    const aiAddRows = (drafts: Partial<SteadFastOrder>[]) => {
+        for (const draft of drafts) {
+            rows.push({
+                Invoice: draft.Invoice ?? defaults.Invoice,
+                Name: draft.Name ?? "",
+                Address: draft.Address ?? "",
+                Phone: draft.Phone ?? "",
+                Amount: draft.Amount ?? "",
+                Note: draft.Note ?? "",
+                Lot: draft.Lot ?? defaults.Lot,
+                "Delivery Type": draft["Delivery Type"] ?? defaults["Delivery Type"],
+                "Contact Name": draft["Contact Name"] ?? defaults["Contact Name"],
+                "Contact Phone": draft["Contact Phone"] ?? defaults["Contact Phone"]
+            });
+            rowIds.push(crypto.randomUUID());
+        }
+    };
+
+    const aiDeleteRows = (indexes: number[]) => {
+        const ordered = [...new Set(indexes)].sort((a, b) => b - a);
+        for (const idx of ordered) {
+            if (idx >= 0 && idx < rows.length) {
+                rows.splice(idx, 1);
+                rowIds.splice(idx, 1);
+            }
+        }
+        selection.clear();
+    };
+
+    const aiSetDefaults = (patch: Partial<BatchDefaults>) => {
+        for (const [key, value] of Object.entries(patch)) {
+            if (value === undefined) continue;
+            updateDefault(key as keyof BatchDefaults, value);
+        }
+    };
+
+    $effect(() => {
+        const controller: EditorController = {
+            getRows: aiGetRows,
+            getDefaults: aiGetDefaults,
+            getWarnings: aiGetWarnings,
+            getFileName: aiGetFileName,
+            snapshot: aiSnapshot,
+            restore: aiRestore,
+            applyCellEdits: aiApplyCellEdits,
+            addRows: aiAddRows,
+            deleteRows: aiDeleteRows,
+            setDefaults: aiSetDefaults
+        };
+        copilotBridge.registerEditor(controller);
+        return () => copilotBridge.unregisterEditor(controller);
+    });
 
     // ---- jump-to-first-warning ----
     const jumpToFirstWarning = () => {

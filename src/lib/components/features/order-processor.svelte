@@ -5,10 +5,12 @@
     import { brandSettings, hasMerchantId } from "$lib/stores";
     import { Courier } from "$lib/types";
     import type { CurrentUser } from "$lib/types";
-    import { cn, parseCSV } from "$lib/utils";
+    import { cn, parseCSV, normalizePhoneNumber } from "$lib/utils";
     import { LoadingSpinner } from "$lib/components";
     import { OutputEditor, type BatchDefaults } from "./output-editor";
     import Upload from "./upload.svelte";
+    import { copilotBridge } from "$lib/stores/copilot-bridge.svelte";
+    import type { CsvMapping, IngestionController } from "$lib/ai/types";
 
     interface Props {
         currentUser: CurrentUser;
@@ -28,6 +30,8 @@
     let editorRows = $state<SteadFastOrder[] | null>(null);
     let editorDefaults = $state<BatchDefaults | null>(null);
     let editorFileName = $state<string>("");
+    // Raw parsed CSV, kept so the Copilot can re-map an unrecognized layout.
+    let lastRawData = $state<string[][] | null>(null);
 
     const isSteadFast = $derived(selectedCourier === Courier.SteadFast);
     const needsMerchantId = $derived(isSteadFast && !hasMerchantId());
@@ -51,6 +55,7 @@
             if (result.errors.length > 0) {
                 console.warn("CSV parsing warnings:", result.errors);
             }
+            lastRawData = result.data;
 
             const settings = brandSettings.value;
             const contactName = settings.contactName ?? currentUser.name;
@@ -86,8 +91,63 @@
         editorRows = null;
         editorDefaults = null;
         editorFileName = "";
+        lastRawData = null;
         zoneHover = false;
     };
+
+    // ---- AI Copilot: re-map an unrecognized CSV layout ----
+    // Re-projects the raw parsed CSV through a Copilot-proposed column mapping
+    // and re-opens the editor with the corrected batch.
+    const applyMapping = (mapping: CsvMapping) => {
+        if (!lastRawData) return;
+        const body = lastRawData.slice(mapping.skipFirst, lastRawData.length - mapping.skipLast);
+        const settings = brandSettings.value;
+        const contactName = settings.contactName ?? currentUser.name;
+        const contactPhone = settings.contactPhone ?? "";
+        const merchantId = settings.merchantId ?? "";
+
+        const mapped: SteadFastOrder[] = body
+            .filter((row) => {
+                const name = (row[mapping.nameIndex] ?? "").trim();
+                const phone = (row[mapping.phoneIndex] ?? "").trim();
+                return name.length > 0 || phone.length > 0;
+            })
+            .map((row) => ({
+                Invoice: merchantId,
+                Name: (row[mapping.nameIndex] ?? "").trim(),
+                Address: mapping.addressIndexes
+                    .map((i) => (row[i] ?? "").trim())
+                    .filter(Boolean)
+                    .join(", "),
+                Phone: normalizePhoneNumber(row[mapping.phoneIndex] ?? ""),
+                Amount: (row[mapping.amountIndex] ?? "").trim(),
+                Note: mapping.noteIndex !== null ? (row[mapping.noteIndex] ?? "").trim() : "",
+                Lot: "",
+                "Delivery Type": "Home",
+                "Contact Name": contactName,
+                "Contact Phone": contactPhone
+            }));
+
+        editorRows = mapped;
+        editorDefaults = {
+            Invoice: merchantId,
+            "Contact Name": contactName,
+            "Contact Phone": contactPhone,
+            "Delivery Type": "Home",
+            Lot: ""
+        };
+        editorFileName = generateFileName(selectedCourier);
+        error = null;
+    };
+
+    $effect(() => {
+        const controller: IngestionController = {
+            getRawCsv: () => (lastRawData ? { headers: lastRawData[0] ?? [], rows: lastRawData.slice(1) } : null),
+            applyMapping
+        };
+        copilotBridge.registerIngestion(controller);
+        return () => copilotBridge.unregisterIngestion(controller);
+    });
 
     const handleDragOver = (e: DragEvent) => {
         e.preventDefault();
@@ -142,12 +202,16 @@
     )}
 >
     {#if isEditorOpen && editorRows && editorDefaults}
-        <OutputEditor
-            initialRows={editorRows}
-            initialDefaults={editorDefaults}
-            fileName={editorFileName}
-            onDiscard={handleEditorDiscard}
-        />
+        <!-- Key on the rows identity so a Copilot re-map (new array) re-mounts
+             the editor — its state is seeded from props once. -->
+        {#key editorRows}
+            <OutputEditor
+                initialRows={editorRows}
+                initialDefaults={editorDefaults}
+                fileName={editorFileName}
+                onDiscard={handleEditorDiscard}
+            />
+        {/key}
     {:else}
         <div
             role="button"

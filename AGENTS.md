@@ -45,6 +45,7 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | CSV Parsing     | PapaParse                                                                              |
 | Excel Export    | SheetJS (`xlsx`)                                                                       |
 | Deployment      | Cloudflare Workers (adapter-cloudflare)                                                |
+| AI Copilot      | Cloudflare Workers AI (`@cf/openai/gpt-oss-120b`), Zod tool schemas, `@lucide/svelte`  |
 | Package Manager | Bun                                                                                    |
 | Linting         | ESLint 10 flat config + Prettier                                                       |
 
@@ -98,6 +99,38 @@ $lib/stores/app.svelte.ts                   -- thin facades over brandSettings
 - Stores use `.svelte.ts` extension and Svelte 5 `$state` runes internally — do not import from `.ts` files that don't use runes context.
 - `brandSettings` is a module singleton. `hydrate()` is called synchronously via `untrack()` in `+page.svelte` so children read canonical server values during their own mount — do NOT move hydration into `$effect`, that race was fixed in `6d9d68b`.
 
+### AI Copilot
+
+A conversational assistant docked beside the output editor that edits the batch via
+natural-language tool calls. Split architecture — the **server only decides** tool calls,
+the **browser executes** them.
+
+```
+copilot-sidebar.svelte --> chat-client.sendMessage()
+  --> POST /api/copilot/chat  (stateless: client ships full history + rendered CURRENT STATE)
+      --> client.runChatFrames() --> env.AI (@cf/openai/gpt-oss-120b, streaming)
+      --> sseStream() yields Frame union: text | tool_call | end | error
+  --> streamFrames() --> executor.executeToolCall()  (runs IN THE BROWSER)
+      --> validates args (Zod) --> safety.ts anomaly check --> confirmation dialog
+      --> mutates the grid via copilotBridge.editor --> pushes AI undo snapshot
+```
+
+- **Model**: `@cf/openai/gpt-oss-120b` via the `AI` Worker binding (OpenAI-compatible chat +
+  tool calls). Image turns route through `@cf/meta/llama-3.2-11b-vision-instruct` for
+  transcription. `MODEL_ID` lives in `$lib/ai/client.ts`.
+- **The bridge** (`$lib/stores/copilot-bridge.svelte.ts`): `output-editor.svelte` registers
+  an `EditorController`, `order-processor.svelte` an `IngestionController`. Grid tools fail
+  gracefully when nothing is registered (no CSV loaded).
+- **Tools** (`$lib/ai/tools-catalog.ts` + `schemas.ts`): 11 typed tools — `editCells`,
+  `setBatchDefaults`, `addRows`, `deleteRows`, `autoFixWarnings`, `updateBrandSettings`,
+  `proposeCsvColumnMapping`, `getBatchSummary`, `getRows`, `flagAnomalies`, `undoLastChange`.
+- **Undo is separate** from the editor's native Cmd+Z (`copilot.undoStack`): each mutation
+  snapshots full editor state; reverting restores it. Tool-card Undo + `undoLastChange` pop it.
+- **Confirmation** (`copilot-confirm-dialog.svelte`): any mutation touching > 1 row shows a
+  diff panel before applying. Enforced centrally in `executor.ts`.
+- **State** (`$lib/stores/copilot.svelte.ts`): conversations + messages are in-memory only —
+  they clear on reload, matching the ephemeral CSV batch. No D1 tables.
+
 ### Authentication Flow
 
 ```
@@ -137,18 +170,22 @@ src/
     +error.svelte                         -- error boundary
     login/                               -- login page with Google OAuth
     api/brand-settings/+server.ts        -- brand settings CRUD (GET + PATCH)
+    api/copilot/chat/+server.ts          -- AI Copilot streaming chat endpoint (SSE, Workers AI)
     api/logout/+server.ts                -- logout endpoint
   lib/
     auth-client.ts                       -- Better Auth client (`authClient`); use authClient.signIn/signOut/useSession directly — no named re-exports
     assets/                              -- static assets (upload.gif, steadfast.png)
     api/
       client.ts                          -- typed api object (get/post/patch/put/delete) + debounceSync
+    ai/                                  -- AI Copilot: types, schemas (Zod), tools-catalog, prompts, context,
+                                            client (Workers AI), streaming, chat-client, executor, safety, markdown
     server/
       auth.ts                            -- createAuth() factory
       schema.ts                          -- Drizzle ORM schema (6 tables)
     components/
       features/                          -- order-processor, upload, courier-picker, user, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-grid/row/cell, columns.ts
+      features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + message, tool-badge, anomaly-warning, conversations-panel, confirm-dialog, mobile-fab, mobile-sheet, launcher-icon
       ui/                                -- button, footer, heading, input, loading-spinner, table (shadcn-svelte)
     config/
       app.ts                             -- app metadata
@@ -163,6 +200,8 @@ src/
     stores/
       app.svelte.ts                      -- courierService facade + hasMerchantId() (backed by brandSettings store)
       brand-settings.svelte.ts           -- closure-based runes store with hydrate, debounce, retry, SaveState
+      copilot.svelte.ts                  -- Copilot runes store: conversations, messages, confirmations, AI undo stack
+      copilot-bridge.svelte.ts           -- editor <-> Copilot bridge (EditorController / IngestionController registration)
     hooks/use-current-user.ts            -- getCurrentUser() derives CurrentUser from the session user
     types/                               -- courier.ts, user.ts, ui.ts, brand-settings.ts (includes SaveState)
     utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
@@ -318,6 +357,7 @@ docs:     documentation changes
 Configured in `wrangler.jsonc`:
 
 - **D1 Database**: binding `DB`, database `order_processor`
+- **Workers AI**: binding `AI` — powers the `/api/copilot/chat` endpoint
 - **Assets**: binding `ASSETS`, directory `.svelte-kit/cloudflare`
 - **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
 - **Observability**: enabled
@@ -376,6 +416,14 @@ When encountering unfamiliar patterns, check these sources in order:
 13. **Svelte's `slide` transition is invalid on `<tr>`** -- table rows have no overflow clipping and ignore padding/margin, so Svelte rejects `slide` (`transition_slide_display`). The output editor's row transitions use `fade` instead.
 
 14. **Editor/dark-background body text must be `zinc-400` or lighter** -- `text-zinc-500` is only 3.77:1 on the dark background, below WCAG 2.2 AA for normal text; `zinc-400` is 6.93:1. Applies to all informational and control text in the output editor.
+
+15. **Copilot grid tools require a mounted editor** -- `editCells`, `addRows`, `deleteRows`, etc. operate through `copilotBridge.editor`, which is null until `output-editor.svelte` mounts. The executor throws a friendly "upload a CSV first" error when nothing is registered. Never assume the bridge is populated.
+
+16. **The `AI` Worker binding is required** -- `wrangler.jsonc` declares `"ai": { "binding": "AI" }`; `app.d.ts` mirrors it on `App.Platform.env`. `/api/copilot/chat` returns 503 if it is absent. After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
+
+17. **Copilot tool execution is client-side** -- the chat endpoint only _decides_ tool calls; `executor.ts` _runs_ them in the browser against editor `$state`. The server is stateless — it never sees grid data except the rendered CURRENT STATE text the client ships each turn. Do not move mutation logic server-side.
+
+18. **Copilot AI undo is separate from the editor's Cmd+Z** -- `copilot.undoStack` holds full-editor snapshots; reverting an AI action restores the snapshot (and will also revert any manual edits made since). This is intentional — the editor's native `undoEntry` is untouched by Copilot mutations.
 
 ---
 
