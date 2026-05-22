@@ -48,7 +48,7 @@
                 : "flex-col-reverse lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
         ]}
     >
-        <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center">
+        <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center lg:block">
             <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} bind:editorOpen />
         </div>
 
