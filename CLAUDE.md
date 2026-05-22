@@ -208,7 +208,7 @@ src/
       features/                          -- order-processor, upload, courier-picker, user, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-grid/row/cell, columns.ts
       features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + message, tool-badge, anomaly-warning, conversations-panel, confirm-dialog, mobile-fab, mobile-sheet, launcher-icon
-      ui/                                -- button, footer, heading, input, loading-spinner, table (shadcn-svelte)
+      ui/                                -- button, dialog, footer, heading, input, loading-spinner, table, tooltip (shadcn-svelte)
     config/
       app.ts                             -- app metadata
       couriers.ts                        -- courier options with logos
