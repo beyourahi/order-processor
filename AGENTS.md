@@ -131,6 +131,28 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
 - **State** (`$lib/stores/copilot.svelte.ts`): conversations + messages are in-memory only —
   they clear on reload, matching the ephemeral CSV batch. No D1 tables.
 
+### Motion
+
+GSAP is the motion engine. All motion code lives under `$lib/motion` and is the **only**
+entry point — surface components import from `$lib/motion`, never from `gsap` directly.
+
+- **SSR safety (critical)**: GSAP touches `window`/`document` at module eval, so it must
+  NEVER load during SSR on Cloudflare Workers. `gsap.ts` is the only file that imports
+  GSAP, and it does so exclusively via a `browser`-guarded dynamic `import()`. Never write
+  a top-level `import ... from "gsap"` anywhere else.
+- **Tokens** (`tokens.ts`): shared duration/ease/stagger/distance values — the cross-app
+  cohesion contract. Mirrored as CSS variables appended at the end of `app.css`
+  (`--motion-*`). Keep restrained: 150–350ms, subtle 8–16px offsets.
+- **API**: `reveal` action (mount/scroll fade-rise), `stagger`/`flipList`/`motionDuration`
+  helpers, `handleViewTransition` (wired via `onNavigate` in `+layout.svelte` for route
+  View Transitions), `prefersReducedMotion` reactive store.
+- **Reduced motion**: all motion respects `prefers-reduced-motion`. The helpers/actions
+  short-circuit automatically; for any direct GSAP use, check `prefersReducedMotion.current`.
+- **Cleanup**: every GSAP timeline and ScrollTrigger must be killed on component destroy
+  (the `reveal` action and helpers already return cleanup; do the same for direct use).
+- **Do not mix mechanisms on one element**: a single element gets either a Svelte
+  `transition:` or GSAP — never both (e.g. editor rows keep their existing `transition:fade`).
+
 ### Authentication Flow
 
 ```
@@ -193,6 +215,7 @@ src/
     constants/
       files.ts                           -- file-related constants
       indexes.ts                         -- CSV column index mappings
+    motion/                              -- GSAP motion system (SSR-safe); tokens, gsap loader, reveal action, helpers, view-transition
     services/
       courier-service.ts                 -- main orchestrator
       data-processing.ts                 -- CSV prep utilities
