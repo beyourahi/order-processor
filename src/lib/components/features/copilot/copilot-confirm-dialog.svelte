@@ -5,8 +5,10 @@
      * a single confirmation's `diff` can list many rows (e.g. auto-fix).
      */
     import { tick } from "svelte";
+    import { fade, fly } from "svelte/transition";
     import { copilot } from "$lib/stores/copilot.svelte";
     import { respondToConfirmation } from "$lib/ai/chat-client";
+    import { motionDuration, DISTANCE } from "$lib/motion";
     import { ShieldCheck, Undo2 } from "@lucide/svelte";
     import CopilotAnomalyWarning from "./copilot-anomaly-warning.svelte";
 
@@ -38,9 +40,11 @@
         role="dialog"
         aria-modal="true"
         aria-labelledby="copilot-confirm-title"
+        transition:fade={{ duration: motionDuration("fast") }}
         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
     >
         <div
+            transition:fly={{ duration: motionDuration("base"), y: DISTANCE.md }}
             class="border-border bg-popover flex max-h-[85vh] w-[min(30rem,calc(100vw-2rem))] flex-col rounded-2xl border border-solid shadow-2xl"
         >
             <div class="border-border flex items-center gap-2 border-b border-solid px-5 py-4">
