@@ -2,6 +2,7 @@
     import { untrack } from "svelte";
     import { courierService, brandSettings } from "$lib/stores";
     import { Heading, OrderProcessor, CourierPicker, User, SteadFastSettings } from "$lib/components";
+    import { reveal } from "$lib/motion";
     import { Courier } from "$lib/types";
     import type { PageData } from "./$types";
 
@@ -27,10 +28,16 @@
 </script>
 
 <!-- The order-processing tool. It occupies the left column; the AI Copilot
-     rail is mounted by the app shell (+layout.svelte). -->
+     rail is mounted by the app shell (+layout.svelte). On mount the regions
+     cascade in via the GSAP-backed `reveal` action (reduced-motion aware). -->
 <div class="flex w-full grow flex-col items-center justify-center gap-12 px-4 py-6 sm:gap-16 sm:py-8 lg:gap-20">
-    <Heading />
+    <div use:reveal={{ distance: "sm", delay: 0 }}>
+        <Heading />
+    </div>
 
+    <!-- User is a fixed-position corner menu; a `transform` from `reveal` on an
+         ancestor would re-anchor the fixed child, so it is intentionally not
+         wrapped. It keeps its own existing entrance behaviour. -->
     <User user={data.user!} currentUser={data.currentUser!} />
 
     <div
@@ -41,7 +48,9 @@
                 : "flex-col-reverse lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
         ]}
     >
-        <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} bind:editorOpen />
+        <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center">
+            <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} bind:editorOpen />
+        </div>
 
         <div
             class={[
@@ -49,8 +58,12 @@
                 editorOpen && "lg:flex-row lg:items-start lg:justify-center lg:gap-8 xl:max-w-5xl"
             ]}
         >
-            <CourierPicker selectedCourier={courierService.value} onSelect={handleCourierSelect} />
-            <SteadFastSettings visible={showSteadFastSettings} />
+            <div use:reveal={{ distance: "sm", delay: 0.15, onScroll: true }} class="flex w-full justify-center">
+                <CourierPicker selectedCourier={courierService.value} onSelect={handleCourierSelect} />
+            </div>
+            <div use:reveal={{ distance: "sm", delay: 0.2, onScroll: true }} class="flex w-full justify-center">
+                <SteadFastSettings visible={showSteadFastSettings} />
+            </div>
         </div>
     </div>
 </div>
