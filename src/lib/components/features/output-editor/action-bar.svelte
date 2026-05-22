@@ -104,14 +104,16 @@
         {/if}
     </div>
 
-    <div class="flex items-center gap-2">
-        <Button variant="ghost" size="lg" onclick={onDiscard} class="min-h-[44px] sm:min-h-9">Discard</Button>
+    <div class="flex w-full items-center gap-2 sm:w-auto">
+        <Button variant="ghost" size="lg" onclick={onDiscard} class="min-h-[44px] flex-1 sm:min-h-9 sm:flex-none"
+            >Discard</Button
+        >
         <button
             type="button"
             onclick={onDownload}
             disabled={!canDownload}
             class={cn(
-                "bg-courier-accent text-background inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-md px-4 text-sm font-medium whitespace-nowrap sm:min-h-9",
+                "bg-courier-accent text-background inline-flex min-h-[44px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap sm:min-h-9 sm:flex-none",
                 "hover:bg-courier-accent/90 focus-visible:ring-courier-accent/40 focus:outline-none focus-visible:ring-2",
                 "transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             )}
