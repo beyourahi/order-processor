@@ -1,6 +1,7 @@
 <script lang="ts">
     import "../app.css";
     import { page } from "$app/state";
+    import { onNavigate } from "$app/navigation";
     import {
         Footer,
         CopilotSidebar,
@@ -8,10 +9,13 @@
         CopilotMobileSheet,
         CopilotConfirmDialog
     } from "$lib/components";
+    import { handleViewTransition } from "$lib/motion";
     import uploadGif from "$lib/assets/upload.gif";
     import steadfastLogo from "$lib/assets/steadfast.png";
 
     let { children } = $props();
+
+    onNavigate(handleViewTransition);
 
     // The AI Copilot is app-shell furniture: a persistent right-side rail on
     // lg+, scoped to the main route so the login and error pages are untouched.
