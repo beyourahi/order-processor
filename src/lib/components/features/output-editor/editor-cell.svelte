@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { scale } from "svelte/transition";
     import { cn } from "$lib/utils";
+    import { motionDuration } from "$lib/motion";
     import type { CellColumn, ColumnInputMode } from "./columns";
 
     export type CellNavigationDirection = "up" | "down" | "left" | "right" | "next" | "previous";
@@ -262,6 +264,7 @@
         {#if warning}
             <span
                 id="cell-warn-{rowIndex}-{column}"
+                transition:scale={{ duration: motionDuration("fast"), start: 0.6 }}
                 class="pointer-events-none absolute top-0.5 right-1 text-xs leading-none text-amber-400"
                 aria-hidden="true">⚠</span
             >
