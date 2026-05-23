@@ -20,6 +20,7 @@ declare global {
                 BETTER_AUTH_URL: string;
                 GOOGLE_CLIENT_ID: string;
                 GOOGLE_CLIENT_SECRET: string;
+                E2E_BYPASS_AUTH?: string;
             };
             cf: CfProperties;
             ctx: ExecutionContext;
