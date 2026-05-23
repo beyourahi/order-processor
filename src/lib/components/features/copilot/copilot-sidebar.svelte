@@ -255,6 +255,7 @@
                 <textarea
                     bind:this={textarea}
                     bind:value={input}
+                    name="copilot-prompt"
                     oninput={autoGrow}
                     onkeydown={onKeyDown}
                     placeholder="Ask the Copilot to change something…"
