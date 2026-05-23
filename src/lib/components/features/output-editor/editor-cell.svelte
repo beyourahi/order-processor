@@ -232,6 +232,7 @@
             <textarea
                 bind:this={inputRef}
                 bind:value={draft}
+                name="cell-{column}-row-{rowIndex + 1}"
                 {inputmode}
                 rows="1"
                 autocomplete="off"
@@ -246,6 +247,7 @@
             <input
                 bind:this={inputRef}
                 bind:value={draft}
+                name="cell-{column}-row-{rowIndex + 1}"
                 {inputmode}
                 type="text"
                 autocomplete="off"
