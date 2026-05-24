@@ -58,7 +58,9 @@
                 <p class="text-chat-text-secondary text-sm text-pretty">{pending.humanLabel}.</p>
 
                 {#if pending.diff.length > 0}
-                    <div class="border-chat-border-subtle bg-chat-surface space-y-2.5 rounded-lg border border-solid p-3">
+                    <div
+                        class="border-chat-border-subtle bg-chat-surface space-y-2.5 rounded-lg border border-solid p-3"
+                    >
                         {#each pending.diff as row, i (i)}
                             <div class="space-y-1">
                                 <div class="text-chat-text-muted font-mono text-[10px] tracking-wide uppercase">

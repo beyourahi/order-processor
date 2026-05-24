@@ -65,7 +65,7 @@
                     </button>
                     <button
                         type="button"
-                        class="text-chat-text-muted hover:bg-red-400/10 rounded-md p-1 transition-colors hover:text-red-300"
+                        class="text-chat-text-muted rounded-md p-1 transition-colors hover:bg-red-400/10 hover:text-red-300"
                         onclick={() => onDelete(conv.id)}
                         aria-label="Delete chat {conv.title}"
                         title="Delete"

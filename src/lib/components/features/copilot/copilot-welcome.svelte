@@ -54,8 +54,8 @@
         class="text-chat-text-secondary mt-2 max-w-md text-center text-xs text-pretty md:mt-3 md:text-sm"
         style="animation: chat-greeting-stagger 0.4s ease-out both; animation-delay: 200ms;"
     >
-        Describe an edit in plain words — it updates the right rows, repairs warnings, and flags risky orders before
-        you download.
+        Describe an edit in plain words — it updates the right rows, repairs warnings, and flags risky orders before you
+        download.
     </p>
     <div class="mt-5 flex w-full flex-col gap-2 md:mt-6 md:gap-2.5">
         {#each suggestions as suggestion, i (suggestion.query)}
