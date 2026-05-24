@@ -2,7 +2,6 @@
     import { fade, fly } from "svelte/transition";
     import { tick } from "svelte";
     import { copilot } from "$lib/stores/copilot.svelte";
-    import { X } from "@lucide/svelte";
     import CopilotSidebar from "./copilot-sidebar.svelte";
 
     let panel = $state<HTMLDivElement | null>(null);
@@ -41,7 +40,6 @@
         }
     };
 
-    // Trap focus within the sheet while open; restore it to the FAB on close.
     $effect(() => {
         if (copilot.mobileOpen) {
             wasOpen = true;
@@ -66,18 +64,10 @@
         ></button>
         <div
             bind:this={panel}
-            class="bg-background absolute inset-x-0 bottom-0 flex h-[100dvh] flex-col"
+            class="bg-chat-bg absolute inset-x-0 bottom-0 flex h-[100dvh] flex-col"
             transition:fly={{ y: 420, duration: 260, opacity: 1 }}
         >
-            <button
-                type="button"
-                onclick={close}
-                class="text-muted-foreground hover:text-foreground hover:bg-muted absolute top-3 right-3 z-10 inline-flex size-9 items-center justify-center rounded-lg transition-colors"
-                aria-label="Close Copilot"
-            >
-                <X class="size-5" aria-hidden="true" />
-            </button>
-            <CopilotSidebar bare />
+            <CopilotSidebar bare onClose={close} />
         </div>
     </div>
 {/if}
