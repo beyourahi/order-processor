@@ -8,6 +8,8 @@ const EMPTY: BrandSettingsState = {
     selectedCourier: null
 };
 
+type FieldKey = keyof BrandSettingsState;
+
 const TEXT_DEBOUNCE_MS = 500;
 const SAVED_LINGER_MS = 2000;
 const RETRY_DELAYS_MS = [1000, 2000, 4000] as const;
@@ -34,58 +36,81 @@ const persistWithRetry = async (patch: BrandSettingsPatch): Promise<void> => {
 
 const createBrandSettingsStore = () => {
     let value = $state<BrandSettingsState>({ ...EMPTY });
-    let saveState = $state<SaveState>("idle");
-    let saveError = $state<string | null>(null);
-    let savedTimer: ReturnType<typeof setTimeout> | null = null;
+    // Per-field state map. Each field tracks its own save lifecycle so the
+    // indicator on one input never reflects activity on another.
+    let fieldStates = $state<Partial<Record<FieldKey, SaveState>>>({});
+    let fieldErrors = $state<Partial<Record<FieldKey, string>>>({});
+    // Plain object — internal bookkeeping only, never read reactively.
+    const fieldTimers: Partial<Record<FieldKey, ReturnType<typeof setTimeout>>> = {};
 
-    const setSavedTransient = () => {
-        saveState = "saved";
-        saveError = null;
-        if (savedTimer) clearTimeout(savedTimer);
-        savedTimer = setTimeout(() => {
-            if (saveState === "saved") saveState = "idle";
-            savedTimer = null;
+    const setSavedTransient = (field: FieldKey) => {
+        fieldStates[field] = "saved";
+        delete fieldErrors[field];
+        const existing = fieldTimers[field];
+        if (existing) clearTimeout(existing);
+        fieldTimers[field] = setTimeout(() => {
+            if (fieldStates[field] === "saved") fieldStates[field] = "idle";
+            delete fieldTimers[field];
         }, SAVED_LINGER_MS);
     };
 
-    const onState = (next: SaveState, err?: Error) => {
+    const onState = (field: FieldKey) => (next: SaveState, err?: Error) => {
         if (next === "saving") {
-            saveState = "saving";
-            saveError = null;
+            fieldStates[field] = "saving";
+            delete fieldErrors[field];
         } else if (next === "saved") {
-            setSavedTransient();
+            setSavedTransient(field);
         } else if (next === "error") {
-            saveState = "error";
-            saveError = err?.message ?? "Save failed";
+            fieldStates[field] = "error";
+            fieldErrors[field] = err?.message ?? "Save failed";
         }
     };
 
     const hydrate = (initial: BrandSettingsState) => {
         value = { ...initial };
-        saveState = "idle";
-        saveError = null;
+        fieldStates = {};
+        fieldErrors = {};
+        for (const key of Object.keys(fieldTimers) as FieldKey[]) {
+            const t = fieldTimers[key];
+            if (t) clearTimeout(t);
+            delete fieldTimers[key];
+        }
     };
 
-    const updateField = <K extends keyof BrandSettingsState>(field: K, next: BrandSettingsState[K]) => {
+    const updateField = <K extends FieldKey>(field: K, next: BrandSettingsState[K]) => {
         value = { ...value, [field]: next };
-        debounceSync(`brand:${field}`, TEXT_DEBOUNCE_MS, () => persistWithRetry({ [field]: next }), { onState });
+        debounceSync(`brand:${field}`, TEXT_DEBOUNCE_MS, () => persistWithRetry({ [field]: next }), {
+            onState: onState(field)
+        });
     };
 
-    const dismissError = () => {
-        saveState = "idle";
-        saveError = null;
+    const dismissError = (field: FieldKey) => {
+        if (fieldStates[field] === "error") fieldStates[field] = "idle";
+        delete fieldErrors[field];
     };
+
+    const fieldState = (field: FieldKey): SaveState => fieldStates[field] ?? "idle";
+    const fieldError = (field: FieldKey): string | null => fieldErrors[field] ?? null;
 
     return {
         get value() {
             return value;
         },
-        get saveState() {
-            return saveState;
+        // Aggregate state derived from all field states. "saving" wins (used by
+        // beforeunload), then "error", then "saved", else "idle".
+        get saveState(): SaveState {
+            const states = Object.values(fieldStates);
+            if (states.includes("saving")) return "saving";
+            if (states.includes("error")) return "error";
+            if (states.includes("saved")) return "saved";
+            return "idle";
         },
-        get saveError() {
-            return saveError;
+        get saveError(): string | null {
+            for (const err of Object.values(fieldErrors)) if (err) return err;
+            return null;
         },
+        fieldState,
+        fieldError,
         hydrate,
         updateField,
         dismissError

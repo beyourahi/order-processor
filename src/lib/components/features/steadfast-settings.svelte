@@ -1,7 +1,7 @@
 <script lang="ts">
     import { brandSettings } from "$lib/stores";
-    import { LoadingSpinner } from "$lib/components";
     import { Input } from "$lib/components/ui/input";
+    import { Loader2, AlertCircle } from "@lucide/svelte";
 
     interface Props {
         visible: boolean;
@@ -39,6 +39,36 @@
     };
 </script>
 
+{#snippet indicator(field: "contactName" | "contactPhone" | "merchantId")}
+    {@const state = brandSettings.fieldState(field)}
+    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center" aria-live="polite" aria-atomic="true">
+        {#if state === "saving" || state === "saved"}
+            <Loader2
+                class="text-courier-accent h-3.5 w-3.5 animate-spin"
+                aria-label={state === "saving" ? "Saving" : "Saved"}
+            />
+        {:else if state === "error"}
+            <AlertCircle class="text-destructive h-3.5 w-3.5" aria-label="Save failed" />
+        {/if}
+    </div>
+{/snippet}
+
+{#snippet errorMessage(field: "contactName" | "contactPhone" | "merchantId")}
+    {@const err = brandSettings.fieldError(field)}
+    {#if err}
+        <p class="text-destructive mt-1 flex items-center gap-2 text-xs">
+            <span class="text-pretty">{err}</span>
+            <button
+                type="button"
+                onclick={() => brandSettings.dismissError(field)}
+                class="text-muted-foreground hover:text-foreground focus-visible:ring-ring cursor-pointer rounded underline focus:outline-none focus-visible:ring-2"
+            >
+                Dismiss
+            </button>
+        </p>
+    {/if}
+{/snippet}
+
 {#if visible}
     <div class="animate-in fade-in slide-in-from-top-2 w-full max-w-sm duration-300">
         <div class="mb-4 flex items-center gap-3">
@@ -50,87 +80,61 @@
         </div>
 
         <div class="sleek border-border bg-card rounded-xl border border-solid p-4 shadow-sm">
-            <div class="mb-3 flex items-center justify-end gap-1.5 text-xs" aria-live="polite" aria-atomic="true">
-                {#if brandSettings.saveState === "saving"}
-                    <LoadingSpinner size="sm" colorClass="border-t-courier-accent" />
-                    <span class="text-muted-foreground whitespace-nowrap">Saving...</span>
-                {:else if brandSettings.saveState === "saved"}
-                    <svg
-                        aria-hidden="true"
-                        class="text-courier-accent h-3 w-3"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="3"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span class="text-courier-accent whitespace-nowrap">Saved</span>
-                {:else if brandSettings.saveState === "error"}
-                    <svg
-                        aria-hidden="true"
-                        class="text-destructive h-3 w-3"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-                        />
-                    </svg>
-                    <span class="text-destructive text-xs text-pretty">{brandSettings.saveError ?? "Save failed"}</span>
-                    <button
-                        onclick={() => brandSettings.dismissError()}
-                        class="text-muted-foreground hover:text-foreground focus-visible:ring-ring ml-1 cursor-pointer rounded text-xs underline focus:outline-none focus-visible:ring-2"
-                    >
-                        Dismiss
-                    </button>
-                {/if}
-            </div>
-
             <div class="space-y-4">
                 <div>
                     <label for="contact-name" class="text-muted-foreground mb-1.5 block text-xs font-medium">
                         Contact Name <span class="text-muted-foreground/70">(optional)</span>
                     </label>
-                    <Input
-                        id="contact-name"
-                        value={contactName}
-                        placeholder="e.g., Lord Voldemort"
-                        oninput={onContactName}
-                    />
+                    <div class="relative">
+                        <Input
+                            id="contact-name"
+                            value={contactName}
+                            placeholder="e.g., Lord Voldemort"
+                            class="pr-9"
+                            oninput={onContactName}
+                        />
+                        {@render indicator("contactName")}
+                    </div>
+                    {@render errorMessage("contactName")}
                 </div>
 
                 <div>
                     <label for="contact-phone" class="text-muted-foreground mb-1.5 block text-xs font-medium">
                         Contact Phone <span class="text-muted-foreground/70">(optional)</span>
                     </label>
-                    <Input
-                        id="contact-phone"
-                        type="tel"
-                        value={contactPhone}
-                        placeholder="e.g., 1XXXXXXXXX"
-                        oninput={onContactPhone}
-                    />
+                    <div class="relative">
+                        <Input
+                            id="contact-phone"
+                            type="tel"
+                            value={contactPhone}
+                            placeholder="e.g., 1XXXXXXXXX"
+                            class="pr-9"
+                            oninput={onContactPhone}
+                        />
+                        {@render indicator("contactPhone")}
+                    </div>
+                    {@render errorMessage("contactPhone")}
                 </div>
 
                 <div>
                     <label for="merchant-id" class="text-muted-foreground mb-1.5 block text-xs font-medium">
                         Merchant ID <span class="text-destructive">*</span>
                     </label>
-                    <Input
-                        id="merchant-id"
-                        value={merchantId}
-                        placeholder="e.g., 123456"
-                        error={merchantIdInvalid}
-                        oninput={onMerchantId}
-                    />
+                    <div class="relative">
+                        <Input
+                            id="merchant-id"
+                            value={merchantId}
+                            placeholder="e.g., 123456"
+                            error={merchantIdInvalid}
+                            class="pr-9"
+                            oninput={onMerchantId}
+                        />
+                        {@render indicator("merchantId")}
+                    </div>
                     {#if merchantIdInvalid}
                         <p class="text-destructive mt-1 text-xs">Merchant ID is required</p>
                     {/if}
+                    {@render errorMessage("merchantId")}
                 </div>
             </div>
         </div>
