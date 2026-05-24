@@ -1,7 +1,104 @@
 /**
- * Tiny, dependency-free markdown parser for assistant message rendering.
- * Supports bold, italic, inline code, links, headings, lists, and fenced code.
+ * Inline markdown segmentation ported from the canonical chat reference.
+ * Linear `Segment[]` token stream: text, bold, italic, break, bullet, link,
+ * email. The reference's "let's talk" action-trigger branch is intentionally
+ * omitted — that hook does not apply here.
+ *
+ * The block-level model below (`parseMarkdown`, `MdBlock`, `MdInline`) keeps
+ * the prior public surface working — assistant messages still render
+ * paragraphs, headings, bullet lists and fenced code blocks via the same
+ * inline rules.
  */
+
+export type Segment =
+    | { type: "text"; value: string }
+    | { type: "bold"; value: string }
+    | { type: "italic"; value: string }
+    | { type: "break" }
+    | { type: "bullet"; value: string }
+    | { type: "link"; value: string; href: string }
+    | { type: "email"; value: string; href: string };
+
+const LINK_PATTERN =
+    /(https?:\/\/[^\s),\]]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\b[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.(?:com|org|net|io|app|co|dev|shop|store|ai|xyz|tech|me|info|biz|design|agency|site|online|world)(?:\/[^\s),\]]*)?)/g;
+
+const TRAILING_PUNCT = /[.,;:!?)]+$/;
+
+/** Strip trailing punctuation that should not be part of a clickable URL. */
+export const cleanUrl = (raw: string): string => raw.replace(TRAILING_PUNCT, "");
+
+const parseInlineLinks = (text: string): Segment[] => {
+    const result: Segment[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    LINK_PATTERN.lastIndex = 0;
+    while ((match = LINK_PATTERN.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            result.push({ type: "text", value: text.slice(lastIndex, match.index) });
+        }
+        const matched = match[0];
+        if (matched.includes("@")) {
+            result.push({ type: "email", value: matched, href: `mailto:${matched}` });
+        } else {
+            const cleaned = cleanUrl(matched);
+            const href = /^https?:\/\//.test(cleaned) ? cleaned : `https://${cleaned}`;
+            result.push({ type: "link", value: cleaned, href });
+            const trailingLen = matched.length - cleaned.length;
+            if (trailingLen > 0) {
+                LINK_PATTERN.lastIndex -= trailingLen;
+            }
+        }
+        lastIndex = LINK_PATTERN.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        result.push({ type: "text", value: text.slice(lastIndex) });
+    }
+    return result;
+};
+
+/**
+ * Parse a chat-style message into a flat segment stream.
+ * Recognises: bullets (`- `), bold (`**…**`), italic (`_…_`), URLs, emails,
+ * and per-line breaks. Order matters — bold splits first, italic inside
+ * non-bold runs, then linkification on remaining text.
+ */
+export const parseInlineMarkdown = (text: string): Segment[] => {
+    const segments: Segment[] = [];
+    const lines = text.split("\n");
+    for (let li = 0; li < lines.length; li++) {
+        const line = lines[li] ?? "";
+        if (line.startsWith("- ")) {
+            segments.push({ type: "bullet", value: line.slice(2) });
+        } else {
+            const parts = line.split(/\*\*(.*?)\*\*/g);
+            for (let pi = 0; pi < parts.length; pi++) {
+                const part = parts[pi];
+                if (!part) continue;
+                if (pi % 2 === 1) {
+                    segments.push({ type: "bold", value: part });
+                } else {
+                    const italicParts = part.split(/(?:^|(?<=\s))_([^_\n]+?)_(?=\s|$)/g);
+                    for (let ii = 0; ii < italicParts.length; ii++) {
+                        const piece = italicParts[ii];
+                        if (!piece) continue;
+                        if (ii % 2 === 1) {
+                            segments.push({ type: "italic", value: piece });
+                        } else {
+                            segments.push(...parseInlineLinks(piece));
+                        }
+                    }
+                }
+            }
+        }
+        if (li < lines.length - 1 && !line.startsWith("- ")) {
+            segments.push({ type: "break" });
+        }
+    }
+    return segments;
+};
+
+/* ── Block-level model (kept for the existing message renderer) ───────────── */
+
 export interface MdText {
     type: "text";
     value: string;
@@ -46,85 +143,19 @@ export interface MdCodeBlock {
 
 export type MdBlock = MdParagraph | MdHeading | MdList | MdCodeBlock;
 
-const URL_RE = /https?:\/\/[^\s<>()]+[^\s<>().,;:!?'"]/g;
-
-const pushText = (nodes: MdInline[], text: string): void => {
-    if (!text) return;
-    let last = 0;
-    for (const match of text.matchAll(URL_RE)) {
-        const start = match.index ?? 0;
-        if (start > last) nodes.push({ type: "text", value: text.slice(last, start) });
-        nodes.push({ type: "link", href: match[0], label: match[0] });
-        last = start + match[0].length;
-    }
-    if (last < text.length) nodes.push({ type: "text", value: text.slice(last) });
-};
-
-const parseInline = (raw: string): MdInline[] => {
+const segmentsToInline = (segments: Segment[]): MdInline[] => {
     const nodes: MdInline[] = [];
-    let buffer = "";
-    let i = 0;
-
-    const flush = () => {
-        pushText(nodes, buffer);
-        buffer = "";
-    };
-
-    while (i < raw.length) {
-        if (raw[i] === "`") {
-            const end = raw.indexOf("`", i + 1);
-            if (end > i) {
-                flush();
-                nodes.push({ type: "code", value: raw.slice(i + 1, end) });
-                i = end + 1;
-                continue;
-            }
-        }
-
-        if (raw[i] === "*" && raw[i + 1] === "*") {
-            const end = raw.indexOf("**", i + 2);
-            if (end > i + 1) {
-                flush();
-                nodes.push({ type: "bold", value: raw.slice(i + 2, end) });
-                i = end + 2;
-                continue;
-            }
-        }
-
-        if (raw[i] === "*" && raw[i + 1] !== "*" && raw[i + 1] !== " " && raw[i + 1] !== undefined) {
-            const end = raw.indexOf("*", i + 1);
-            if (end > i + 1 && raw[end - 1] !== " ") {
-                flush();
-                nodes.push({ type: "italic", value: raw.slice(i + 1, end) });
-                i = end + 1;
-                continue;
-            }
-        }
-
-        if (raw[i] === "[") {
-            const close = raw.indexOf("]", i + 1);
-            if (close > i && raw[close + 1] === "(") {
-                const hrefEnd = raw.indexOf(")", close + 2);
-                if (hrefEnd > close) {
-                    flush();
-                    nodes.push({
-                        type: "link",
-                        label: raw.slice(i + 1, close),
-                        href: raw.slice(close + 2, hrefEnd)
-                    });
-                    i = hrefEnd + 1;
-                    continue;
-                }
-            }
-        }
-
-        buffer += raw[i];
-        i++;
+    for (const seg of segments) {
+        if (seg.type === "text") nodes.push({ type: "text", value: seg.value });
+        else if (seg.type === "bold") nodes.push({ type: "bold", value: seg.value });
+        else if (seg.type === "italic") nodes.push({ type: "italic", value: seg.value });
+        else if (seg.type === "link") nodes.push({ type: "link", href: seg.href, label: seg.value });
+        else if (seg.type === "email") nodes.push({ type: "link", href: seg.href, label: seg.value });
     }
-
-    flush();
     return nodes;
 };
+
+const parseLineInline = (line: string): MdInline[] => segmentsToInline(parseInlineMarkdown(line));
 
 const BULLET_RE = /^\s*[-*]\s+(.*)$/;
 const ORDERED_RE = /^\s*\d+[.)]\s+(.*)$/;
@@ -169,7 +200,7 @@ export const parseMarkdown = (raw: string): MdBlock[] => {
         const heading = line.match(HEADING_RE);
         if (heading) {
             flushPara();
-            blocks.push({ type: "heading", nodes: parseInline(heading[1] ?? "") });
+            blocks.push({ type: "heading", nodes: parseLineInline(heading[1] ?? "") });
             i++;
             continue;
         }
@@ -180,7 +211,7 @@ export const parseMarkdown = (raw: string): MdBlock[] => {
             while (i < lines.length) {
                 const match = (lines[i] ?? "").match(BULLET_RE);
                 if (!match) break;
-                items.push(parseInline(match[1] ?? ""));
+                items.push(parseLineInline(match[1] ?? ""));
                 i++;
             }
             blocks.push({ type: "list", ordered: false, items });
@@ -193,14 +224,14 @@ export const parseMarkdown = (raw: string): MdBlock[] => {
             while (i < lines.length) {
                 const match = (lines[i] ?? "").match(ORDERED_RE);
                 if (!match) break;
-                items.push(parseInline(match[1] ?? ""));
+                items.push(parseLineInline(match[1] ?? ""));
                 i++;
             }
             blocks.push({ type: "list", ordered: true, items });
             continue;
         }
 
-        para.push(parseInline(line));
+        para.push(parseLineInline(line));
         i++;
     }
 
