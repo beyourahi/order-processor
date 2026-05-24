@@ -10,7 +10,7 @@
         historyCount,
         status = "online"
     }: {
-        onClose?: () => void;
+        onClose?: (() => void) | undefined;
         onNewConversation: () => void;
         onToggleHistory: () => void;
         hasMessages: boolean;

@@ -9,7 +9,6 @@
 
     let { call }: { call: CopilotToolCall } = $props();
 
-    // Human-readable card title — the raw tool name is never shown to the user.
     const label = $derived(TOOL_LABELS[call.name as ToolName] ?? "Copilot action");
 
     const statusLabel = $derived.by(() => {
@@ -28,18 +27,18 @@
     });
 
     const statusClasses = $derived.by(() => {
-        if (call.undone) return "border-border bg-card text-muted-foreground";
+        if (call.undone) return "border-chat-border-subtle bg-chat-surface text-chat-text-muted";
         switch (call.status) {
             case "applied":
                 return "border-courier-accent/30 bg-courier-accent/10 text-courier-accent";
             case "rejected":
-                return "border-border bg-card text-muted-foreground";
+                return "border-chat-border-subtle bg-chat-surface text-chat-text-muted";
             case "failed":
-                return "border-destructive/40 bg-destructive/10 text-red-300";
+                return "border-red-400/40 bg-red-400/10 text-red-300";
             case "pending_confirmation":
                 return "border-amber-400/30 bg-amber-400/10 text-amber-300";
             default:
-                return "border-border bg-card text-muted-foreground";
+                return "border-chat-border-subtle bg-chat-surface text-chat-text-secondary";
         }
     });
 
@@ -54,7 +53,7 @@
     };
 </script>
 
-<div class="ai-enter flex w-full flex-col gap-1.5">
+<div class="chat-message-enter flex w-full flex-col gap-1.5">
     <div
         class={cn(
             "flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-solid px-2.5 py-2 text-xs",
@@ -80,7 +79,7 @@
                 onclick={onUndo}
                 disabled={undoing}
                 class={cn(
-                    "text-muted-foreground hover:text-foreground hover:bg-muted border-border bg-card ml-auto inline-flex items-center gap-1 rounded-md border border-solid px-2 py-1 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                    "border-chat-border bg-chat-surface text-chat-text-secondary hover:text-chat-text-primary hover:bg-chat-surface-hover ml-auto inline-flex items-center gap-1 rounded-md border border-solid px-2 py-1 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                     undoing && "cursor-wait"
                 )}
             >
