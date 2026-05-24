@@ -90,6 +90,7 @@ $lib/stores/brand-settings.svelte.ts        -- closure-based runes store (NOT wr
   --> brandSettings.value                   -- reactive BrandSettingsState
   --> brandSettings.hydrate(initial)        -- called synchronously in +page.svelte via untrack()
   --> brandSettings.updateField(key, value) -- debounces PATCH /api/brand-settings with retry
+  --> brandSettings.fieldState(key) / fieldError(key) / dismissError(key) -- per-field SaveState (each field has its own retry budget; aggregate `saveState` getter rolls them up for beforeunload)
 
 $lib/stores/app.svelte.ts                   -- thin facades over brandSettings
   --> courierService.value / .setSelected() -- reads/writes selectedCourier via brandSettings
@@ -222,7 +223,7 @@ src/
       processors/steadfast.ts            -- SteadFast processor
     stores/
       app.svelte.ts                      -- courierService facade + hasMerchantId() (backed by brandSettings store)
-      brand-settings.svelte.ts           -- closure-based runes store with hydrate, debounce, retry, SaveState
+      brand-settings.svelte.ts           -- closure-based runes store; per-field SaveState (fieldState/fieldError/dismissError) + aggregate saveState; debounced PATCH with retry
       copilot.svelte.ts                  -- Copilot runes store: conversations, messages, confirmations, AI undo stack
       copilot-bridge.svelte.ts           -- editor <-> Copilot bridge (EditorController / IngestionController registration)
     hooks/use-current-user.ts            -- getCurrentUser() derives CurrentUser from the session user
@@ -299,7 +300,7 @@ For `db:push` and `db:studio`, set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE
 - Flat config (`eslint.config.js`) with `@eslint/js`, `typescript-eslint`, `eslint-plugin-svelte`, `eslint-config-prettier`
 - Unused vars allowed with `_` prefix: `argsIgnorePattern: "^_"`, `varsIgnorePattern: "^_"`
 - `svelte/no-navigation-without-resolve` disabled (app does not use a base path)
-- Ignored: `build/`, `.svelte-kit/`, `dist/`, `node_modules/`, `scripts/`, `worker-configuration.d.ts`
+- Ignored: `build/`, `.svelte-kit/`, `.wrangler/`, `dist/`, `node_modules/`, `scripts/`, `worker-configuration.d.ts`
 
 ### TypeScript
 
@@ -449,6 +450,10 @@ When encountering unfamiliar patterns, check these sources in order:
 18. **Copilot AI undo is separate from the editor's Cmd+Z** -- `copilot.undoStack` holds full-editor snapshots; reverting an AI action restores the snapshot (and will also revert any manual edits made since). This is intentional — the editor's native `undoEntry` is untouched by Copilot mutations.
 
 19. **The chat model leaks artifacts** -- `@cf/openai/gpt-oss-120b` intermittently emits reasoning text, stray code fences, and tool calls as plain chat text. The Copilot defends in layers: `prompts.ts` hardens the system prompt, the message renderer downgrades stray code blocks to plain text, and `chat-client.ts` maps every failure to a friendly message via `friendlyHttpError`. Raw model output, raw errors, and internal tool names must never reach the user — do not strip these guards as redundant.
+
+20. **`E2E_BYPASS_AUTH` is a preview-only auth shortcut** -- when set to `"true"` in `.dev.vars`, `hooks.server.ts` synthesizes an `e2e-test-user` session and upserts it into the local D1, bypassing Google OAuth entirely. It exists for Wrangler preview / E2E runs. NEVER set it in `wrangler.jsonc`, GitHub Actions, or production secrets. The flag is declared optional on `App.Platform.env` in `app.d.ts` so it can stay absent everywhere else.
+
+21. **Copilot rail width is tokenized** -- `--copilot-rail-width` / `--copilot-rail-width-xl` in `app.css` define the right rail's size; the main column reserves space via `lg:pr-[calc(var(--copilot-rail-width)+1.5rem)]` in `+layout.svelte`. Change the tokens, not the hard-coded values.
 
 ---
 

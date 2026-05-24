@@ -30,7 +30,9 @@
 <!-- The order-processing tool. It occupies the left column; the AI Copilot
      rail is mounted by the app shell (+layout.svelte). On mount the regions
      cascade in via the GSAP-backed `reveal` action (reduced-motion aware). -->
-<div class="flex w-full grow flex-col items-center justify-center gap-12 px-4 py-6 sm:gap-16 sm:py-8 lg:gap-20">
+<div
+    class="flex w-full grow flex-col items-center justify-center gap-12 px-4 py-6 sm:gap-16 sm:px-6 sm:py-8 lg:items-stretch lg:gap-20"
+>
     <div use:reveal={{ distance: "sm", delay: 0 }}>
         <Heading />
     </div>
@@ -43,9 +45,7 @@
     <div
         class={[
             "flex w-full max-w-md items-center justify-center gap-8 sm:max-w-xl sm:gap-10",
-            editorOpen
-                ? "flex-col lg:max-w-5xl xl:max-w-6xl"
-                : "flex-col-reverse lg:max-w-4xl lg:flex-row lg:gap-12 2xl:max-w-6xl"
+            editorOpen ? "flex-col lg:max-w-none" : "flex-col-reverse lg:max-w-none lg:flex-row lg:gap-12"
         ]}
     >
         <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center lg:block">
@@ -55,7 +55,7 @@
         <div
             class={[
                 "flex w-full flex-col items-center gap-6",
-                editorOpen && "lg:flex-row lg:items-start lg:justify-center lg:gap-8 xl:max-w-5xl"
+                editorOpen && "lg:flex-row lg:items-start lg:justify-center lg:gap-8"
             ]}
         >
             <div use:reveal={{ distance: "sm", delay: 0.15, onScroll: true }} class="flex w-full justify-center">

@@ -30,8 +30,14 @@
 </svelte:head>
 
 <!-- Left column — nav, main content and footer share its width. On lg+ it
-     reserves space for the fixed Copilot rail via padding-right. -->
-<div class={["flex min-h-dvh flex-col", showCopilot && "lg:pr-[26rem] xl:pr-[28rem]"]}>
+     reserves space for the fixed Copilot rail plus a 1.5rem gutter (matches sm:px-6). -->
+<div
+    class={[
+        "flex min-h-dvh flex-col",
+        showCopilot &&
+            "lg:pr-[calc(var(--copilot-rail-width)+1.5rem)] xl:pr-[calc(var(--copilot-rail-width-xl)+1.5rem)]"
+    ]}
+>
     <main class="flex grow flex-col">
         {@render children()}
     </main>
@@ -39,8 +45,13 @@
 </div>
 
 {#if showCopilot}
-    <!-- Right rail — the Copilot, pinned to the viewport edge, full height. -->
-    <aside class="fixed top-0 right-0 z-40 hidden h-dvh p-2.5 lg:block lg:w-[26rem] xl:w-[28rem]">
+    <!-- Right rail — the Copilot, pinned to the viewport edge, full height.
+         p-2.5 is the card's viewport inset (so its rounded corners and shadow
+         breathe at the screen edges); the gutter between main content and the
+         rail itself lives on the shell's lg:pr-* above. -->
+    <aside
+        class="fixed top-0 right-0 z-40 hidden h-dvh p-2.5 lg:block lg:w-[var(--copilot-rail-width)] xl:w-[var(--copilot-rail-width-xl)]"
+    >
         <CopilotSidebar />
     </aside>
 

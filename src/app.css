@@ -54,6 +54,9 @@
     --border-strong: oklch(0.85 0 0);
     --courier-accent: oklch(0.69 0.17 162);
 
+    --copilot-rail-width: 26rem;
+    --copilot-rail-width-xl: 28rem;
+
     --font-sans:
         "Google Sans Flex", "Google Sans Flex Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --font-mono: "Google Sans Code", ui-monospace, "SF Mono", Consolas, "Courier New", monospace;
