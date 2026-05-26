@@ -7,7 +7,7 @@
     import type { CellNavigationDirection } from "./editor-cell.svelte";
     import { PER_ROW_COLUMNS, STEADFAST_COLUMNS, type CellColumn, type BatchDefaults } from "./columns";
 
-    // Shared empty map for rows without warnings — avoids per-render allocation.
+    // Singleton sentinel handed to rows with no warnings — avoids allocating an empty Map per render.
     const EMPTY_WARNING_MAP: ReadonlyMap<CellColumn, string> = new Map();
 
     interface Props {
@@ -40,9 +40,8 @@
 
     let gridRef = $state<HTMLDivElement | null>(null);
 
-    // Suppress row entry transitions for the rows present at editor mount —
-    // the PRD wants the editor mount itself instant; only rows the user
-    // adds/duplicates afterwards slide in (UX §Motion).
+    // Gate row entry transitions so the initial mount is instant and only
+    // user-driven row inserts animate (UX §Motion in PRD).
     let mounted = $state(false);
     onMount(() => {
         mounted = true;
@@ -52,9 +51,8 @@
     const visibleColumnKeys = $derived(visibleColumns.map((c) => c.key));
 
     /**
-     * Resolve where a navigation event should move focus, given the source
-     * cell and the requested direction. Tab wraps to next/previous row,
-     * arrow keys stay within their row/column. Out-of-bounds = noop.
+     * Map (source cell, direction) → target cell or null (out-of-bounds noop).
+     * Arrow keys stay in their row/column; Tab/Shift+Tab wraps to next/prev row.
      */
     const resolveNavigationTarget = (
         rowIndex: number,
@@ -110,8 +108,7 @@
 
     const focusCell = (rowIndex: number, column: CellColumn) => {
         if (!gridRef) return;
-        // Attribute value is quoted, so only " needs escaping; column names
-        // contain spaces but no quotes — no escape needed.
+        // CellColumn values are a fixed string union (no quotes) — safe to interpolate without CSS.escape.
         const selector = `[data-cell="${rowIndex}:${column}"]`;
         const target = gridRef.querySelector<HTMLElement>(selector);
         target?.focus();
@@ -122,12 +119,9 @@
         if (target) focusCell(target.row, target.column);
     };
 
-    /**
-     * Public method on the grid so the editor can focus the most recently
-     * added/duplicated row's Name cell, per FR-16/FR-17.
-     */
+    // FR-16/FR-17: called by parent after add/duplicate to land focus in the new row.
+    // microtask waits for the EditorRow to render.
     export const focusNameCell = (rowIndex: number) => {
-        // wait one tick for the new row to render
         queueMicrotask(() => focusCell(rowIndex, "Name"));
     };
 </script>

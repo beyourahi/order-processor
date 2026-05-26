@@ -27,7 +27,6 @@
                     "active:scale-[0.97]"
                 )}
             >
-                <!-- Selection indicator (radio style) -->
                 <div
                     class={cn(
                         "absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full border-2 border-solid transition-all duration-200 sm:h-6 sm:w-6",
@@ -50,7 +49,6 @@
                     {/if}
                 </div>
 
-                <!-- Courier logo -->
                 <div
                     class={cn(
                         "flex h-14 w-14 items-center justify-center rounded-xl p-2 transition-all duration-200 sm:h-16 sm:w-16",
@@ -67,7 +65,6 @@
                     />
                 </div>
 
-                <!-- Courier name -->
                 <span
                     class={cn(
                         "text-sm font-semibold whitespace-nowrap transition-colors duration-200 sm:text-base",

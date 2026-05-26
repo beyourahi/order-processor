@@ -8,18 +8,17 @@
 
     let { data }: { data: PageData } = $props();
 
-    // Hydrate the store synchronously during setup so children read canonical
-    // server values during their own mount — fixes the previous $effect-based
-    // race that left inputs empty until after first render.
+    // CRITICAL: synchronous hydration via untrack(). DO NOT move into $effect
+    // — children read brandSettings during their own mount, and an $effect race
+    // left inputs blank until after first render (fixed in commit 6d9d68b).
     untrack(() => {
         brandSettings.hydrate(data.brandSettings);
     });
 
     const showSteadFastSettings = $derived(courierService.value === Courier.SteadFast);
 
-    // Bound by OrderProcessor — true while the output editor is mounted in
-    // place of the upload zone. Drives the outer layout: when the editor is
-    // open, picker + settings stack above it so the editor gets full width.
+    // bind:editorOpen — true while output-editor replaces the dropzone.
+    // Drives the outer layout: editor gets full width; picker + settings stack on top.
     let editorOpen = $state(false);
 
     const handleCourierSelect = (courier: string) => {
@@ -27,9 +26,8 @@
     };
 </script>
 
-<!-- The order-processing tool. It occupies the left column; the AI Copilot
-     rail is mounted by the app shell (+layout.svelte). On mount the regions
-     cascade in via the GSAP-backed `reveal` action (reduced-motion aware). -->
+<!-- Left column of the layout; Copilot rail is mounted by +layout.svelte.
+     `reveal` is GSAP-backed and respects prefers-reduced-motion. -->
 <div
     class="flex w-full grow flex-col items-center justify-center gap-12 px-4 py-6 sm:gap-16 sm:px-6 sm:py-8 lg:items-stretch lg:gap-20"
 >
@@ -37,9 +35,8 @@
         <Heading />
     </div>
 
-    <!-- User is a fixed-position corner menu; a `transform` from `reveal` on an
-         ancestor would re-anchor the fixed child, so it is intentionally not
-         wrapped. It keeps its own existing entrance behaviour. -->
+    <!-- Not wrapped in reveal: User is position:fixed, and a transform on any
+         ancestor would re-anchor it relative to that ancestor instead of the viewport. -->
     <User user={data.user!} currentUser={data.currentUser!} />
 
     <div

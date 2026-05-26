@@ -1,9 +1,9 @@
 /**
- * Normalize a Bangladesh mobile number for SteadFast import.
+ * BD-specific phone normalizer for SteadFast import. Strips +880 prefix and
+ * any leading zeros → bare 10-digit number starting with 1.
  *
- * Idempotent: running the function on its own output yields the same string.
- * Strips +880 country code and any leading zeros, leaving the bare 10-digit
- * mobile number that SteadFast's import expects.
+ * INVARIANT (NFR-14): idempotent. normalize(normalize(x)) === normalize(x).
+ * NOT a general validator — pair with validatePhone() to detect bad numbers.
  */
 export const normalizePhoneNumber = (phoneNumber: string): string => {
     if (!phoneNumber) return "";

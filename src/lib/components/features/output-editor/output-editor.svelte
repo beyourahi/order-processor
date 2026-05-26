@@ -19,16 +19,11 @@
 
     let { initialRows, initialDefaults, fileName, onDiscard }: Props = $props();
 
-    // ---- state ----
-    // Editor state is seeded from props once. Subsequent prop changes are
-    // ignored — a re-mount (new CSV drop) re-creates the component instance.
-    // Note: spread-clone each row instead of structuredClone() — initialRows
-    // may be a Svelte $state proxy from the parent, which structuredClone
-    // refuses to walk.
+    // Props seed state once. Re-mount on new CSV drop, never re-read props.
+    // Spread-clone (not structuredClone) — initialRows may be a $state proxy.
     let rows = $state<SteadFastOrder[]>(untrack(() => initialRows.map((row) => ({ ...row }))));
-    // Stable per-row identity, kept in lockstep with `rows`. Keying the grid
-    // by id (not array index) lets a row insert/delete animate exactly one
-    // row, and preserves a row's component across a cell commit.
+    // rowIds stays lockstep with rows. Stable UUID keys make row insert/delete
+    // animate exactly one row and preserve a cell's component across commit.
     let rowIds = $state<string[]>(untrack(() => initialRows.map(() => crypto.randomUUID())));
     let defaults = $state<BatchDefaults>(untrack(() => ({ ...initialDefaults })));
     let selection = new SvelteSet<number>();
@@ -46,7 +41,7 @@
     let undoEntry = $state<UndoEntry>(null);
     let undoTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // ---- snapshots for dirty detection (FR-28) ----
+    // FR-28 dirty detection: compare current JSON against mount-time snapshot.
     const initialRowsSnapshot = untrack(() => JSON.stringify(initialRows));
     const initialDefaultsSnapshot = untrack(() => JSON.stringify(initialDefaults));
 
@@ -54,7 +49,6 @@
         JSON.stringify(rows) !== initialRowsSnapshot || JSON.stringify(defaults) !== initialDefaultsSnapshot
     );
 
-    // ---- derived: warnings ----
     const allWarnings = $derived.by((): CellWarning[] => {
         const list: CellWarning[] = [];
         for (let i = 0; i < rows.length; i++) {
@@ -78,13 +72,11 @@
         return map;
     });
 
-    // Warning count the live region last reflected. Row operations resync it
-    // (via announceRowChange) after announcing themselves, so the validation
-    // $effect only speaks for commit-driven validation changes — not the
-    // warnings that simply appear when a blank row is added.
+    // Sentinel for the validation live-region: row ops call announceRowChange
+    // which resyncs this, so the $effect below only speaks for commit-driven
+    // warning changes (not warnings that appear when blank rows are inserted).
     let lastWarningCount = -1;
 
-    // ---- derived: override counts (per batch-constant column) ----
     const overrideCountByColumn = $derived.by(() => {
         const counts: Record<keyof BatchDefaults, number> = {
             Invoice: 0,
@@ -102,7 +94,6 @@
         return counts;
     });
 
-    // ---- undo machinery ----
     const scheduleUndoExpiry = (ms: number) => {
         if (undoTimer) clearTimeout(undoTimer);
         undoTimer = setTimeout(() => {
@@ -117,7 +108,6 @@
         undoEntry = null;
     };
 
-    // ---- cell commit ----
     const commitCell = (rowIndex: number, column: CellColumn, value: string) => {
         const row = rows[rowIndex];
         if (!row) return;
@@ -125,7 +115,6 @@
         rows[rowIndex] = next as SteadFastOrder;
     };
 
-    // ---- row management ----
     const addRow = () => {
         const newRow: SteadFastOrder = {
             Invoice: defaults.Invoice,
@@ -151,7 +140,7 @@
         if (!source) return;
         rows.splice(rowIndex + 1, 0, { ...source });
         rowIds.splice(rowIndex + 1, 0, crypto.randomUUID());
-        // shift selection indexes >= rowIndex+1 by +1 (mutate in place)
+        // Shift selection indexes >= rowIndex+1 by +1; SvelteSet is reactive so mutate in place.
         const snapshot = [...selection];
         selection.clear();
         for (const i of snapshot) selection.add(i >= rowIndex + 1 ? i + 1 : i);
@@ -166,7 +155,7 @@
         if (!removed || removedId === undefined) return;
         rows.splice(rowIndex, 1);
         rowIds.splice(rowIndex, 1);
-        // recompute selection (shift indexes > rowIndex by -1) — mutate in place
+        // Drop the removed index and shift indexes > rowIndex by -1.
         const snapshot = [...selection];
         selection.clear();
         for (const i of snapshot) {
@@ -186,7 +175,7 @@
         if (selection.size === 0) return;
         const sortedIndexes = [...selection].sort((a, b) => a - b);
         const removed: { row: SteadFastOrder; id: string; index: number }[] = [];
-        // delete in reverse to keep indexes stable
+        // Reverse iteration keeps lower indexes stable while splicing.
         for (let i = sortedIndexes.length - 1; i >= 0; i--) {
             const idx = sortedIndexes[i];
             if (idx === undefined) continue;
@@ -211,7 +200,7 @@
     const undo = () => {
         if (!undoEntry) return;
         if (undoEntry.kind === "delete-rows") {
-            // re-insert in ascending index order so positions match
+            // Ascending order so each splice lands the row at its original index.
             const sorted = [...undoEntry.rows].sort((a, b) => a.index - b.index);
             for (const item of sorted) {
                 rows.splice(item.index, 0, item.row);
@@ -222,7 +211,7 @@
         clearUndo();
     };
 
-    // ---- selection (mutate selection in place — SvelteSet is reactive) ----
+    // SvelteSet is reactive — mutate in place rather than reassigning.
     const toggleSelect = (rowIndex: number, event: MouseEvent) => {
         const isShift = event.shiftKey;
 
@@ -237,11 +226,11 @@
         }
     };
 
-    // ---- batch defaults strip ----
+    // Changing a default rewrites every row whose value still equals the
+    // previous default; rows that diverged are treated as user overrides.
     const updateDefault = (field: keyof BatchDefaults, value: string) => {
         const previous = defaults[field];
         defaults = { ...defaults, [field]: value };
-        // propagate to every row whose value still matches the previous default
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             if (!row) continue;
@@ -262,10 +251,9 @@
         }
     };
 
-    // ---- AI Copilot bridge ----
-    // The editor publishes this controller so the Copilot's tool layer can read
-    // and mutate the grid. These methods deliberately do NOT touch the native
-    // `undoEntry` — the Copilot owns a separate snapshot-based undo stack.
+    // Controller exposed to the AI Copilot via copilotBridge. These deliberately
+    // do NOT touch native `undoEntry` — Copilot owns a parallel snapshot stack
+    // in copilot.svelte.ts. Restoring an AI undo reverts manual edits too.
     const aiGetRows = (): SteadFastOrder[] => rows.map((row) => ({ ...row }));
     const aiGetDefaults = (): BatchDefaults => ({ ...defaults });
     const aiGetWarnings = (): CellWarning[] => [...allWarnings];
@@ -346,12 +334,11 @@
         return () => copilotBridge.unregisterEditor(controller);
     });
 
-    // ---- jump-to-first-warning ----
     const jumpToFirstWarning = () => {
         const first = allWarnings[0];
         if (!first) return;
         gridComponent?.focusNameCell(first.rowIndex);
-        // focus the exact warning cell instead of Name
+        // focusNameCell scrolls the row in; microtask then moves focus to the offending cell.
         queueMicrotask(() => {
             const selector = `[data-cell="${first.rowIndex}:${CSS.escape(first.column)}"]`;
             const el = document.querySelector<HTMLElement>(selector);
@@ -360,7 +347,6 @@
         });
     };
 
-    // ---- discard ----
     const requestDiscard = () => {
         if (!dirty) {
             onDiscard();
@@ -378,9 +364,8 @@
         showDiscardConfirm = false;
     };
 
-    // ---- download ----
     const download = () => {
-        // single idempotent phone-normalization pass (NFR-14)
+        // NFR-14: idempotent BD-phone normalization at export only, not on commit.
         const normalized = rows.map((row) => ({
             ...row,
             Phone: normalizePhoneNumber(row.Phone ?? "")
@@ -390,13 +375,11 @@
         liveAnnounce(`Downloaded ${normalized.length} row${normalized.length === 1 ? "" : "s"}`);
     };
 
-    // ---- focus-on-mount action for modal Cancel button ----
+    // Svelte action: focus after tick() so the modal is laid out before focus moves.
     const focusOnMount = (node: HTMLElement) => {
-        // schedule after current microtask so the modal is fully laid out
         tick().then(() => node.focus());
     };
 
-    // ---- a11y live region ----
     let liveMessage = $state("");
     let liveTimer: ReturnType<typeof setTimeout> | null = null;
     const liveAnnounce = (msg: string) => {
@@ -408,19 +391,17 @@
         }, 2000);
     };
 
-    // Announce a row-level change and resync the warning baseline, so the
-    // validation $effect below does not also speak for the same change.
+    // Resync lastWarningCount so the validation $effect doesn't double-announce
+    // a row op that already spoke (e.g. "Added row 3" + "1 warning").
     const announceRowChange = (msg: string) => {
         liveAnnounce(msg);
         lastWarningCount = allWarnings.length;
     };
 
-    // ---- a11y: announce validation-state changes (NFR-8) ----
-    // Row add/delete announce themselves (announceRowChange); this covers the
-    // other half — a cell commit that fixes or introduces a problem. The -1
-    // sentinel on lastWarningCount primes the first run so the editor's
-    // starting warning count is not announced. Announcing to a live region is
-    // a genuine side effect, hence $effect rather than $derived.
+    // NFR-8: announce validation changes triggered by cell commits. Row ops
+    // announce themselves via announceRowChange. The -1 sentinel primes the
+    // first run so the editor's starting warning count is not announced.
+    // $effect (not $derived) because announcing to the live region is a side effect.
     $effect(() => {
         const count = allWarnings.length;
         if (lastWarningCount === -1) {
@@ -431,10 +412,9 @@
         }
     });
 
-    // ---- Cmd/Ctrl+Z global ----
     const handleKeydown = (event: KeyboardEvent) => {
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
-            // do not steal undo when an input has focus and the browser would naturally undo text
+            // Defer to the browser's native text-undo when an input/textarea is focused.
             const target = event.target as HTMLElement | null;
             if (target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
             if (undoEntry) {

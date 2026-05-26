@@ -26,11 +26,11 @@
     let error = $state<string | null>(null);
     let fileInputRef = $state<HTMLInputElement | null>(null);
 
-    // editor state — non-null means the editor is mounted in place of the dropzone
+    // Non-null editorRows means the editor is mounted in place of the dropzone.
     let editorRows = $state<SteadFastOrder[] | null>(null);
     let editorDefaults = $state<BatchDefaults | null>(null);
     let editorFileName = $state<string>("");
-    // Raw parsed CSV, kept so the Copilot can re-map an unrecognized layout.
+    // Raw CSV retained so the Copilot's `proposeCsvColumnMapping` can re-project it.
     let lastRawData = $state<string[][] | null>(null);
 
     const isSteadFast = $derived(selectedCourier === Courier.SteadFast);
@@ -38,8 +38,7 @@
     const isDisabled = $derived(selectedCourier === "" || needsMerchantId);
     const isEditorOpen = $derived(editorRows !== null);
 
-    // Sync the local editor-open flag to the parent so it can switch its
-    // outer layout (stack vs side-by-side) and give the editor room to grow.
+    // Mirror to bindable prop so the parent can swap stack ↔ side-by-side layout.
     $effect(() => {
         editorOpen = isEditorOpen;
     });
@@ -68,8 +67,8 @@
                 merchantId
             }) as SteadFastOrder[];
 
-            // FR-3: zero-row results still mount the editor with an empty grid
-            // and a populated defaults strip — the user can add rows manually.
+            // FR-3: zero-row results still mount the editor (empty grid +
+            // populated defaults strip) so the user can add rows manually.
             editorRows = processedOrders;
             editorDefaults = {
                 Invoice: merchantId,
@@ -95,9 +94,8 @@
         zoneHover = false;
     };
 
-    // ---- AI Copilot: re-map an unrecognized CSV layout ----
-    // Re-projects the raw parsed CSV through a Copilot-proposed column mapping
-    // and re-opens the editor with the corrected batch.
+    // Re-projects `lastRawData` through a Copilot-proposed column mapping and
+    // re-mounts the editor (via {#key editorRows}) with the corrected batch.
     const applyMapping = (mapping: CsvMapping) => {
         if (!lastRawData) return;
         const body = lastRawData.slice(mapping.skipFirst, lastRawData.length - mapping.skipLast);
@@ -188,13 +186,13 @@
             const file = files[0];
             if (file) handleFileSelect(file);
         }
-        // Reset so the same file can be selected again
+        // Reset value so re-selecting the same file fires `change` again.
         input.value = "";
     };
 </script>
 
-<!-- Stable wrapper straddles the editor/dropzone swap so `max-width`
-     interpolates smoothly (~150ms) when the editor opens — UX §Layout. -->
+<!-- Wrapper persists across the dropzone↔editor swap so `max-width` can
+     transition (~150ms) rather than snap. -->
 <div
     class={cn(
         "w-full transition-[max-width] duration-150 ease-out",
@@ -202,8 +200,8 @@
     )}
 >
     {#if isEditorOpen && editorRows && editorDefaults}
-        <!-- Key on the rows identity so a Copilot re-map (new array) re-mounts
-             the editor — its state is seeded from props once. -->
+        <!-- Key on rows identity: Copilot re-map (new array ref) re-mounts
+             OutputEditor so it re-seeds its $state from the new props. -->
         {#key editorRows}
             <OutputEditor
                 initialRows={editorRows}

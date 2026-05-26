@@ -1,11 +1,17 @@
 /**
- * Client-side tool executor. The server only *decides* tool calls; this module
- * *runs* them against the output-editor grid via `copilotBridge`.
+ * Browser-side tool executor. The server only decides calls; this module runs
+ * them against the editor via `copilotBridge.editor`.
  *
- * Every mutation: validates args (Zod) → builds a confirmation diff → asks the
- * user to confirm if it touches more than one row → snapshots editor state →
- * applies → pushes a revert closure onto the Copilot's AI undo stack. The
- * editor's `$derived` validation re-runs on its own once `rows` changes.
+ * Mutation pipeline (applyMutation):
+ *   1. Zod-validate args (already validated server-side; re-run for defense)
+ *   2. Build a confirmation diff
+ *   3. requestConfirmation if it touches > 1 row (deleteRows/autoFix always confirm)
+ *   4. Snapshot full editor state via editor.snapshot()
+ *   5. Apply mutation
+ *   6. Push a revert closure onto copilot.undoStack
+ *
+ * Editor `$derived` validation re-runs automatically when `rows` mutates.
+ * IMPORTANT: undoStack is SEPARATE from the editor's native Cmd+Z (undoEntry).
  */
 import { copilot } from "$lib/stores/copilot.svelte";
 import { copilotBridge } from "$lib/stores/copilot-bridge.svelte";
@@ -40,8 +46,7 @@ export interface ExecutorContext {
     requestConfirmation: (req: ConfirmationRequest) => Promise<boolean>;
 }
 
-/* ── helpers ──────────────────────────────────────────────────────────────── */
-
+// Throws a user-visible message when grid tools run before output-editor mounts.
 const requireEditor = (): EditorController => {
     const editor = copilotBridge.editor;
     if (!editor) {
@@ -53,7 +58,12 @@ const requireEditor = (): EditorController => {
 const cellValue = (row: SteadFastOrder | undefined, column: CellColumn): string =>
     row ? String(row[column as keyof SteadFastOrder] ?? "") : "";
 
-/** Repair a malformed Bangladesh phone number, or null if undeliverable. */
+/**
+ * Recover a deliverable BD mobile (^1\d{9}$) from a malformed input.
+ * Handles: multi-number strings split by delimiters, accidentally doubled
+ * numbers (length 20), and 9-digit numbers missing the leading 1.
+ * Returns null if no salvageable BD mobile is found.
+ */
 const repairPhone = (raw: string): string | null => {
     if (!raw) return null;
     const parts = raw
@@ -79,7 +89,7 @@ const repairPhone = (raw: string): string | null => {
     return null;
 };
 
-/** Repair a malformed amount string (strip currency symbols / separators). */
+/** Strip currency symbols/separators; returns the leading numeric run or null. */
 const repairAmount = (raw: string): string | null => {
     if (!raw) return null;
     const cleaned = raw.replace(/[^\d.]/g, "");
@@ -87,17 +97,13 @@ const repairAmount = (raw: string): string | null => {
     return match ? match[0] : null;
 };
 
-/** Pushes a revert closure onto the AI undo stack and returns its id. */
+// Returns the entry id so the caller can stamp it on the tool card for the inline Undo button.
 const registerUndo = (label: string, revert: () => void): string => {
     const id = crypto.randomUUID();
     copilot.pushUndo({ id, label, revert, undone: false });
     return id;
 };
 
-/**
- * Standard mutation flow: confirm (if needed) → snapshot → apply → register
- * undo → mark the tool card applied.
- */
 const applyMutation = async (
     call: ParsedToolCall,
     ctx: ExecutorContext,
@@ -136,8 +142,6 @@ const applyMutation = async (
     const undoId = registerUndo(spec.undoLabel, () => editor.restore(snapshot));
     update({ status: "applied", summary: spec.summary, undoId });
 };
-
-/* ── read-only tools ──────────────────────────────────────────────────────── */
 
 const runGetBatchSummary = (call: ParsedToolCall, ctx: ExecutorContext): void => {
     const editor = requireEditor();
@@ -196,8 +200,6 @@ const runFlagAnomalies = (call: ParsedToolCall, ctx: ExecutorContext): void => {
                 : `Flagged ${anomalies.length} potential issue(s) across the batch.`
     });
 };
-
-/* ── mutation tools ───────────────────────────────────────────────────────── */
 
 const runEditCells = async (call: ParsedToolCall, ctx: ExecutorContext, args: ArgsOf<"editCells">): Promise<void> => {
     const editor = requireEditor();
@@ -301,8 +303,9 @@ const runDeleteRows = async (call: ParsedToolCall, ctx: ExecutorContext, args: A
     }));
     const anomalies = detectAnomalies(rows).filter((a) => indexes.includes(a.rowIndex));
 
+    // Deletion always confirms, even for a single row — destructive op.
     await applyMutation(call, ctx, editor, {
-        needsConfirm: true, // deletion is always destructive — always confirm
+        needsConfirm: true,
         humanLabel: indexes.length === 1 ? `Delete row ${indexes[0]! + 1}` : `Delete ${indexes.length} rows`,
         diff,
         anomalies,
@@ -357,8 +360,9 @@ const runAutoFixWarnings = async (
         return;
     }
 
+    // Always confirm — batch repair can touch arbitrary rows.
     await applyMutation(call, ctx, editor, {
-        needsConfirm: true, // batch repair — always confirm
+        needsConfirm: true,
         humanLabel: `Auto-fix ${edits.length} validation warning(s)`,
         diff,
         anomalies: [],
@@ -508,11 +512,10 @@ const runUndoLastChange = (call: ParsedToolCall, ctx: ExecutorContext): void => 
     });
 };
 
-/* ── dispatch ─────────────────────────────────────────────────────────────── */
-
 /**
- * Validates and executes one model-emitted tool call, updating its tool card in
- * the Copilot store as it progresses.
+ * Dispatch: validate args (defensive — server validates too), then run the
+ * matching tool. Updates the tool card's status/summary/error in copilot store.
+ * Defensive failure mode: model-facing error mapped to a friendly user message.
  */
 export const executeToolCall = async (call: ParsedToolCall, ctx: ExecutorContext): Promise<void> => {
     const fail = (message: string) =>

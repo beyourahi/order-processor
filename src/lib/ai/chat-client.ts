@@ -1,8 +1,10 @@
 /**
- * Client orchestration for one Copilot turn: append the user message, stream the
- * model response from `/api/copilot/chat`, then run any tool calls the model
- * emitted against the editor. The server is stateless — the full message history
- * and a rendered CURRENT STATE block are shipped with every request.
+ * One Copilot turn: append user msg → POST to /api/copilot/chat → consume SSE
+ * frames → execute any tool calls in the browser.
+ *
+ * Server is stateless: every request ships full message history + the
+ * `projectBatchState` CURRENT STATE block. Errors NEVER surface as raw text in
+ * the assistant bubble — friendlyHttpError() maps them onto the error banner.
  */
 import { copilot } from "$lib/stores/copilot.svelte";
 import { copilotBridge } from "$lib/stores/copilot-bridge.svelte";
@@ -12,7 +14,8 @@ import { streamFrames } from "./streaming";
 import { executeToolCall, type ConfirmationRequest, type ExecutorContext } from "./executor";
 import type { ChatRequestBody, ParsedToolCall } from "./types";
 
-/** Maps an HTTP failure to a friendly, actionable, plain-language message. */
+// Defense-in-depth: ensures error banners are always user-readable; never
+// expose raw status codes or server payloads (see CLAUDE.md warning #19).
 const friendlyHttpError = (status: number): string => {
     switch (status) {
         case 401:
@@ -26,7 +29,8 @@ const friendlyHttpError = (status: number): string => {
     }
 };
 
-/** Bridges the executor's confirmation request to the store's dialog queue. */
+// Bridges executor → confirm dialog: enqueue the request, await the dialog's
+// resolve(approved) call, then auto-dequeue.
 const requestConfirmation = (req: ConfirmationRequest): Promise<boolean> =>
     new Promise((resolve) => {
         copilot.enqueueConfirmation({
@@ -50,7 +54,7 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
     const userMessageId = crypto.randomUUID();
     copilot.appendUserMessage(userMessageId, trimmed || "(image attached)", image);
 
-    // History is built before the assistant placeholder so it is excluded.
+    // Snapshot history BEFORE startAssistantMessage so the in-progress placeholder isn't included.
     const history = copilot.messages
         .filter((m) => m.role === "user" || m.content.trim().length > 0)
         .map((m) => ({ role: m.role, content: m.content }));
@@ -80,8 +84,6 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
         });
 
         if (!response.ok || !response.body) {
-            // Surface a friendly message via the error banner only — never leak
-            // a raw status code or server payload into the assistant bubble.
             copilot.setError(friendlyHttpError(response.status));
             copilot.finalizeAssistantMessage(assistantId);
             copilot.setStreaming(false);

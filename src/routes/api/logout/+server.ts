@@ -1,8 +1,8 @@
 import { json, redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-// Better Auth handles the main logout via authClient.signOut(); this is a server-side fallback.
-// Cookie name must match cookiePrefix in auth.ts: "order-processor.session_token".
+// Fallback for non-JS clients; the primary signout path is authClient.signOut().
+// Cookie name MUST mirror `cookiePrefix` in $lib/server/auth.ts.
 
 export const POST: RequestHandler = async ({ cookies }) => {
     try {

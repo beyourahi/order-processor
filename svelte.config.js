@@ -14,12 +14,12 @@ const config = {
                 exclude: ["<all>"]
             }
         }),
-        // CSRF protection - only allow requests from these trusted origins
+        // CSRF allowlist; MUST mirror trustedOrigins in $lib/server/auth.ts.
         csrf: {
             trustedOrigins: [
-                "http://localhost:5173", // Vite dev server
-                "http://localhost:8787", // Wrangler preview
-                "https://order-processor.beyourahi.workers.dev" // Production
+                "http://localhost:5173",
+                "http://localhost:8787",
+                "https://order-processor.beyourahi.workers.dev"
             ]
         }
     }

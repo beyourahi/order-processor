@@ -1,4 +1,5 @@
-// Column names use snake_case as required by Better Auth's Drizzle adapter.
+// MUST be snake_case columns — Better Auth's Drizzle adapter (usePlural: true)
+// rejects camelCase silently (see CLAUDE.md warning #3).
 import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
@@ -66,7 +67,8 @@ export const verifications = sqliteTable(
     (table) => [index("idx_verifications_identifier").on(table.identifier)]
 );
 
-// lastRequest is a Unix millisecond timestamp (not a Date), stored as a plain integer.
+// Better Auth's D1 rate limiter table. lastRequest is Unix-ms (integer), NOT a
+// Date — adapter expects raw numeric epoch.
 export const rateLimits = sqliteTable(
     "rate_limits",
     {

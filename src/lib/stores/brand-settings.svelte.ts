@@ -14,10 +14,8 @@ const TEXT_DEBOUNCE_MS = 500;
 const SAVED_LINGER_MS = 2000;
 const RETRY_DELAYS_MS = [1000, 2000, 4000] as const;
 
-/**
- * Persist a patch with retries before reporting failure. Each call uses its
- * own retry budget so failures on one field do not affect others.
- */
+// Retry budget is per-call; one field's failure never blocks another.
+// Delays: 1s, 2s, 4s — up to 4 attempts total.
 const persistWithRetry = async (patch: BrandSettingsPatch): Promise<void> => {
     let lastError: unknown;
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
@@ -36,11 +34,10 @@ const persistWithRetry = async (patch: BrandSettingsPatch): Promise<void> => {
 
 const createBrandSettingsStore = () => {
     let value = $state<BrandSettingsState>({ ...EMPTY });
-    // Per-field state map. Each field tracks its own save lifecycle so the
-    // indicator on one input never reflects activity on another.
+    // Per-field SaveState so each input renders independently — no cross-field bleed.
     let fieldStates = $state<Partial<Record<FieldKey, SaveState>>>({});
     let fieldErrors = $state<Partial<Record<FieldKey, string>>>({});
-    // Plain object — internal bookkeeping only, never read reactively.
+    // Non-reactive (plain object): timers are bookkeeping, no UI reads them.
     const fieldTimers: Partial<Record<FieldKey, ReturnType<typeof setTimeout>>> = {};
 
     const setSavedTransient = (field: FieldKey) => {
@@ -96,8 +93,8 @@ const createBrandSettingsStore = () => {
         get value() {
             return value;
         },
-        // Aggregate state derived from all field states. "saving" wins (used by
-        // beforeunload), then "error", then "saved", else "idle".
+        // Aggregate roll-up used by the beforeunload guard.
+        // Precedence: saving > error > saved > idle.
         get saveState(): SaveState {
             const states = Object.values(fieldStates);
             if (states.includes("saving")) return "saving";

@@ -17,8 +17,7 @@
 
     onNavigate(handleViewTransition);
 
-    // The AI Copilot is app-shell furniture: a persistent right-side rail on
-    // lg+, scoped to the main route so the login and error pages are untouched.
+    // Copilot rail is scoped to "/" only — never on /login or error pages.
     const showCopilot = $derived(page.route.id === "/" && !page.error);
 </script>
 
@@ -29,8 +28,8 @@
     <link rel="preload" href={steadfastLogo} as="image" />
 </svelte:head>
 
-<!-- Left column — nav, main content and footer share its width. On lg+ it
-     reserves space for the fixed Copilot rail plus a 1.5rem gutter (matches sm:px-6). -->
+<!-- Reserves rail width + 1.5rem gutter on lg+ via --copilot-rail-width(-xl).
+     CLAUDE.md warning #21: change the tokens, not hard-coded values. -->
 <div
     class={[
         "flex min-h-dvh flex-col",
@@ -45,10 +44,8 @@
 </div>
 
 {#if showCopilot}
-    <!-- Right rail — the Copilot, pinned to the viewport edge, full height.
-         p-2.5 is the card's viewport inset (so its rounded corners and shadow
-         breathe at the screen edges); the gutter between main content and the
-         rail itself lives on the shell's lg:pr-* above. -->
+    <!-- p-2.5 is the inset for the card's rounded corners + shadow; the gutter
+         between main content and rail is the lg:pr-* on the shell above. -->
     <aside
         class="fixed top-0 right-0 z-40 hidden h-dvh p-2.5 lg:block lg:w-[var(--copilot-rail-width)] xl:w-[var(--copilot-rail-width-xl)]"
     >

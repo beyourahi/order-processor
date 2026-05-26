@@ -17,7 +17,7 @@ export default ts.config(
             }
         },
         rules: {
-            // Allow unused vars with underscore prefix (conventional for intentionally unused params)
+            // `_`-prefixed vars/args are intentionally unused (project convention).
             "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }]
         }
     },
@@ -29,7 +29,7 @@ export default ts.config(
             }
         },
         rules: {
-            // Disable resolve() requirement - this app doesn't use a base path
+            // SvelteKit base path is "/" — no need for resolveRoute() wrapping.
             "svelte/no-navigation-without-resolve": "off"
         }
     },

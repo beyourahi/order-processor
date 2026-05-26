@@ -1,13 +1,11 @@
 /**
- * Inline markdown segmentation ported from the canonical chat reference.
- * Linear `Segment[]` token stream: text, bold, italic, break, bullet, link,
- * email. The reference's "let's talk" action-trigger branch is intentionally
- * omitted — that hook does not apply here.
+ * Two-layer markdown parser used by the Copilot message renderer.
  *
- * The block-level model below (`parseMarkdown`, `MdBlock`, `MdInline`) keeps
- * the prior public surface working — assistant messages still render
- * paragraphs, headings, bullet lists and fenced code blocks via the same
- * inline rules.
+ * - parseInlineMarkdown → Segment[] (single-line: text/bold/italic/bullet/link/email/break)
+ * - parseMarkdown → MdBlock[] (paragraph/heading/list/codeblock; uses inline parser per line)
+ *
+ * Renderer guarantees: stray code fences from the model are downgraded to
+ * plain text upstream — see copilot-message.svelte (CLAUDE.md warning #19).
  */
 
 export type Segment =
@@ -24,7 +22,7 @@ const LINK_PATTERN =
 
 const TRAILING_PUNCT = /[.,;:!?)]+$/;
 
-/** Strip trailing punctuation that should not be part of a clickable URL. */
+/** Strip trailing `.,;:!?)` so they don't get pulled into the clickable href. */
 export const cleanUrl = (raw: string): string => raw.replace(TRAILING_PUNCT, "");
 
 const parseInlineLinks = (text: string): Segment[] => {
@@ -57,10 +55,11 @@ const parseInlineLinks = (text: string): Segment[] => {
 };
 
 /**
- * Parse a chat-style message into a flat segment stream.
- * Recognises: bullets (`- `), bold (`**…**`), italic (`_…_`), URLs, emails,
- * and per-line breaks. Order matters — bold splits first, italic inside
- * non-bold runs, then linkification on remaining text.
+ * Order of operations matters:
+ *   bold (**…**) → split first
+ *   italic (_…_) → only inside non-bold runs
+ *   links/emails → on the remaining text fragments
+ * Bullets (`- `) and per-line breaks are detected line-by-line.
  */
 export const parseInlineMarkdown = (text: string): Segment[] => {
     const segments: Segment[] = [];
@@ -96,8 +95,6 @@ export const parseInlineMarkdown = (text: string): Segment[] => {
     }
     return segments;
 };
-
-/* ── Block-level model (kept for the existing message renderer) ───────────── */
 
 export interface MdText {
     type: "text";

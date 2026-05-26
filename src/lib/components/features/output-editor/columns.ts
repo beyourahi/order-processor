@@ -19,19 +19,13 @@ export interface ColumnDescriptor {
     kind: ColumnKind;
     inputmode: ColumnInputMode;
     required: boolean;
-    /**
-     * When true the cell edits in a `<textarea>` that wraps long text and
-     * auto-grows on focus (FR-8). Address and Note carry free-form text that
-     * routinely overflows a single line; every other column is single-line.
-     */
+    // FR-8: when true, EditorCell renders a `<textarea>` that auto-grows on
+    // focus. Used for Address + Note; all other columns are single-line.
     multiline: boolean;
 }
 
-/**
- * SteadFast column layout: five per-row fields followed by five batch-constant
- * fields. The order here is the canonical render order in the grid when batch
- * columns are toggled visible.
- */
+// Canonical render order in editor-grid when batch columns are visible.
+// First 5 = per-row, last 5 = batch-constant.
 export const STEADFAST_COLUMNS: readonly ColumnDescriptor[] = [
     { key: "Name", kind: "per-row", inputmode: "text", required: true, multiline: false },
     { key: "Address", kind: "per-row", inputmode: "text", required: true, multiline: true },
@@ -53,11 +47,8 @@ export const BATCH_CONSTANT_COLUMNS: readonly ColumnDescriptor[] = STEADFAST_COL
     (column) => column.kind === "batch-constant"
 );
 
-/**
- * The five batch-constant fields, typed as a plain object so the defaults
- * strip can $state it and so the editor can spread it onto each row at
- * mount / Add-row time.
- */
+// Plain object shape (not Map) so $state can wrap it and spread copies are cheap.
+// Editor seeds rows from these at mount and on Add-row.
 export interface BatchDefaults {
     Invoice: string;
     "Contact Name": string;

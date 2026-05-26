@@ -15,10 +15,12 @@ const removeDuplicatesAndExtractIndexes = (data: string[][], indexes: readonly n
     return uniqueData;
 };
 
+// Legacy non-Shopify CSV: .slice(1, -1) drops the header AND a trailing
+// summary row. CLAUDE.md warning #6: do NOT remove without confirming the
+// source format still has both.
 export const prepareSteadFastOrderData = (rawData: string[][]): string[][] => {
     if (rawData.length <= 2) return [];
     const processed = removeDuplicatesAndExtractIndexes(rawData, STEADFAST_INDEXES_ARRAY);
-    // Trim header and trailing summary rows that exist in the legacy non-Shopify format
     return processed.slice(1, -1);
 };
 
@@ -29,6 +31,14 @@ const buildFullAddress = (address1: string, address2: string, city: string): str
         .join(", ");
 };
 
+/**
+ * Shopify exports repeat the order header for every line item; we collapse on
+ * `Name` (col 0) keyed by the leading `#`. Column indexes are positional and
+ * tied to Shopify's current export schema — if Shopify changes the schema,
+ * these break silently (CLAUDE.md warning #5).
+ *   34 ShippingName | 36/37/39 ShippingAddress1 / 2 / City
+ *   43 ShippingPhone | 11 Total | 44 Notes
+ */
 export const prepareShopifySteadFastOrderData = (rawData: string[][]): string[][] => {
     if (rawData.length <= 1) return [];
 
@@ -42,14 +52,13 @@ export const prepareShopifySteadFastOrderData = (rawData: string[][]): string[][
         if (!orderNumber?.startsWith("#") || !row[34]) continue;
 
         if (!orderMap.has(orderNumber)) {
-            // Cols 36/37/39 = ShippingAddress1 / ShippingAddress2 / ShippingCity
             const fullAddress = buildFullAddress(row[36] || "", row[37] || "", row[39] || "");
             orderMap.set(orderNumber, [
-                row[34] || "", // Shipping Name
+                row[34] || "",
                 fullAddress,
-                row[43] || "", // Shipping Phone
-                row[11] || "", // Total
-                row[44] || "" // Notes
+                row[43] || "",
+                row[11] || "",
+                row[44] || ""
             ]);
         }
     }

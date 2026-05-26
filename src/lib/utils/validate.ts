@@ -11,20 +11,14 @@ export interface CellWarning {
     message: string;
 }
 
-/**
- * BD mobile number is valid when, after stripping country code and leading
- * zeros, the result is exactly 10 digits starting with 1. Empty handled
- * separately by the `empty` warning.
- */
+// Valid BD mobile = exactly /^1\d{9}$/ after normalizePhoneNumber. Empty values
+// are reported as `empty`, not `phone_format` — caller pre-filters blanks.
 export const validatePhone = (value: string): boolean => {
     const normalized = normalizePhoneNumber(value);
     return /^1\d{9}$/.test(normalized);
 };
 
-/**
- * Amount is valid when it parses as a positive decimal. Empty handled
- * separately by the `empty` warning.
- */
+// Positive decimal only. Blank values are reported as `empty` by the caller.
 export const validateAmount = (value: string): boolean => {
     if (!value) return false;
     return /^\d+(\.\d+)?$/.test(value.trim());

@@ -1,10 +1,8 @@
 /**
- * Shared type contracts for the AI Copilot.
- *
- * The Copilot follows a split architecture: a stateless server endpoint
- * (`/api/copilot/chat`) only *decides* tool calls, while the browser *executes*
- * them against the output-editor grid. `Frame` is the wire protocol between the
- * two; everything else here is client-side state.
+ * Shared Copilot contracts. Architecture split: `/api/copilot/chat` is
+ * stateless and only *decides* tool calls; the browser *executes* them via
+ * `executor.ts` against editor `$state`. `Frame` is the SSE wire protocol;
+ * everything else here is client-side state.
  */
 import type { SteadFastOrder } from "$lib/types";
 import type { CellWarning, WarningCode } from "$lib/utils";
@@ -168,9 +166,10 @@ export interface EditorSnapshot {
 }
 
 /**
- * Imperative surface the output editor publishes into `copilotBridge` so the
- * Copilot can read and mutate the grid. All mutations keep `rowIds` in lockstep
- * and let the editor's `$derived` validation re-run on its own.
+ * Surface published into `copilotBridge` by output-editor. All mutations must
+ * keep `rowIds` lockstep with `rows`; validation re-runs via $derived.
+ * Null until output-editor mounts — executor.ts maps absence to a friendly
+ * "upload a CSV first" error.
  */
 export interface EditorController {
     getRows(): SteadFastOrder[];
@@ -200,7 +199,7 @@ export interface CsvMapping {
     skipLast: number;
 }
 
-/** Published by `OrderProcessor` so the Copilot can map unrecognized CSVs. */
+/** Published by order-processor.svelte for `proposeCsvColumnMapping`. */
 export interface IngestionController {
     getRawCsv(): RawCsv | null;
     applyMapping(mapping: CsvMapping): void;

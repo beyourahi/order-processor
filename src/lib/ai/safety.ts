@@ -1,21 +1,19 @@
 /**
- * Anomaly detectors — scan a batch for delivery-risk rows. Results surface in
- * the `flagAnomalies` tool and inside confirmation panels before a mutation.
- *
- * The thresholds below are deliberate, conservative defaults — tune them to the
- * real characteristics of your order batches.
+ * Anomaly detectors for batch delivery-risk rows. Output feeds:
+ *   - `flagAnomalies` tool result
+ *   - executor.ts confirmation panels (warnings before a mutation applies)
+ * Thresholds are conservative defaults — tune against real batch distributions.
  */
 import type { SteadFastOrder } from "$lib/types";
 import { normalizePhoneNumber } from "$lib/utils";
 import type { AnomalyResult } from "./types";
 
-/* ── Tunable thresholds ───────────────────────────────────────────────────── */
 const AMOUNT_OUTLIER_MIN_SAMPLES = 4;
-const AMOUNT_OUTLIER_LOW = 0.2; // flag amounts below 0.2× the batch median
-const AMOUNT_OUTLIER_HIGH = 5; // flag amounts above 5× the batch median
-const MIN_ADDRESS_LENGTH = 18; // chars; below this an address is suspiciously short
+const AMOUNT_OUTLIER_LOW = 0.2;
+const AMOUNT_OUTLIER_HIGH = 5;
+const MIN_ADDRESS_LENGTH = 18;
 
-/** Cancellation / return language, English + Bengali. */
+// English + Bengali cancellation/return phrasing.
 const CANCELLATION_RE =
     /\b(cancel(?:led|ed)?|return(?:ed)?|refund|do not (?:deliver|send)|hold)\b|বাতিল|ফেরত|হোল্ড|ক্যান্সেল/iu;
 
@@ -29,14 +27,11 @@ const median = (nums: number[]): number => {
     return sorted[mid] ?? 0;
 };
 
-/**
- * Runs every detector over a batch and returns a flat list of flagged rows.
- * A single row can trigger multiple anomalies.
- */
+/** Runs all detectors. One row may yield multiple AnomalyResult entries. */
 export const detectAnomalies = (rows: SteadFastOrder[]): AnomalyResult[] => {
     const out: AnomalyResult[] = [];
 
-    /* Amount outliers vs the batch median. */
+    // Amount outliers vs batch median; needs >= AMOUNT_OUTLIER_MIN_SAMPLES to avoid false positives on small batches.
     const amounts: number[] = [];
     for (const row of rows) {
         const n = Number.parseFloat(row.Amount);
@@ -57,7 +52,6 @@ export const detectAnomalies = (rows: SteadFastOrder[]): AnomalyResult[] => {
         });
     }
 
-    /* Suspiciously short addresses. */
     rows.forEach((row, i) => {
         const addr = (row.Address ?? "").trim();
         if (addr.length > 0 && addr.length < MIN_ADDRESS_LENGTH) {
@@ -69,7 +63,6 @@ export const detectAnomalies = (rows: SteadFastOrder[]): AnomalyResult[] => {
         }
     });
 
-    /* Cancellation / return language in the note. */
     rows.forEach((row, i) => {
         if (row.Note && CANCELLATION_RE.test(row.Note)) {
             out.push({
@@ -80,7 +73,7 @@ export const detectAnomalies = (rows: SteadFastOrder[]): AnomalyResult[] => {
         }
     });
 
-    /* Undeliverable phones — landline or malformed numbers SteadFast rejects. */
+    // BD mobile contract: normalized number must match /^1\d{9}$/ — anything else is landline/malformed.
     rows.forEach((row, i) => {
         const norm = normalizePhoneNumber(row.Phone ?? "");
         if (norm.length > 0 && !/^1\d{9}$/.test(norm)) {
@@ -92,7 +85,7 @@ export const detectAnomalies = (rows: SteadFastOrder[]): AnomalyResult[] => {
         }
     });
 
-    /* Duplicate recipients — same normalized phone on more than one row. */
+    // Dedup keyed on normalized phone; flags every row after the first occurrence.
     const seen = new Map<string, number>();
     rows.forEach((row, i) => {
         const norm = normalizePhoneNumber(row.Phone ?? "");

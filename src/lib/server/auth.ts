@@ -3,10 +3,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
-/**
- * Environment variables required for Better Auth.
- * These are provided by Cloudflare Workers environment.
- */
 interface AuthEnv {
     BETTER_AUTH_SECRET: string;
     BETTER_AUTH_URL: string;
@@ -15,40 +11,31 @@ interface AuthEnv {
 }
 
 /**
- * Creates a Better Auth instance configured for Cloudflare D1.
+ * Per-request Better Auth instance. MUST be a factory — Cloudflare Workers
+ * supply the D1 binding per request via `event.platform.env.DB`, so a
+ * module-scope singleton would leak the wrong db across requests.
  *
- * This factory pattern is required because Cloudflare Workers
- * provide the D1 binding per-request via `event.platform.env.DB`.
- * We cannot create a singleton auth instance at module scope.
- *
- * @param d1 - The D1 database binding from the request context
- * @param env - Environment variables containing auth secrets
+ * Drizzle adapter uses `usePlural: true`; schema column names MUST be
+ * snake_case (silent auth failures otherwise).
  */
 export function createAuth(d1: D1Database, env: AuthEnv) {
-    // Initialize Drizzle ORM with the D1 binding and schema
     const db = drizzle(d1, { schema });
 
     return betterAuth({
-        // Use Drizzle adapter with SQLite provider (D1 is SQLite-based)
-        // Pass schema explicitly for proper table mapping
         database: drizzleAdapter(db, {
             provider: "sqlite",
-            usePlural: true, // Better Auth expects plural table names (users, sessions, etc.)
+            usePlural: true,
             schema
         }),
 
-        // Base URL for auth callbacks - must match OAuth redirect URIs
         baseURL: env.BETTER_AUTH_URL,
-
-        // Secret for signing cookies and tokens
         secret: env.BETTER_AUTH_SECRET,
 
-        // Disable email/password auth - we only use Google OAuth
+        // Google OAuth is the only entry point; password auth is intentionally off.
         emailAndPassword: {
             enabled: false
         },
 
-        // Configure Google OAuth provider
         socialProviders: {
             google: {
                 clientId: env.GOOGLE_CLIENT_ID,
@@ -56,47 +43,40 @@ export function createAuth(d1: D1Database, env: AuthEnv) {
             }
         },
 
-        // Session configuration
         session: {
-            // Session expires after 7 days of inactivity
-            expiresIn: 60 * 60 * 24 * 7, // 7 days
-            // Update session expiry on each request (rolling sessions)
-            updateAge: 60 * 60 * 24, // Update once per day
-            // Enable cookie caching for performance
+            expiresIn: 60 * 60 * 24 * 7,
+            updateAge: 60 * 60 * 24,
             cookieCache: {
                 enabled: true,
-                maxAge: 60 * 5, // 5 minutes
-                // Bump version to instantly invalidate all cached sessions globally (e.g. security incident)
+                maxAge: 60 * 5,
+                // Global kill switch: bump to instantly invalidate every cached
+                // session across all edge nodes (use in security incidents).
                 version: "1"
             }
         },
 
-        // Rate limiting on auth routes — uses D1 so limits apply across all edge nodes
+        // D1-backed so limits apply across all Cloudflare edge nodes, not per-node.
+        // Better Auth applies stricter built-in rules (3/10s) on sign-in/sign-up.
         rateLimit: {
             enabled: true,
-            window: 60, // 1-minute window
-            max: 20, // generous for an internal tool; sign-in/sign-up paths get stricter built-in rules (3/10s)
+            window: 60,
+            max: 20,
             storage: "database"
         },
 
-        // Advanced security settings
         advanced: {
-            // Secure cookie configuration
-            cookiePrefix: "order-processor", // Unique prefix to avoid collisions
-            useSecureCookies: true // Force secure cookies (HTTPS only)
+            cookiePrefix: "order-processor",
+            useSecureCookies: true
         },
 
-        // Trusted origins for CORS and OAuth callbacks
+        // Must include every host that can issue OAuth callbacks; mirrors
+        // CSRF list in svelte.config.js.
         trustedOrigins: [
-            "http://localhost:5173", // Vite dev server
-            "http://localhost:8787", // Wrangler preview
-            "https://order-processor.beyourahi.workers.dev" // Production
+            "http://localhost:5173",
+            "http://localhost:8787",
+            "https://order-processor.beyourahi.workers.dev"
         ]
     });
 }
 
-/**
- * Type export for the auth instance.
- * Used for typing session and user in app.d.ts
- */
 export type Auth = ReturnType<typeof createAuth>;

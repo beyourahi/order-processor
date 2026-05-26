@@ -1,8 +1,3 @@
-<!--
-  Login Page
-  Google OAuth sign-in with redirect support
-  Responsive design for all screen sizes
--->
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
     import { page } from "$app/state";
@@ -12,10 +7,9 @@
     let isLoading = $state(false);
     let error = $state<string | null>(null);
 
-    // Get redirect URL from query params (preserves where user wanted to go)
+    // Preserve the originally requested route from ?redirect= so post-login lands the user there.
     const redirectUrl = $derived(page.url.searchParams.get("redirect") ?? "/");
 
-    // Redirect if already logged in
     const session = authClient.useSession();
     $effect(() => {
         if ($session.data?.user) {

@@ -1,12 +1,13 @@
 /**
- * Copilot client state — a closure-based runes store (the project's store
- * pattern, see `brand-settings.svelte.ts`). Conversations and messages are
- * held in memory only; they clear on reload, matching the editor batch which
- * is itself ephemeral.
+ * Closure-based runes store (project pattern; see brand-settings.svelte.ts).
  *
- * The AI undo stack is separate from the output editor's native Cmd+Z undo:
- * each applied mutation captures a full editor snapshot, and reverting restores
- * it. Tool-card Undo buttons and the `undoLastChange` tool both pop this stack.
+ * IN-MEMORY ONLY — no D1 tables. Conversations clear on reload, matching the
+ * ephemeral editor batch.
+ *
+ * undoStack is SEPARATE from output-editor's native Cmd+Z. Each AI mutation
+ * snapshots full editor state via EditorController.snapshot(); revert restores
+ * the snapshot, which also reverts any manual edits made since (intentional —
+ * see CLAUDE.md warning #18). Bounded by MAX_UNDO to cap memory.
  */
 import { titleFromMessage } from "$lib/ai/prompts";
 import type {
@@ -39,7 +40,7 @@ const createCopilotStore = () => {
     let mobileOpen = $state(false);
     let inputFocusNonce = $state(0);
 
-    /** The active conversation, recreated defensively if it ever goes missing. */
+    // Defensive: should always find one, but recovers if state was somehow nuked.
     const active = (): Conversation => {
         const found = conversations.find((c) => c.id === activeConversationId);
         if (found) return found;
@@ -64,7 +65,7 @@ const createCopilotStore = () => {
         get streaming() {
             return streaming;
         },
-        /** True while the model streams OR tool calls execute — gates the input. */
+        // Disables the composer while the model streams OR tool calls run.
         get inputBusy() {
             return streaming || toolsRunning;
         },
@@ -181,7 +182,7 @@ const createCopilotStore = () => {
         pushUndo(entry: AiUndoEntry) {
             undoStack = [...undoStack, entry].slice(-MAX_UNDO);
         },
-        /** Most recent not-yet-reverted entry, or null. */
+        // LIFO scan: returns the most recent not-yet-undone entry.
         peekUndo(): AiUndoEntry | null {
             for (let i = undoStack.length - 1; i >= 0; i--) {
                 const e = undoStack[i];

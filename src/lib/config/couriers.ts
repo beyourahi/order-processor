@@ -1,8 +1,5 @@
-/**
- * Courier service configurations and UI options
- * Contains courier options with logos for available services
- */
-
+// Courier picker options (label + logo per Courier enum entry).
+// Add a new courier here AND register its processor in courier-service.ts.
 import { Courier, type CourierOption } from "$lib/types";
 import steadfastLogo from "$lib/assets/steadfast.png";
 

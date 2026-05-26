@@ -6,8 +6,9 @@ import { createAuth } from "$lib/server/auth";
 import { users } from "$lib/server/schema";
 import { getCurrentUser } from "$lib/hooks";
 
-// Google Fonts is loaded in app.html; lh3.googleusercontent.com serves user avatars from Google OAuth.
-// 'unsafe-inline' is required for SvelteKit's hydration bootstrap scripts and Tailwind's scoped styles.
+// 'unsafe-inline' is REQUIRED for SvelteKit hydration scripts and Tailwind
+// scoped styles — do not tighten without testing. lh3.googleusercontent.com
+// serves Google OAuth avatars; fonts.* serves Google Fonts loaded in app.html.
 const CSP = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
@@ -21,12 +22,12 @@ const CSP = [
 const SECURITY_HEADERS = {
     "Content-Security-Policy": CSP,
     "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY", // kept for browsers that predate CSP frame-ancestors support
+    "X-Frame-Options": "DENY", // legacy fallback for browsers without CSP frame-ancestors
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
 } as const;
 
-// Clones immutable responses (e.g. redirects) before setting headers.
+// SvelteKit redirect responses have immutable headers; catch and clone.
 function applySecurityHeaders(response: Response): Response {
     try {
         for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
@@ -46,7 +47,8 @@ function applySecurityHeaders(response: Response): Response {
     }
 }
 
-// `building` guard is critical: platform bindings (D1) are unavailable during SvelteKit build/prerender.
+// `building` guard is critical: D1 binding is absent during prerender.
+// Removing this crashes the build.
 export const handle: Handle = async ({ event, resolve }) => {
     if (building) {
         return resolve(event);
@@ -55,7 +57,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const db = event.platform?.env?.DB;
 
     if (!db) {
-        // D1 not available — likely running in dev mode without wrangler or during initial project setup
+        // Happens in `bun run dev` (no wrangler bindings) or during initial setup.
         console.warn("D1 database not available - auth disabled");
         event.locals.user = null;
         event.locals.session = null;
@@ -63,9 +65,9 @@ export const handle: Handle = async ({ event, resolve }) => {
         return resolve(event);
     }
 
-    // E2E auth bypass: env-gated test affordance for Wrangler preview runs. Synthesizes locals so
-    // auth-gated flows can be exercised without invoking real Google OAuth. Inert unless
-    // E2E_BYPASS_AUTH=true is set in .dev.vars (gitignored). Never set in wrangler.jsonc.
+    // E2E auth bypass for Wrangler preview / E2E runs only. Synthesizes a session
+    // and upserts the user into D1. Inert unless `.dev.vars` sets E2E_BYPASS_AUTH=true.
+    // NEVER set in wrangler.jsonc, CI secrets, or production.
     if (event.platform?.env?.E2E_BYPASS_AUTH === "true") {
         const now = new Date();
         const userId = "e2e-test-user";
@@ -112,7 +114,6 @@ export const handle: Handle = async ({ event, resolve }) => {
         GOOGLE_CLIENT_SECRET: event.platform?.env?.GOOGLE_CLIENT_SECRET ?? ""
     };
 
-    // Warn if BETTER_AUTH_SECRET is missing — auth will fail in production
     if (!env.BETTER_AUTH_SECRET) {
         console.error("[auth] BETTER_AUTH_SECRET is not set — auth will fail in production");
     }
@@ -138,16 +139,15 @@ export const handle: Handle = async ({ event, resolve }) => {
         event.locals.currentUser = null;
     }
 
-    // /api/auth/* routes go through svelteKitHandler
+    // svelteKitHandler dispatches /api/auth/* to Better Auth; other routes pass through.
     const response = await svelteKitHandler({ event, resolve, auth, building });
     return applySecurityHeaders(response);
 };
 
-// errorId correlates user reports with server logs.
+// errorId is returned to the client and logged here so user reports map back to a Cloudflare log entry.
 export const handleError: HandleServerError = async ({ error, event, status, message }) => {
     const errorId = crypto.randomUUID();
 
-    // Log the full error (visible in Cloudflare logs)
     console.error(`[${errorId}] Unhandled error:`, {
         status,
         message,

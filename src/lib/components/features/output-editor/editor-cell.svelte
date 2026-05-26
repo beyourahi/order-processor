@@ -38,10 +38,10 @@
     let inputRef = $state<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
     /**
-     * Resolve the caret character offset under a click point so editing
-     * begins where the user pointed (FR-4). Read while the display span is
-     * still mounted, before it swaps to an input. Returns null when the
-     * browser exposes neither caret API.
+     * FR-4: resolve caret offset under the click point so editing starts
+     * where the user pointed. MUST run before isEditing flips — the display
+     * span needs to still be mounted to read its caret position.
+     * Returns null when neither caret API is exposed.
      */
     const caretOffsetFromPoint = (x: number, y: number): number | null => {
         type CaretDoc = Document & {
@@ -58,13 +58,13 @@
         return null;
     };
 
-    /** Grow a textarea to fit its content (FR-8 expand-on-focus). */
+    /** FR-8 expand-on-focus: grow textarea to fit content (no scrollbars until max-h hits). */
     const autoGrow = (el: HTMLTextAreaElement) => {
         el.style.height = "auto";
         el.style.height = `${el.scrollHeight}px`;
     };
 
-    /** Focus the freshly mounted editor and place the caret. */
+    // microtask defers until the input/textarea is mounted by the {#if} branch.
     const focusEditor = (caret: number | "end") => {
         queueMicrotask(() => {
             const el = inputRef;
@@ -77,10 +77,7 @@
         });
     };
 
-    /**
-     * Enter edit mode and place the caret. Text columns honour the click
-     * offset; tel/decimal columns always start at the end (FR-4).
-     */
+    // FR-4: text columns honour the click caret; tel/decimal always start at end.
     const enterEditMode = (caret: number | "end") => {
         draft = value;
         isEditing = true;
@@ -102,7 +99,7 @@
         if (draft !== value) {
             onCommit(draft);
         }
-        // restore focus to the cell wrapper so arrow keys keep working
+        // Return focus to the cell wrapper so arrow-key navigation resumes.
         queueMicrotask(() => cellRef?.focus());
     };
 
@@ -144,7 +141,7 @@
                 return;
         }
 
-        // Type-to-edit: any printable character starts editing with that key.
+        // Type-to-edit: any printable char enters edit mode seeded with that char.
         if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
             event.preventDefault();
             draft = event.key;
@@ -156,9 +153,8 @@
     const handleInputKeydown = (event: KeyboardEvent) => {
         switch (event.key) {
             case "Enter":
-                // Enter commits even in a textarea — SteadFast cells hold a
-                // single logical value; the textarea only wraps long text,
-                // it never stores literal newlines (FR-5).
+                // FR-5: Enter commits even in textarea. SteadFast cells are
+                // single logical values; textarea is layout-only — no newlines.
                 event.preventDefault();
                 event.stopPropagation();
                 commit();
@@ -179,14 +175,14 @@
     };
 
     /**
-     * Reject any keystroke or paste that would put a non-digit — or a second
-     * decimal point — into an Amount cell (FR-8). Cancelling at `beforeinput`
-     * never mutates the value after the fact, so the caret never jumps.
+     * FR-8: gate decimal cells at `beforeinput` so non-digits / extra dots
+     * never enter the DOM. Cancelling here keeps the caret stable; cancelling
+     * at `input` would re-trigger after the value already mutated.
      */
     const handleBeforeInput = (event: InputEvent) => {
         if (inputmode !== "decimal") return;
         const data = event.data;
-        if (!data) return; // deletions / composition end — always allowed
+        if (!data) return; // null data = deletion or IME composition end — always pass.
         if (!/^[0-9.]*$/.test(data)) {
             event.preventDefault();
             return;

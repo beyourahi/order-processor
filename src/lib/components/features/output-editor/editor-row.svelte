@@ -44,16 +44,12 @@
         return false;
     };
 
-    // Raised control surface — separation via a solid fill, a subtle border and a shadow.
     const controlBase = "border border-solid border-border bg-secondary shadow-sm";
 
-    // Row insertion/deletion motion (UX §Motion): a 100ms fade. Svelte's
-    // `slide` is explicitly unsupported on `display: table-row` elements
-    // (transition_slide_display) — table rows have no overflow clipping and
-    // ignore padding/margin — so a fade is the correct transition for rows in
-    // the <table>-based grid. Entry is gated by `animateEntry` so the rows
-    // present at editor mount appear instantly; only rows added afterwards
-    // animate in. Deletion always animates.
+    // Row motion uses `fade` (NOT `slide`) — Svelte rejects `slide` on
+    // <tr> (transition_slide_display) because table rows have no overflow
+    // clipping and ignore padding/margin. See CLAUDE.md warning #13.
+    // animateEntry gates IN so initial mount is instant; OUT always animates.
     const ROW_MOTION_MS = 100;
     const rowMotion = (node: Element, { animate }: { animate: boolean }) =>
         animate ? fade(node, { duration: ROW_MOTION_MS, easing: cubicOut }) : { duration: 0 };

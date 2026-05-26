@@ -1,20 +1,15 @@
 /**
- * Server-side Workers AI client. `runChatFrames` invokes the chat model in
- * streaming mode and yields a `Frame` stream; `describeImage` runs a vision
- * model for image-attachment turns (the chat model is text-only).
- *
- * Model: @cf/openai/gpt-oss-120b — an OpenAI-chat-completions-compatible model
- * on Workers AI (SSE chunks with `choices[].delta`, OpenAI-style tool calls).
+ * Workers AI bridge.
+ * - runChatFrames: chat + tool-calling, streamed via OpenAI-compatible SSE
+ *   chunks (data: lines with choices[].delta).
+ * - describeImage: image transcription for vision turns (chat model is text-only).
  */
 import type { Frame, ParsedToolCall, ToolCatalogEntry } from "./types";
 
-/** Chat / tool-calling model. */
 export const MODEL_ID = "@cf/openai/gpt-oss-120b" as const;
-/** Vision model used only for image-attachment turns. */
 export const VISION_MODEL_ID = "@cf/meta/llama-3.2-11b-vision-instruct" as const;
 
-/** Minimal structural type for the Workers AI binding — the generated `Ai`
- *  type does not include every model, so the endpoint casts to this. */
+// Structural type — the generated `Ai` binding omits some models, so we cast.
 export interface AiBinding {
     run(model: string, input: Record<string, unknown>): Promise<unknown>;
 }
@@ -46,8 +41,10 @@ const buildToolsPayload = (tools: ToolCatalogEntry[]) =>
     }));
 
 /**
- * Streams a single model turn. Yields `text` and `tool_call` frames as they
- * arrive and returns the accumulated `RawChatResult` for the caller to persist.
+ * Streams one chat turn. Yields text deltas live; tool_calls are accumulated
+ * across the SSE stream (OpenAI tool-call deltas split args.string by index)
+ * and emitted ONCE after the stream closes with parsed JSON args.
+ * Generator returns the accumulated RawChatResult for the caller to persist.
  */
 export const runChatFrames = async function* (
     ai: AiBinding,
@@ -173,8 +170,9 @@ const dataUrlToBytes = (dataUrl: string): number[] => {
 };
 
 /**
- * Best-effort image-to-text for vision turns. Returns a plain-text description
- * of the orders/amounts visible in the image, or "" if extraction fails.
+ * Vision-model image transcription. Best-effort: errors return "" so the chat
+ * model still gets a useful (image-less) turn. Caller folds the result into the
+ * user message; see /api/copilot/chat/+server.ts.
  */
 export const describeImage = async (ai: AiBinding, imageDataUrl: string): Promise<string> => {
     try {

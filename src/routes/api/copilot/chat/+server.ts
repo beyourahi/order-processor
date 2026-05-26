@@ -1,11 +1,11 @@
 /**
- * Streaming chat endpoint for the AI Copilot.
+ * Copilot SSE chat endpoint.
  *
- * Stateless by design: the client ships the full in-memory conversation and a
- * rendered CURRENT STATE block on every request. The endpoint assembles the
- * system prompt, invokes Workers AI, and streams a `Frame` SSE response. Tool
- * calls are validated here (with one corrective retry) but EXECUTED in the
- * browser against the output-editor grid.
+ * CONTRACT
+ * - Stateless: client ships full conversation + pre-rendered CURRENT STATE every turn.
+ * - Server only DECIDES tool calls; executor.ts in the browser RUNS them.
+ * - Validates tool args against argSchemas; one corrective retry per turn.
+ * - Frames out: text → tool_call(s) → end | error (see Frame in $lib/ai/types).
  */
 import { error } from "@sveltejs/kit";
 import { z } from "zod";
@@ -61,14 +61,14 @@ const correctiveMessage = (invalid: ValidatedCall[]): string =>
         "Re-issue the corrected tool call(s) now. Argument names and types must exactly match each tool's schema. If you cannot produce a valid call, reply with a short plain-text explanation instead."
     ].join("\n");
 
-/** Sent when the model wrote a tool call as chat text instead of calling it. */
+/** Retry prompt for when the model writes a tool call as chat text instead of calling it. */
 const LEAK_RETRY_MESSAGE =
     "Your previous response wrote the action as a chat message instead of calling a tool, so nothing happened. Re-issue it now as a real tool call through the tool interface. If you genuinely cannot, reply with one short plain-language sentence — never JSON or code.";
 
 /**
- * Detects a tool call the model leaked into its chat text — it emitted the
- * arguments as a JSON object in the reply instead of through the tool channel.
- * Such a "reply" both leaks raw JSON to the user and silently runs nothing.
+ * Heuristic: did the model emit tool args as a JSON literal in chat text?
+ * `@cf/openai/gpt-oss-120b` does this intermittently — surfacing it as text
+ * would leak raw JSON AND silently no-op the user's request.
  */
 const looksLikeLeakedToolCall = (text: string): boolean => {
     const start = text.indexOf("{");
@@ -106,8 +106,8 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     let userMessage = lastMessage.content;
     const history = parsed.messages.slice(0, -1);
 
-    // Vision turns: transcribe the image, then fold the transcript into the
-    // user message so the text-only chat model can act on it.
+    // Two-stage vision: llama-3.2-vision transcribes the image, the transcript
+    // is folded into the user message for the text-only chat model.
     if (parsed.image) {
         const transcript = await describeImage(aiBinding, parsed.image);
         if (transcript.length > 0) {
@@ -124,9 +124,9 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     return sseStream(async (push) => {
         let errored: string | null = null;
 
-        // The turn is buffered, not streamed live: the model's text is inspected
-        // before any of it reaches the user, so a tool call the model leaked as
-        // chat text is caught and never shown.
+        // Buffer the entire turn before flushing: we must inspect the text for
+        // leaked tool-call JSON BEFORE pushing it to the client (see prompts.ts
+        // and warning #19 in CLAUDE.md).
         const consume = async (gen: ReturnType<typeof runChatFrames>) => {
             let step = await gen.next();
             while (!step.done) {
@@ -155,8 +155,9 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             const invalid = validated.filter((v) => !v.valid);
             const leakedAsText = first.toolCalls.length === 0 && looksLikeLeakedToolCall(first.text);
 
-            // One corrective retry when the model emits a malformed tool call, or
-            // writes a tool call as chat text instead of calling it.
+            // Exactly one corrective retry: malformed args OR tool call written
+            // as chat text. No retry on retry — failures fall through to a
+            // friendly fallback reply.
             if ((invalid.length > 0 || leakedAsText) && !errored) {
                 const retry = await consume(
                     runChatFrames(aiBinding, {
@@ -181,8 +182,9 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
             const validCalls = validated.filter((entry) => entry.valid);
 
-            // A leaked tool call must never surface as text. If the retry could
-            // not recover it into a real call, tell the user plainly.
+            // Final safety net: never emit text that still looks like leaked
+            // JSON. If retry also failed and no calls were extracted, fall back
+            // to a friendly message rather than empty output.
             let outText = looksLikeLeakedToolCall(replyText) ? "" : replyText;
             if (leakedAsText && validCalls.length === 0 && outText.trim().length === 0) {
                 outText = "I couldn't apply that change — could you rephrase your request?";

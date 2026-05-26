@@ -1,7 +1,7 @@
 /**
- * Projects live editor + brand state into the compact CURRENT STATE text block
- * the client ships to the stateless chat endpoint each turn. Row listing is
- * capped so a large batch does not blow the model's context window.
+ * Renders editor + brand state into the CURRENT STATE block shipped to the
+ * stateless chat endpoint each turn. Row listing capped at MAX_LISTED_ROWS to
+ * stay under the model context limit; the model uses getRows() to inspect more.
  */
 import type { BrandSettingsState } from "$lib/types";
 import type { EditorController, RawCsv } from "./types";
@@ -10,8 +10,8 @@ const MAX_LISTED_ROWS = 60;
 
 const truncate = (value: string, max: number): string => (value.length > max ? `${value.slice(0, max - 1)}…` : value);
 
-/** Headers + a couple of sample rows, indexed — lets the model map an
- *  unrecognized CSV via `proposeCsvColumnMapping`. */
+// Indexed headers + 2 sample rows — supplies the model with the data it needs
+// to call proposeCsvColumnMapping correctly for unrecognized layouts.
 const renderRawCsv = (raw: RawCsv): string => {
     const lines: string[] = [
         "",
@@ -28,7 +28,6 @@ export const projectBatchState = (
     editor: EditorController | null,
     brand: BrandSettingsState,
     rawCsv: RawCsv | null = null,
-    /** True when a prior Copilot change can still be reverted with `undoLastChange`. */
     undoAvailable = false
 ): string => {
     const brandLine = `Brand settings: contactName=${brand.contactName ?? "(unset)"}, contactPhone=${brand.contactPhone ?? "(unset)"}, merchantId=${brand.merchantId ?? "(unset)"}.`;
