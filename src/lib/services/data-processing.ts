@@ -53,13 +53,7 @@ export const prepareShopifySteadFastOrderData = (rawData: string[][]): string[][
 
         if (!orderMap.has(orderNumber)) {
             const fullAddress = buildFullAddress(row[36] || "", row[37] || "", row[39] || "");
-            orderMap.set(orderNumber, [
-                row[34] || "",
-                fullAddress,
-                row[43] || "",
-                row[11] || "",
-                row[44] || ""
-            ]);
+            orderMap.set(orderNumber, [row[34] || "", fullAddress, row[43] || "", row[11] || "", row[44] || ""]);
         }
     }
 
