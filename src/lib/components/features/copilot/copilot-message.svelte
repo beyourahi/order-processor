@@ -53,7 +53,8 @@
             {#if message.image}
                 <img
                     src={message.image}
-                    alt="Attached"
+                    alt="Attachment"
+                    onerror={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
                     class="border-chat-border-subtle max-h-44 rounded-2xl rounded-br-md border border-solid object-cover"
                 />
             {/if}
@@ -123,7 +124,7 @@
         {/if}
 
         {#if (message.content || message.image) && timeLabel}
-            <span class="text-chat-text-muted px-1 text-[10px] tabular-nums">{timeLabel}</span>
+            <span class="text-chat-text-muted px-1 text-micro tabular-nums">{timeLabel}</span>
         {/if}
     </div>
 </div>

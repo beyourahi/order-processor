@@ -112,6 +112,6 @@
                 <Loader2 class="text-chat-text-muted h-4 w-4 animate-spin" aria-hidden="true" />
             </div>
         {/if}
-        <span class="text-chat-text-muted text-[10px]">image attached</span>
+        <span class="text-chat-text-muted text-micro">image attached</span>
     </div>
 {/if}

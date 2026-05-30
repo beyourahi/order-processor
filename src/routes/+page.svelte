@@ -46,6 +46,7 @@
         ]}
     >
         <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center lg:block">
+            <h2 class="sr-only">Upload and edit orders</h2>
             <OrderProcessor currentUser={data.currentUser!} selectedCourier={courierService.value} bind:editorOpen />
         </div>
 
@@ -56,6 +57,7 @@
             ]}
         >
             <div use:reveal={{ distance: "sm", delay: 0.15, onScroll: true }} class="flex w-full justify-center">
+                <h2 class="sr-only">Select a courier</h2>
                 <CourierPicker selectedCourier={courierService.value} onSelect={handleCourierSelect} />
             </div>
             <div use:reveal={{ distance: "sm", delay: 0.2, onScroll: true }} class="flex w-full justify-center">

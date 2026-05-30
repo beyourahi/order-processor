@@ -1,10 +1,7 @@
+// Only the entry points consumed outside this folder are re-exported here.
+// Internal pieces (header, welcome, message-list, composer, typing-indicator,
+// image-upload) are imported directly via relative paths where used.
 export { default as CopilotSidebar } from "./copilot-sidebar.svelte";
 export { default as CopilotMobileFab } from "./copilot-mobile-fab.svelte";
 export { default as CopilotMobileSheet } from "./copilot-mobile-sheet.svelte";
 export { default as CopilotConfirmDialog } from "./copilot-confirm-dialog.svelte";
-export { default as CopilotHeader } from "./copilot-header.svelte";
-export { default as CopilotWelcome } from "./copilot-welcome.svelte";
-export { default as CopilotMessageList } from "./copilot-message-list.svelte";
-export { default as CopilotComposer } from "./copilot-composer.svelte";
-export { default as CopilotTypingIndicator } from "./copilot-typing-indicator.svelte";
-export { default as CopilotImageUpload } from "./copilot-image-upload.svelte";

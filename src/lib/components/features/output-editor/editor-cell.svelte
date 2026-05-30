@@ -220,7 +220,7 @@
         isSelected && "bg-secondary/40",
         warning && "ring-1 ring-amber-500/60 ring-inset",
         isOverride &&
-            "before:bg-courier-accent/80 before:absolute before:top-1 before:bottom-1 before:left-0 before:w-[2px] before:rounded-r"
+            "before:bg-courier-accent/80 before:absolute before:top-1 before:bottom-1 before:left-0 before:w-0.5 before:rounded-r"
     )}
 >
     {#if isEditing}

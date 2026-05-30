@@ -17,6 +17,7 @@
 
             <button
                 onclick={() => onSelect(option.value)}
+                aria-pressed={isSelected}
                 class={cn(
                     "sleek group relative flex w-full cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
                     "border border-solid transition-all duration-200",

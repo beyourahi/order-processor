@@ -73,7 +73,12 @@ export const runChatFrames = async function* (
 
     let stream: ReadableStream<Uint8Array>;
     try {
-        stream = (await ai.run(MODEL_ID, input)) as ReadableStream<Uint8Array>;
+        const raw = await ai.run(MODEL_ID, input);
+        if (!(raw instanceof ReadableStream)) {
+            yield { t: "error", message: "Model did not return a stream" };
+            return result;
+        }
+        stream = raw as ReadableStream<Uint8Array>;
     } catch (err) {
         yield { t: "error", message: err instanceof Error ? err.message : "Model invocation failed" };
         return result;

@@ -73,9 +73,9 @@
     <div class="animate-in fade-in slide-in-from-top-2 w-full max-w-sm duration-300">
         <div class="mb-4 flex items-center gap-3">
             <div class="bg-border h-px flex-1"></div>
-            <span class="text-muted-foreground text-xs font-medium tracking-wider whitespace-nowrap uppercase"
-                >SteadFast Settings</span
-            >
+            <h2 class="text-muted-foreground m-0 text-xs font-medium tracking-wider whitespace-nowrap uppercase">
+                SteadFast Settings
+            </h2>
             <div class="bg-border h-px flex-1"></div>
         </div>
 

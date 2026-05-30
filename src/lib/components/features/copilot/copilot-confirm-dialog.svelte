@@ -63,7 +63,7 @@
                     >
                         {#each pending.diff as row, i (i)}
                             <div class="space-y-1">
-                                <div class="text-chat-text-muted font-mono text-[10px] tracking-wide uppercase">
+                                <div class="text-chat-text-muted font-mono text-micro tracking-wide uppercase">
                                     {row.label}
                                 </div>
                                 <div class="flex items-start gap-2 text-xs">

@@ -30,6 +30,7 @@
     let showBatchColumns = $state(false);
     let lastSelectAnchor = $state<number | null>(null);
     let showDiscardConfirm = $state(false);
+    let discardModalEl = $state<HTMLElement | null>(null);
     let gridComponent = $state<EditorGrid | null>(null);
 
     type UndoEntry = {
@@ -212,7 +213,7 @@
     };
 
     // SvelteSet is reactive — mutate in place rather than reassigning.
-    const toggleSelect = (rowIndex: number, event: MouseEvent) => {
+    const toggleSelect = (rowIndex: number, event: MouseEvent | KeyboardEvent) => {
         const isShift = event.shiftKey;
 
         if (isShift && lastSelectAnchor !== null) {
@@ -364,6 +365,32 @@
         showDiscardConfirm = false;
     };
 
+    // Escape closes; Tab cycles within the modal's buttons (focus trap).
+    const onDiscardModalKeydown = (event: KeyboardEvent) => {
+        if (!showDiscardConfirm) return;
+        if (event.key === "Escape") {
+            event.preventDefault();
+            cancelDiscard();
+            return;
+        }
+        if (event.key !== "Tab" || !discardModalEl) return;
+        const items = Array.from(discardModalEl.querySelectorAll<HTMLElement>("button:not([disabled])")).filter(
+            (el) => el.offsetParent !== null
+        );
+        const first = items[0];
+        const last = items.at(-1);
+        if (!first || !last) return;
+        const active = document.activeElement;
+        const outside = !discardModalEl.contains(active);
+        if (event.shiftKey && (active === first || outside)) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (active === last || outside)) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+
     const download = () => {
         // NFR-14: idempotent BD-phone normalization at export only, not on commit.
         const normalized = rows.map((row) => ({
@@ -466,16 +493,20 @@
 
 {#if showDiscardConfirm}
     <div
-        role="dialog"
+        role="alertdialog"
         aria-modal="true"
         aria-labelledby="discard-title"
+        aria-describedby="discard-desc"
+        tabindex="-1"
+        onkeydown={onDiscardModalKeydown}
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     >
         <div
+            bind:this={discardModalEl}
             class="border-border bg-popover w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-solid p-6 shadow-2xl"
         >
             <h2 id="discard-title" class="text-foreground text-base font-medium text-balance">Discard your edits?</h2>
-            <p class="text-muted-foreground mt-2 text-sm text-pretty">
+            <p id="discard-desc" class="text-muted-foreground mt-2 text-sm text-pretty">
                 This can't be undone. Your edits will be lost and you'll return to the upload zone.
             </p>
             <div class="mt-6 flex items-center justify-end gap-2">

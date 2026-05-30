@@ -214,6 +214,8 @@
         <div
             role="button"
             tabindex={isDisabled ? -1 : 0}
+            aria-label="Upload CSV file"
+            aria-disabled={isDisabled}
             class={cn(
                 "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
                 "h-56 sm:h-64 md:h-72 lg:h-80",

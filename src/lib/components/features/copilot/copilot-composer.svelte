@@ -173,7 +173,7 @@
             </button>
         </div>
 
-        <span class="text-chat-text-muted/60 absolute bottom-2.5 left-4 text-[10px]">
+        <span class="text-chat-text-muted/60 absolute bottom-2.5 left-4 text-micro">
             {#if disabled}
                 generating...
             {:else}
