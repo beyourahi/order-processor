@@ -208,7 +208,7 @@ src/
     components/
       features/                          -- order-processor, upload, courier-picker, user, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-grid/row/cell, columns.ts
-      features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + message, tool-badge, anomaly-warning, conversations-panel, confirm-dialog, mobile-fab, mobile-sheet, launcher-icon
+      features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + chat shell (header, welcome, message-list, message, composer, typing-indicator, image-upload) + tool-badge, anomaly-warning, conversations-panel, confirm-dialog, mobile-fab, mobile-sheet, launcher-icon
       ui/                                -- button, dialog, footer, heading, input, loading-spinner, table, tooltip (shadcn-svelte)
     config/
       app.ts                             -- app metadata
