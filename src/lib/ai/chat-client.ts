@@ -9,10 +9,11 @@
 import { copilot } from "$lib/stores/copilot.svelte";
 import { copilotBridge } from "$lib/stores/copilot-bridge.svelte";
 import { brandSettings } from "$lib/stores";
+import { api } from "$lib/api/client";
 import { projectBatchState } from "./context";
 import { streamFrames } from "./streaming";
 import { executeToolCall, type ConfirmationRequest, type ExecutorContext } from "./executor";
-import type { ChatRequestBody, ParsedToolCall } from "./types";
+import type { ChatRequestBody, ParsedToolCall, PersistedConversationSummary, PersistedMessage } from "./types";
 
 // Defense-in-depth: ensures error banners are always user-readable; never
 // expose raw status codes or server payloads (see CLAUDE.md warning #19).
@@ -51,6 +52,9 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
     const trimmed = text.trim();
     if ((trimmed.length === 0 && !image) || copilot.inputBusy) return;
 
+    const localConversationId = copilot.activeConversationId;
+    const persistedConversationId = copilot.activeConversation.persisted ? localConversationId : null;
+
     const userMessageId = crypto.randomUUID();
     copilot.appendUserMessage(userMessageId, trimmed || "(image attached)", image);
 
@@ -74,7 +78,7 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
     const collectedToolCalls: ParsedToolCall[] = [];
 
     try {
-        const body: ChatRequestBody = { messages: history, contextText };
+        const body: ChatRequestBody = { messages: history, contextText, conversationId: persistedConversationId };
         if (image) body.image = image;
 
         const response = await fetch("/api/copilot/chat", {
@@ -97,6 +101,8 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
                 const call: ParsedToolCall = { id: frame.id, name: frame.name, args: frame.args };
                 collectedToolCalls.push(call);
                 copilot.attachToolCall(assistantId, call);
+            } else if (frame.t === "end") {
+                if (frame.conversationId) copilot.adoptConversationId(localConversationId, frame.conversationId);
             } else if (frame.t === "error") {
                 copilot.setError("The Copilot ran into a problem completing that. Please try again.");
             }
@@ -120,6 +126,55 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
 
 export const createNewConversation = (): void => {
     copilot.createNewConversation();
+};
+
+/** Fetches the user's D1 conversation summaries and seeds the store. */
+export const loadConversations = async (): Promise<void> => {
+    try {
+        const rows = await api.get<PersistedConversationSummary[]>("/api/copilot/conversations");
+        copilot.hydrate(rows);
+    } catch {
+        // Best-effort hydration; an offline list just leaves the local draft.
+    }
+};
+
+/** Switches to a conversation, lazily loading its messages from D1 on first open. */
+export const switchConversation = async (id: string): Promise<void> => {
+    const conv = copilot.conversations.find((c) => c.id === id);
+    copilot.switchConversation(id);
+    if (!conv || conv.loaded || !conv.persisted) return;
+    try {
+        const rows = await api.get<PersistedMessage[]>(
+            `/api/copilot/messages?conversationId=${encodeURIComponent(id)}`
+        );
+        copilot.setConversationMessages(id, rows);
+    } catch {
+        copilot.markLoaded(id);
+    }
+};
+
+/** Renames a conversation locally, persisting to D1 when it has a server row. */
+export const renameConversation = async (id: string, title: string): Promise<void> => {
+    const conv = copilot.conversations.find((c) => c.id === id);
+    copilot.renameConversation(id, title);
+    if (!conv?.persisted) return;
+    try {
+        await api.patch(`/api/copilot/conversations/${encodeURIComponent(id)}`, { title: title.trim() });
+    } catch {
+        // Local rename already applied; D1 stays best-effort.
+    }
+};
+
+/** Deletes a conversation locally and from D1 when it has a server row. */
+export const deleteConversation = async (id: string): Promise<void> => {
+    const conv = copilot.conversations.find((c) => c.id === id);
+    copilot.deleteConversation(id);
+    if (!conv?.persisted) return;
+    try {
+        await api.delete(`/api/copilot/conversations/${encodeURIComponent(id)}`);
+    } catch {
+        // Local deletion already applied; D1 stays best-effort.
+    }
 };
 
 /** Resolves a queued confirmation dialog (called by the confirm dialog UI). */

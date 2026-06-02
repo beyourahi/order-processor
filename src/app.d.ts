@@ -16,6 +16,9 @@ declare global {
             env: {
                 DB: D1Database;
                 AI: Ai;
+                VECTORIZE: VectorizeIndex;
+                SEED_SECRET?: string;
+                AI_GATEWAY_SLUG?: string;
                 BETTER_AUTH_SECRET: string;
                 BETTER_AUTH_URL: string;
                 GOOGLE_CLIENT_ID: string;

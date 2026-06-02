@@ -20,6 +20,12 @@
     "ai": {
         "binding": "AI"
     },
+    "vectorize": [
+        {
+            "binding": "VECTORIZE",
+            "index_name": "order-processor-kb"
+        }
+    ],
     "observability": {
         "enabled": true
     },
@@ -27,6 +33,7 @@
         "cpu_ms": 300000
     },
     "vars": {
-        "BETTER_AUTH_URL": "https://order-processor.beyourahi.workers.dev"
+        "BETTER_AUTH_URL": "https://order-processor.beyourahi.workers.dev",
+        "AI_GATEWAY_SLUG": "order-processor-ai"
     }
 }

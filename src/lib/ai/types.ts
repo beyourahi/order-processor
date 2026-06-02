@@ -44,7 +44,7 @@ export interface ToolCatalogEntry {
 export type Frame =
     | { t: "text"; delta: string }
     | { t: "tool_call"; id: string; name: string; args: unknown }
-    | { t: "end"; turnId: string }
+    | { t: "end"; turnId: string; conversationId?: string | undefined }
     | { t: "error"; message: string };
 
 export interface ParsedToolCall {
@@ -64,7 +64,9 @@ export interface ChatHistoryMessage {
 }
 
 export interface ChatRequestBody {
-    /** Prior turns of the active conversation (in-memory; server is stateless). */
+    /** D1 conversation id to persist this turn under; null/omitted creates one. */
+    conversationId?: string | null;
+    /** Prior turns of the active conversation (the model flow stays stateless). */
     messages: ChatHistoryMessage[];
     /** Pre-rendered CURRENT STATE block — the client owns editor state. */
     contextText: string;
@@ -105,7 +107,29 @@ export interface Conversation {
     id: string;
     title: string;
     createdAt: string;
+    updatedAt?: string;
     messages: CopilotMessage[];
+    /** True once this conversation exists as a row in D1. */
+    persisted: boolean;
+    /** True once messages have been fetched from D1 (or it was created locally). */
+    loaded: boolean;
+}
+
+/** Conversation summary hydrated from D1 on page load (no messages yet). */
+export interface PersistedConversationSummary {
+    id: string;
+    title: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** A single persisted message row hydrated from D1 for a conversation. */
+export interface PersistedMessage {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+    toolCalls: Array<{ id: string; name: string; args: unknown }> | null;
+    createdAt: string;
 }
 
 /* ── Safety / anomaly detection ───────────────────────────────────────────── */

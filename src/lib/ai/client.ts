@@ -5,8 +5,8 @@
  * - describeImage: image transcription for vision turns (chat model is text-only).
  */
 import type { Frame, ParsedToolCall, ToolCatalogEntry } from "./types";
+import { openGatewayChat, type GatewayEnv } from "./gateway";
 
-export const MODEL_ID = "@cf/openai/gpt-oss-120b" as const;
 export const VISION_MODEL_ID = "@cf/meta/llama-3.2-11b-vision-instruct" as const;
 
 // Structural type — the generated `Ai` binding omits some models, so we cast.
@@ -14,10 +14,13 @@ export interface AiBinding {
     run(model: string, input: Record<string, unknown>): Promise<unknown>;
 }
 
+export type RunChatEnv = GatewayEnv;
+
 export interface RunChatParams {
     systemContext: string;
     history: Array<{ role: "user" | "assistant"; content: string }>;
     userMessage: string;
+    conversationId: string;
     tools: ToolCatalogEntry[];
     maxTokens?: number;
 }
@@ -47,7 +50,7 @@ const buildToolsPayload = (tools: ToolCatalogEntry[]) =>
  * Generator returns the accumulated RawChatResult for the caller to persist.
  */
 export const runChatFrames = async function* (
-    ai: AiBinding,
+    env: RunChatEnv,
     params: RunChatParams
 ): AsyncGenerator<Frame, RawChatResult> {
     const messages = [
@@ -58,9 +61,9 @@ export const runChatFrames = async function* (
 
     const input: Record<string, unknown> = {
         messages,
-        max_completion_tokens: params.maxTokens ?? 2048,
+        max_tokens: params.maxTokens ?? 2048,
         temperature: 0.2,
-        reasoning_effort: "medium",
+        chat_template_kwargs: { thinking: false },
         stream: true,
         stream_options: { include_usage: true }
     };
@@ -73,7 +76,10 @@ export const runChatFrames = async function* (
 
     let stream: ReadableStream<Uint8Array>;
     try {
-        stream = (await ai.run(MODEL_ID, input)) as ReadableStream<Uint8Array>;
+        const gatewayResult = await openGatewayChat(env, input, {
+            conversationId: params.conversationId
+        });
+        stream = gatewayResult.stream;
     } catch (err) {
         yield { t: "error", message: err instanceof Error ? err.message : "Model invocation failed" };
         return result;

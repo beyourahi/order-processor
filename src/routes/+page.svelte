@@ -1,6 +1,7 @@
 <script lang="ts">
     import { untrack } from "svelte";
     import { courierService, brandSettings } from "$lib/stores";
+    import { copilot } from "$lib/stores/copilot.svelte";
     import { Heading, OrderProcessor, CourierPicker, User, SteadFastSettings } from "$lib/components";
     import { reveal } from "$lib/motion";
     import { Courier } from "$lib/types";
@@ -13,6 +14,7 @@
     // left inputs blank until after first render (fixed in commit 6d9d68b).
     untrack(() => {
         brandSettings.hydrate(data.brandSettings);
+        copilot.hydrate(data.copilotConversations);
     });
 
     const showSteadFastSettings = $derived(courierService.value === Courier.SteadFast);

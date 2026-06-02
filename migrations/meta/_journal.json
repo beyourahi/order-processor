@@ -29,6 +29,13 @@
             "when": 1777905068326,
             "tag": "0007_add_selected_courier",
             "breakpoints": true
+        },
+        {
+            "idx": 8,
+            "version": "6",
+            "when": 1780395061253,
+            "tag": "0008_curly_bloodaxe",
+            "breakpoints": true
         }
     ]
 }

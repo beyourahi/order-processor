@@ -97,3 +97,38 @@ export const brandSettings = sqliteTable(
     },
     (table) => [index("idx_brand_settings_user_id").on(table.userId)]
 );
+
+export const aiConversations = sqliteTable(
+    "ai_conversations",
+    {
+        id: text("id").primaryKey(),
+        userId: text("user_id")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        title: text("title").notNull(),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .$defaultFn(() => new Date()),
+        updatedAt: integer("updated_at", { mode: "timestamp" })
+            .notNull()
+            .$defaultFn(() => new Date())
+    },
+    (table) => [index("idx_ai_conversations_user_updated").on(table.userId, table.updatedAt)]
+);
+
+export const aiMessages = sqliteTable(
+    "ai_messages",
+    {
+        id: text("id").primaryKey(),
+        conversationId: text("conversation_id")
+            .notNull()
+            .references(() => aiConversations.id, { onDelete: "cascade" }),
+        role: text("role").$type<"user" | "assistant">().notNull(),
+        content: text("content").notNull(),
+        toolCalls: text("tool_calls", { mode: "json" }).$type<Array<{ id: string; name: string; args: unknown }>>(),
+        createdAt: integer("created_at", { mode: "timestamp" })
+            .notNull()
+            .$defaultFn(() => new Date())
+    },
+    (table) => [index("idx_ai_messages_conversation_created").on(table.conversationId, table.createdAt)]
+);

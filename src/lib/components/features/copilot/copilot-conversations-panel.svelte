@@ -1,22 +1,23 @@
 <script lang="ts">
     import { copilot } from "$lib/stores/copilot.svelte";
+    import { switchConversation, renameConversation, deleteConversation } from "$lib/ai/chat-client";
     import { Pencil, Trash2 } from "@lucide/svelte";
     import { cn } from "$lib/utils";
 
     const onSwitch = (id: string) => {
-        copilot.switchConversation(id);
+        void switchConversation(id);
     };
 
     const onRename = (id: string, currentTitle: string) => {
         const next = prompt("Rename chat", currentTitle);
         if (next && next.trim() && next.trim() !== currentTitle) {
-            copilot.renameConversation(id, next.trim());
+            void renameConversation(id, next.trim());
         }
     };
 
     const onDelete = (id: string) => {
         if (confirm("Delete this chat?")) {
-            copilot.deleteConversation(id);
+            void deleteConversation(id);
         }
     };
 </script>

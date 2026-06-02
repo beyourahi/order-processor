@@ -8,16 +8,21 @@
  * - Frames out: text → tool_call(s) → end | error (see Frame in $lib/ai/types).
  */
 import { error } from "@sveltejs/kit";
+import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod";
 import type { RequestHandler } from "./$types";
-import { runChatFrames, describeImage, type AiBinding } from "$lib/ai/client";
+import { runChatFrames, describeImage, type AiBinding, type RunChatEnv } from "$lib/ai/client";
 import { sseStream } from "$lib/ai/streaming";
-import { buildSystemContext, FEW_SHOTS } from "$lib/ai/prompts";
+import { buildSystemContext, FEW_SHOTS, titleFromMessage } from "$lib/ai/prompts";
 import { TOOLS_CATALOG } from "$lib/ai/tools-catalog";
 import { argSchemas, isKnownToolName } from "$lib/ai/schemas";
+import { retrieveAppKnowledge, formatKnowledge, type RagEnv } from "$lib/ai/rag";
+import { createConversation, getConversation, touchUpdatedAt } from "$lib/server/repositories/ai-conversations";
+import { appendMessage } from "$lib/server/repositories/ai-messages";
 import type { ParsedToolCall } from "$lib/ai/types";
 
 const bodySchema = z.object({
+    conversationId: z.string().nullable().optional(),
     messages: z
         .array(
             z.object({
@@ -82,6 +87,19 @@ const looksLikeLeakedToolCall = (text: string): boolean => {
     }
 };
 
+/**
+ * Conversations are in-memory client-side with no server id; derive a stable id
+ * from the first user message so gateway session affinity holds across a
+ * conversation's turns without leaking content.
+ */
+const stableConversationId = async (seed: string): Promise<string> => {
+    const data = new TextEncoder().encode(seed);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest).slice(0, 16))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+};
+
 export const POST: RequestHandler = async ({ locals, platform, request }) => {
     if (!locals.user) {
         error(401, { message: "Not authenticated" });
@@ -117,12 +135,49 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
         }
     }
 
+    if (platform?.env?.VECTORIZE) {
+        try {
+            const knowledge = formatKnowledge(
+                await retrieveAppKnowledge(platform.env as unknown as RagEnv, lastMessage.content)
+            );
+            if (knowledge.length > 0) {
+                userMessage = `${userMessage}\n\nAPP KNOWLEDGE:\n${knowledge}`;
+            }
+        } catch {
+            // Knowledge retrieval is best-effort; ignore failures.
+        }
+    }
+
+    const gatewayEnv = platform?.env as unknown as RunChatEnv;
     const systemContext = buildSystemContext(parsed.contextText, TOOLS_CATALOG);
     const withFewShots = history.length === 0 ? [...FEW_SHOTS, ...history] : history;
     const turnId = crypto.randomUUID();
+    const firstUserMessage = parsed.messages.find((m) => m.role === "user")?.content ?? userMessage;
+    const conversationId = await stableConversationId(firstUserMessage);
+
+    // D1 persistence runs alongside the stateless model flow above — the model
+    // still receives the client-shipped history; D1 only records the turn so
+    // conversations survive reloads. Persistence failures never abort the turn.
+    const db = platform?.env?.DB ? drizzle(platform.env.DB) : null;
+    let persistedConversationId: string | null = null;
+    if (db) {
+        try {
+            const requestedId = parsed.conversationId ?? null;
+            let conversation = requestedId ? await getConversation(db, locals.user.id, requestedId) : null;
+            if (!conversation) {
+                conversation = await createConversation(db, locals.user.id, titleFromMessage(lastMessage.content));
+            }
+            persistedConversationId = conversation.id;
+            await appendMessage(db, persistedConversationId, { role: "user", content: lastMessage.content });
+        } catch {
+            persistedConversationId = null;
+        }
+    }
 
     return sseStream(async (push) => {
         let errored: string | null = null;
+        let assistantText = "";
+        const persistedToolCalls: ParsedToolCall[] = [];
 
         // Buffer the entire turn before flushing: we must inspect the text for
         // leaked tool-call JSON BEFORE pushing it to the client (see prompts.ts
@@ -142,10 +197,11 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
         try {
             const first = await consume(
-                runChatFrames(aiBinding, {
+                runChatFrames(gatewayEnv, {
                     systemContext,
                     history: withFewShots,
                     userMessage,
+                    conversationId,
                     tools: TOOLS_CATALOG
                 })
             );
@@ -160,7 +216,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             // friendly fallback reply.
             if ((invalid.length > 0 || leakedAsText) && !errored) {
                 const retry = await consume(
-                    runChatFrames(aiBinding, {
+                    runChatFrames(gatewayEnv, {
                         systemContext,
                         history: [
                             ...withFewShots,
@@ -172,6 +228,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                         ],
                         userMessage:
                             leakedAsText && invalid.length === 0 ? LEAK_RETRY_MESSAGE : correctiveMessage(invalid),
+                        conversationId,
                         tools: TOOLS_CATALOG
                     })
                 );
@@ -190,9 +247,11 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                 outText = "I couldn't apply that change — could you rephrase your request?";
             }
             if (outText.trim().length > 0) {
+                assistantText = outText;
                 push({ t: "text", delta: outText });
             }
             for (const entry of validCalls) {
+                persistedToolCalls.push({ id: entry.call.id, name: entry.call.name, args: entry.call.args });
                 push({
                     t: "tool_call",
                     id: entry.call.id,
@@ -204,6 +263,19 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             push({ t: "error", message: err instanceof Error ? err.message : "Stream failed" });
         }
 
-        push({ t: "end", turnId });
+        if (db && persistedConversationId) {
+            try {
+                await appendMessage(db, persistedConversationId, {
+                    role: "assistant",
+                    content: assistantText,
+                    toolCalls: persistedToolCalls.length > 0 ? persistedToolCalls : null
+                });
+                await touchUpdatedAt(db, persistedConversationId);
+            } catch {
+                // Persistence is best-effort; the live turn already streamed.
+            }
+        }
+
+        push({ t: "end", turnId, conversationId: persistedConversationId ?? undefined });
     });
 };

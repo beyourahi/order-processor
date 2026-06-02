@@ -1,8 +1,11 @@
 /**
  * Closure-based runes store (project pattern; see brand-settings.svelte.ts).
  *
- * IN-MEMORY ONLY — no D1 tables. Conversations clear on reload, matching the
- * ephemeral editor batch.
+ * D1-BACKED — conversations + messages persist server-side and survive reloads.
+ * The store holds the working set; chat-client.ts owns the network calls
+ * (create/list/load/rename/delete) and feeds results back through these
+ * mutators. A conversation starts local (`persisted: false`); the server mints
+ * its real id on the first turn and the client adopts it via adoptConversationId.
  *
  * undoStack is SEPARATE from output-editor's native Cmd+Z. Each AI mutation
  * snapshots full editor state via EditorController.snapshot(); revert restores
@@ -16,7 +19,9 @@ import type {
     CopilotMessage,
     CopilotToolCall,
     ParsedToolCall,
-    PendingConfirmation
+    PendingConfirmation,
+    PersistedConversationSummary,
+    PersistedMessage
 } from "$lib/ai/types";
 
 const MAX_UNDO = 25;
@@ -25,7 +30,28 @@ const newConversation = (): Conversation => ({
     id: crypto.randomUUID(),
     title: "New chat",
     createdAt: new Date().toISOString(),
-    messages: []
+    messages: [],
+    persisted: false,
+    loaded: true
+});
+
+const toCopilotMessage = (row: PersistedMessage): CopilotMessage => ({
+    id: row.id,
+    role: row.role,
+    content: row.content,
+    toolCalls: (row.toolCalls ?? []).map((tc) => ({
+        id: tc.id,
+        name: tc.name,
+        args: tc.args,
+        status: "applied",
+        summary: null,
+        error: null,
+        anomalies: [],
+        undoId: null,
+        undone: false
+    })),
+    createdAt: row.createdAt,
+    streaming: false
 });
 
 const createCopilotStore = () => {
@@ -58,6 +84,9 @@ const createCopilotStore = () => {
         },
         get activeConversationId() {
             return activeConversationId;
+        },
+        get activeConversation() {
+            return active();
         },
         get messages() {
             return active().messages;
@@ -111,6 +140,59 @@ const createCopilotStore = () => {
         },
         requestInputFocus() {
             inputFocusNonce++;
+        },
+
+        // Seeds the conversation list from D1 (summaries only — messages load
+        // lazily on switch). Keeps the current local draft at the top so an
+        // in-progress new chat is never discarded by hydration.
+        hydrate(summaries: PersistedConversationSummary[]) {
+            const draft = active();
+            const persisted = summaries.map<Conversation>((s) => ({
+                id: s.id,
+                title: s.title,
+                createdAt: s.createdAt,
+                updatedAt: s.updatedAt,
+                messages: [],
+                persisted: true,
+                loaded: false
+            }));
+            const keepDraft = draft.messages.length === 0 && !draft.persisted;
+            conversations = keepDraft ? [draft, ...persisted] : persisted.length > 0 ? persisted : [newConversation()];
+            if (!conversations.some((c) => c.id === activeConversationId)) {
+                activeConversationId = conversations[0]?.id ?? "";
+            }
+        },
+
+        // Replaces an active local conversation's id with the server-minted one
+        // once the first turn is persisted, so subsequent turns reuse the row.
+        adoptConversationId(localId: string, serverId: string) {
+            const conv = conversations.find((c) => c.id === localId);
+            if (!conv || conv.id === serverId) return;
+            const existing = conversations.find((c) => c.id === serverId);
+            if (existing) {
+                // Server row already in the list (e.g. from hydration) — drop the
+                // local draft and point the active id at the canonical row.
+                conv.persisted = true;
+                conversations = conversations.filter((c) => c.id !== localId);
+                if (activeConversationId === localId) activeConversationId = serverId;
+                return;
+            }
+            conv.id = serverId;
+            conv.persisted = true;
+            conv.loaded = true;
+            if (activeConversationId === localId) activeConversationId = serverId;
+        },
+
+        setConversationMessages(id: string, rows: PersistedMessage[]) {
+            const conv = conversations.find((c) => c.id === id);
+            if (!conv) return;
+            conv.messages = rows.map(toCopilotMessage);
+            conv.loaded = true;
+        },
+
+        markLoaded(id: string) {
+            const conv = conversations.find((c) => c.id === id);
+            if (conv) conv.loaded = true;
         },
 
         appendUserMessage(id: string, content: string, image?: string) {
