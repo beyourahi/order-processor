@@ -7,6 +7,13 @@
 >
     <p>
         <a
+            href="/changelog"
+            class="group sleek focus-visible:ring-ring rounded focus-visible:ring-2 focus-visible:outline-none"
+        >
+            <span class="group-hover:text-foreground underline-offset-4 group-hover:underline">Changelog</span>
+        </a>
+        <span class="mx-2 opacity-50">·</span>
+        <a
             href={APP_CONFIG.author.url}
             target="_blank"
             rel="noopener noreferrer"
