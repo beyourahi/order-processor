@@ -40,6 +40,12 @@ export const stagger = async (targets: ArrayLike<Element>, options?: StaggerOpti
     return () => tween.kill();
 };
 
+/**
+ * FLIP helper for list reorder/add/remove. Two-phase: call it BEFORE the DOM
+ * mutation to snapshot positions, then await the returned function AFTER the
+ * mutation to animate from old to new layout. The returned fn awaits `tick()`
+ * so Svelte has flushed the DOM. Under reduced motion both phases are no-ops.
+ */
 export const flipList = async (container: Element): Promise<() => Promise<void>> => {
     if (prefersReducedMotion.current) return async () => {};
 
@@ -61,5 +67,8 @@ export const flipList = async (container: Element): Promise<() => Promise<void>>
     };
 };
 
+// Resolves a duration token to milliseconds for non-GSAP timing (setTimeout,
+// Svelte transitions). Returns 0 under reduced motion so callers collapse to
+// instant without branching themselves.
 export const motionDuration = (token: DurationToken = "base"): number =>
     prefersReducedMotion.current ? 0 : DURATION_MS[token];

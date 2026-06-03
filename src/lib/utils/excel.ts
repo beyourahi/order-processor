@@ -7,6 +7,8 @@ export const buildWorkbook = <T extends object>(data: T[], sheetName: string = "
     return workbook;
 };
 
+// Side effect: triggers an immediate browser download of the .xlsx. Returns
+// nothing — must run client-side (SheetJS writeFile uses the DOM/Blob APIs).
 export const writeWorkbook = (workbook: XLSX.WorkBook, fileName: string): void => {
     XLSX.writeFile(workbook, fileName);
 };

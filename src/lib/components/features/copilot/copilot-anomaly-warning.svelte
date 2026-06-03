@@ -1,4 +1,9 @@
 <script lang="ts">
+    /**
+     * Shared safety-check list rendered both inside a tool-badge (post-apply) and
+     * in the confirm dialog (pre-apply). `anomaly.rowIndex` is 0-based; the +1 in
+     * markup matches the 1-based row numbers the user sees in the editor grid.
+     */
     import type { AnomalyResult } from "$lib/ai/types";
     import { AlertTriangle } from "@lucide/svelte";
 

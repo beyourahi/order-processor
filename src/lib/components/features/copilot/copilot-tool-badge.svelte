@@ -1,5 +1,12 @@
 <script lang="ts">
-    /** A single tool-call card inside an assistant message. */
+    /**
+     * A single tool-call card inside an assistant message (child of copilot-message).
+     * Reflects the call's live status from the store and, for an applied mutation,
+     * offers Undo. The Undo button calls `undoAction(call.undoId)` which pops the
+     * Copilot's *own* undo stack (warning #18) — distinct from the editor's native
+     * Cmd+Z; reverting also rolls back any manual edits made since. Read-only tools
+     * have no `undoId`, so `canUndo` hides the button for them.
+     */
     import type { CopilotToolCall, ToolName } from "$lib/ai/types";
     import { TOOL_LABELS } from "$lib/ai/tools-catalog";
     import { undoAction } from "$lib/ai/chat-client";

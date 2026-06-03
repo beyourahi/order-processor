@@ -55,6 +55,9 @@
     --border-strong: oklch(0.85 0 0);
     --courier-accent: oklch(0.69 0.17 162);
 
+    /* Copilot right-rail sizing (CLAUDE.md warning #21). +layout.svelte reserves
+       this much space on the main column via lg:pr-[calc(var(--copilot-rail-width)+1.5rem)].
+       Change these tokens, never the hard-coded calc() expressions in markup. */
     --copilot-rail-width: 26rem;
     --copilot-rail-width-xl: 28rem;
 
@@ -316,6 +319,11 @@ textarea,
     }
 }
 
+/* Anti-zoom font floor (CLAUDE.md warning #12): iOS auto-zooms on focus of any
+   input whose font-size is < 16px. Forcing 1rem prevents that. This rule lives
+   OUTSIDE @layer deliberately — unlayered styles outrank all Tailwind utilities,
+   so a `text-sm` on an input cannot reintroduce the zoom. Do not move it into a
+   layer or lower its specificity. */
 @supports (-webkit-touch-callout: none) {
     @media (hover: none) and (pointer: coarse) {
         input,
@@ -707,6 +715,10 @@ textarea,
 
 /* ───────────────────────────────  Motion tokens  ─────────────────────────────── */
 
+/* CSS mirror of $lib/motion/tokens.ts — the cross-app motion cohesion contract.
+   GSAP-driven motion reads the TS tokens; CSS-only motion (view transitions below,
+   any `var(--motion-*)` in components) reads these. Keep the two in sync when
+   either changes; restrained values only (150–350ms). */
 :root {
     --motion-fast: 150ms;
     --motion-base: 250ms;

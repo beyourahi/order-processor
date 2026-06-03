@@ -1,4 +1,13 @@
 <script lang="ts">
+    /**
+     * The input dock (child of copilot-sidebar): auto-growing textarea, drag/drop
+     * image zone, send button. `value`/`image` are `$bindable` so the sidebar owns
+     * the draft and can clear it on new-conversation. `focusNonce` is a focus
+     * *signal*, not a flag — the sidebar bumps it (via the store) to pull focus
+     * here after a suggestion click; the effect ignores its 0 seed value so it
+     * doesn't steal focus on mount. Drop events are delegated to the child upload
+     * component through its exported `addFile`, reusing its validation/re-encode.
+     */
     import { ArrowUp, ImagePlus } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import CopilotImageUpload from "./copilot-image-upload.svelte";

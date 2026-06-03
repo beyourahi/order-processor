@@ -1,3 +1,10 @@
+<!--
+    Per-user SteadFast brand settings form (contact name/phone + required merchant
+    ID). Writes directly to the brandSettings store, which debounces a PATCH with
+    per-field save state (the indicator/errorMessage snippets read fieldState/
+    fieldError). The beforeunload guard blocks navigation while a save is in flight
+    so an in-progress PATCH is not lost.
+-->
 <script lang="ts">
     import { brandSettings } from "$lib/stores";
     import { Input } from "$lib/components/ui/input";
@@ -13,6 +20,8 @@
     const contactPhone = $derived(brandSettings.value.contactPhone ?? "");
     const merchantId = $derived(brandSettings.value.merchantId ?? "");
 
+    // Invalid only when the user has actually cleared it: null = not yet
+    // hydrated/never touched (no error shown), "" = explicitly emptied.
     const merchantIdInvalid = $derived(
         brandSettings.value.merchantId !== null && brandSettings.value.merchantId.trim().length === 0
     );

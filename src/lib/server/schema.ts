@@ -98,6 +98,9 @@ export const brandSettings = sqliteTable(
     (table) => [index("idx_brand_settings_user_id").on(table.userId)]
 );
 
+// Copilot chat history. Written best-effort from /api/copilot/chat AFTER the
+// turn — persistence must never block or abort the live SSE stream (CLAUDE.md
+// warning #23). Messages cascade-delete with their conversation.
 export const aiConversations = sqliteTable(
     "ai_conversations",
     {
@@ -125,6 +128,8 @@ export const aiMessages = sqliteTable(
             .references(() => aiConversations.id, { onDelete: "cascade" }),
         role: text("role").$type<"user" | "assistant">().notNull(),
         content: text("content").notNull(),
+        // Decided tool calls serialized as JSON; null for plain-text turns. The
+        // model decides, the browser executes — args are unvalidated here.
         toolCalls: text("tool_calls", { mode: "json" }).$type<Array<{ id: string; name: string; args: unknown }>>(),
         createdAt: integer("created_at", { mode: "timestamp" })
             .notNull()

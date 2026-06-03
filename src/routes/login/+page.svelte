@@ -10,6 +10,9 @@
     // Preserve the originally requested route from ?redirect= so post-login lands the user there.
     const redirectUrl = $derived(page.url.searchParams.get("redirect") ?? "/");
 
+    // Client-side fallback redirect: signIn.social() does a full OAuth round-trip,
+    // but if a live session already exists (e.g. back-nav to /login) this bounces
+    // out without waiting for the server load guard.
     const session = authClient.useSession();
     $effect(() => {
         if ($session.data?.user) {

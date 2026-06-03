@@ -1,3 +1,15 @@
+/**
+ * qwen3 embedding helpers for Copilot RAG (Workers AI `AI` binding).
+ *
+ * EMBEDDING_DIMS is load-bearing: the Vectorize index `order-processor-kb` is
+ * created at exactly this dimension. Changing the model here without recreating
+ * the index at the new dimension (and re-seeding) breaks every query. See
+ * CLAUDE.md warning #24.
+ *
+ * Document vs query split follows qwen3's asymmetric protocol: documents embed
+ * raw; queries embed with a task `instruction`. Mismatching the two degrades
+ * retrieval scores.
+ */
 export const EMBEDDING_MODEL = "@cf/qwen/qwen3-embedding-0.6b" as const;
 export const EMBEDDING_DIMS = 1024;
 
@@ -10,6 +22,7 @@ interface EmbeddingOutput {
     shape?: number[];
 }
 
+/** Embeds corpus passages for seeding. Throws if the model returns fewer vectors than inputs (caller must not partially upsert). */
 export const embedDocuments = async (env: EmbeddingEnv, texts: string[]): Promise<number[][]> => {
     if (texts.length === 0) return [];
     const res = (await env.AI.run(EMBEDDING_MODEL, { text: texts })) as EmbeddingOutput;
@@ -19,6 +32,7 @@ export const embedDocuments = async (env: EmbeddingEnv, texts: string[]): Promis
     return res.data;
 };
 
+/** Embeds a single retrieval query. `instruction` is the qwen3 task hint (see rag.ts QUERY_INSTRUCTION). */
 export const embedQuery = async (env: EmbeddingEnv, text: string, instruction: string): Promise<number[]> => {
     const res = (await env.AI.run(EMBEDDING_MODEL, { text: [text], instruction })) as EmbeddingOutput;
     const vector = res.data?.[0];

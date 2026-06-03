@@ -1,4 +1,13 @@
 <script lang="ts">
+    /**
+     * Mobile presentation of the Copilot: a full-height bottom sheet that hosts
+     * CopilotSidebar in `bare` mode (no rail chrome). Visibility is driven by the
+     * shared store flag `copilot.mobileOpen`, so the FAB and this sheet stay in sync.
+     * Implements a manual focus trap: Tab/Shift+Tab cycle within the panel, Escape
+     * closes, focus moves to the first focusable on open, and on close focus is
+     * restored to the FAB (queried by its `aria-label="Open AI Copilot"`). Hidden on
+     * `lg+` where the persistent rail takes over.
+     */
     import { fade, fly } from "svelte/transition";
     import { tick } from "svelte";
     import { copilot } from "$lib/stores/copilot.svelte";

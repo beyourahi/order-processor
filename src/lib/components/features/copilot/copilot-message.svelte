@@ -1,4 +1,15 @@
 <script lang="ts">
+    /**
+     * One chat bubble (child of copilot-message-list). User messages render raw
+     * text + optional image; assistant messages render through the in-house
+     * `parseMarkdown` (no HTML, no external sanitizer needed). The empty-content +
+     * `streaming` branch shows the in-bubble generating wave. Tool-call cards and
+     * the relative timestamp hang below the bubble.
+     *
+     * Warning #19: the `codeblock` branch is rendered as a plain `<p>`, NOT a
+     * styled code block — the gateway models intermittently leak reasoning text in
+     * fences, so we deliberately downgrade them rather than present them as code.
+     */
     import type { CopilotMessage } from "$lib/ai/types";
     import type { MdBlock, MdInline } from "$lib/ai/markdown";
     import { parseMarkdown } from "$lib/ai/markdown";

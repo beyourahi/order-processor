@@ -1,3 +1,12 @@
+<!--
+    Ingestion orchestrator: owns the dropzone ↔ editor swap. Parses the dropped
+    CSV via CourierService, then mounts OutputEditor in place of the dropzone
+    (editorRows !== null is the switch). Retains the raw CSV so the Copilot's
+    proposeCsvColumnMapping can re-project it through applyMapping, which re-mounts
+    the editor with a corrected batch. Registers an IngestionController with
+    copilotBridge (CLAUDE.md #15). Mirrors editor-open state to the `editorOpen`
+    bindable so the parent layout can switch stacked ↔ side-by-side.
+-->
 <script lang="ts">
     import type { SteadFastOrder } from "$lib/types";
     import { CourierService } from "$lib/services";

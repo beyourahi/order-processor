@@ -1,4 +1,12 @@
 <script lang="ts">
+    /**
+     * Scrollable message transcript (child of copilot-sidebar, rendered only once
+     * a chat has messages). Auto-pins to the bottom as content streams in, but
+     * backs off the moment the user scrolls up so reading history is not yanked
+     * away — `userScrolledUp` latches that intent and the autoscroll `$effect`
+     * short-circuits on it. The `<svelte:boundary>` isolates a markdown/render
+     * fault to this panel so one bad message can't blank the whole rail.
+     */
     import type { CopilotMessage as CopilotMessageType } from "$lib/ai/types";
     import CopilotMessage from "./copilot-message.svelte";
     import CopilotTypingIndicator from "./copilot-typing-indicator.svelte";
@@ -17,6 +25,8 @@
     const last = $derived(messages.at(-1));
     const lastContent = $derived(last?.content ?? "");
 
+    // Only show the standalone indicator before the assistant bubble exists; once
+    // the streaming assistant message lands it renders its own in-bubble wave.
     const showTypingIndicator = $derived(isStreaming && !!last && last.role === "user");
 
     const isPinnedToBottom = (): boolean => {
@@ -31,6 +41,8 @@
     };
 
     $effect(() => {
+        // Touch every signal that grows the transcript so the effect re-runs and
+        // re-pins on new messages, streamed token deltas, and the typing indicator.
         void messages.length;
         void lastContent;
         void showTypingIndicator;

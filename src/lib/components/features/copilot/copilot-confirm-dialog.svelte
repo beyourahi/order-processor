@@ -1,8 +1,12 @@
 <script lang="ts">
     /**
-     * Confirmation modal for Copilot batch mutations. The executor runs tool
-     * calls sequentially, so at most one confirmation is pending at a time — but
-     * a single confirmation's `diff` can list many rows (e.g. auto-fix).
+     * Confirmation modal for Copilot batch mutations — the user-facing half of the
+     * gate the executor enforces centrally for any change touching >1 row.
+     * Mounted globally (not inside the rail) so it overlays the whole app; it reads
+     * `copilot.pendingConfirmations[0]` and answers via `respondToConfirmation`.
+     * The executor runs tool calls sequentially, so at most one confirmation is
+     * pending at a time — but a single confirmation's `diff` can list many rows
+     * (e.g. auto-fix). Escape rejects; reject is focused on mount as the safe default.
      */
     import { tick } from "svelte";
     import { fade, fly } from "svelte/transition";

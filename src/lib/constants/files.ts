@@ -1,3 +1,4 @@
+// Output download name: `formatted-orders-<courier>.xlsx` (courier lowercased).
 const FILE_PREFIX = "formatted-orders";
 const FILE_EXTENSION = ".xlsx";
 

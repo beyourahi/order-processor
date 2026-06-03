@@ -59,6 +59,9 @@ export const runChatFrames = async function* (
         { role: "user", content: params.userMessage }
     ];
 
+    // `thinking: false` suppresses chain-of-thought emission — chain models in
+    // the gateway chain otherwise leak reasoning into chat text (CLAUDE.md
+    // warning #19). Low temperature keeps tool-arg JSON deterministic.
     const input: Record<string, unknown> = {
         messages,
         max_tokens: params.maxTokens ?? 2048,

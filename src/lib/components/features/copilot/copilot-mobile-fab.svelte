@@ -1,4 +1,10 @@
 <script lang="ts">
+    /**
+     * Floating launcher that opens the Copilot on small screens — `lg:hidden`
+     * because the desktop layout docks the rail permanently instead. Hidden once
+     * `copilot.mobileOpen` so it never sits under the open sheet; opening flips the
+     * same store flag the sheet reads.
+     */
     import { copilot } from "$lib/stores/copilot.svelte";
     import CopilotLauncherIcon from "./copilot-launcher-icon.svelte";
 </script>

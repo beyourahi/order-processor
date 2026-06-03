@@ -1,3 +1,13 @@
+<!--
+    Editor entry: owns the working batch (rows + per-row UUID rowIds + batch
+    defaults) and composes the defaults strip, grid, and action bar. Mounted by
+    order-processor.svelte once a CSV is parsed; re-mounted (via {#key}) on a new
+    drop or a Copilot re-map, which is why props seed $state once and are never
+    re-read. Registers an EditorController with copilotBridge so the AI Copilot
+    can mutate this batch (CLAUDE.md #15) — those ai* handlers deliberately bypass
+    the native undo stack (see comment at aiGetRows). Phone normalization happens
+    only in download() at export, never on commit (CLAUDE.md #4 / NFR-14).
+-->
 <script lang="ts">
     import { untrack, tick } from "svelte";
     import { SvelteSet, SvelteMap } from "svelte/reactivity";

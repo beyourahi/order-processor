@@ -1,4 +1,16 @@
 <script lang="ts">
+    /**
+     * Image attachment handler for the composer. Owns the hidden file input,
+     * validation, and the `image` data-URL ($bindable up to the composer). Exposes
+     * an imperative surface (`triggerUpload`, `addFile`) the composer calls so it
+     * can route the file picker button and drag-drop through one validated path.
+     *
+     * Non-obvious: uploads are re-encoded to WebP in an OffscreenCanvas to shrink
+     * the data URL before it rides the chat payload to the vision model — GIFs are
+     * passed through (animation would be lost) and small WebPs skip re-encode.
+     * Any failure (no OffscreenCanvas, decode error) silently falls back to the
+     * original file, so the path degrades rather than blocking the attachment.
+     */
     import { X, Loader2 } from "@lucide/svelte";
 
     const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/heic", "image/heif"];

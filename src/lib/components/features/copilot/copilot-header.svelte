@@ -1,4 +1,11 @@
 <script lang="ts">
+    /**
+     * Chat-shell header bar (child of copilot-sidebar): status pill + history /
+     * new-conversation / close controls. Purely presentational — every action is
+     * a callback the sidebar owns; this component holds no store state. The
+     * new-conversation button only renders once a chat exists (`hasMessages`), and
+     * close only when `onClose` is supplied (mobile sheet, not the docked rail).
+     */
     import { Clock, Plus, X } from "@lucide/svelte";
 
     let {

@@ -2,9 +2,18 @@
  * System prompt assembly. The prompt is built per-turn from a static behavioral
  * preamble, the client-supplied CURRENT STATE block (the editor owns that
  * state), and the tool catalog.
+ *
+ * This preamble is the first layer of the leaked-artifact defense (CLAUDE.md
+ * warning #19): rule 2 forbids emitting tool calls as chat text, rule 9 forbids
+ * code/JSON/raw tool names in replies. Loosening these shifts load onto the
+ * server-side leak detector and the renderer downgrade — don't soften without
+ * accounting for that.
  */
 import type { ToolCatalogEntry } from "./types";
 
+// Behavioral revision tag, bumped when SYSTEM_PROMPT_V2 changes meaningfully.
+// Deliberately ahead of the constant name (`_V2`) — the name is frozen to avoid
+// churn; PROMPT_VERSION is the live identifier.
 export const PROMPT_VERSION = "v3" as const;
 
 export const SYSTEM_PROMPT_V2 =
@@ -27,6 +36,7 @@ Behavioural rules:
 12. If no batch is loaded yet, guide the user: they must pick a courier, set a Merchant ID, and upload a CSV before the grid tools can run.
 13. Detect the language of the user's latest message; if it is Bangla (Bengali script or romanized), reply entirely in Bangla, otherwise reply in English. Keep recipient names, amounts, phone numbers, addresses, and identifiers unchanged regardless of language.` as const;
 
+// Demonstrates rule 4 (ask, don't guess, when a row reference is ambiguous).
 export const FEW_SHOTS: Array<{ role: "user" | "assistant"; content: string }> = [
     {
         role: "user",

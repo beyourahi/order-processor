@@ -12,6 +12,12 @@ declare global {
             currentUser: CurrentUser | null;
         }
 
+        // Mirrors the bindings/vars declared in wrangler.jsonc — rerun
+        // `bun run cf-typegen` after editing that file. Required bindings are
+        // non-optional so a missing one is a type error, not a runtime surprise;
+        // optional vars are `?`-typed (under exactOptionalPropertyTypes a `?`
+        // member is genuinely absent, not `undefined`) so they may stay unset
+        // everywhere they don't apply.
         interface Platform {
             env: {
                 DB: D1Database;
@@ -23,6 +29,7 @@ declare global {
                 BETTER_AUTH_URL: string;
                 GOOGLE_CLIENT_ID: string;
                 GOOGLE_CLIENT_SECRET: string;
+                // Preview/E2E-only OAuth bypass — never set in production (warning #20).
                 E2E_BYPASS_AUTH?: string;
             };
             cf: CfProperties;

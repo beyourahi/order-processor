@@ -1,3 +1,16 @@
+/**
+ * Closure-based runes store (project pattern; NOT a Svelte `writable()`). The
+ * exported `brandSettings` is a module singleton.
+ *
+ * HYDRATION: `+page.svelte` calls `hydrate()` synchronously via `untrack()`
+ * during its own setup so children read canonical server values on first mount.
+ * Do NOT move hydration into an `$effect` — that reintroduces the mount race
+ * fixed in commit 6d9d68b (children would briefly see EMPTY).
+ *
+ * Each field owns an independent SaveState + retry budget so a slow/failing
+ * field never blocks another; the aggregate `saveState`/`saveError` getters
+ * roll them up for the beforeunload guard.
+ */
 import type { BrandSettingsState, BrandSettingsPatch, SaveState } from "$lib/types";
 import { api, debounceSync } from "$lib/api/client";
 

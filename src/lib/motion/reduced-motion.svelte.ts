@@ -1,3 +1,8 @@
+// Reactive mirror of the OS `prefers-reduced-motion` setting, exposed as a
+// `.current` getter so any rune/component re-runs when the user toggles it.
+// SSR-safe: defaults to false (no reduction) when `window` is unavailable, and
+// the change listener is only attached in the browser. Every motion entry point
+// short-circuits on this — it is the global gate for honouring reduced motion.
 import { browser } from "$app/environment";
 
 const QUERY = "(prefers-reduced-motion: reduce)";

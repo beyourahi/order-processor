@@ -1,3 +1,14 @@
+/**
+ * D1 access for Copilot conversation threads. Every read/mutate is scoped by
+ * `userId` (tenant isolation invariant) — `id` alone is never trusted, so one
+ * user cannot touch another's thread even with a guessed id. Callers (the
+ * /api/copilot routes) treat these as best-effort: a failure must not abort the
+ * live chat stream (CLAUDE.md warning #23).
+ *
+ * `renameConversation`/`touchUpdatedAt` set `updatedAt` via SQL `unixepoch()`
+ * (DB-side clock) rather than a JS `Date`, matching the integer-timestamp
+ * column without a round-trip.
+ */
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { aiConversations } from "$lib/server/schema";
@@ -52,6 +63,8 @@ export const getConversation = async (db: Db, userId: string, id: string): Promi
     };
 };
 
+// Returns false when no row matched (wrong id, or not this user's) — lets the
+// caller answer 404 vs 200 without a separate existence check.
 export const renameConversation = async (db: Db, userId: string, id: string, title: string): Promise<boolean> => {
     const result = await db
         .update(aiConversations)
@@ -68,6 +81,8 @@ export const deleteConversation = async (db: Db, userId: string, id: string): Pr
         .run();
 };
 
+// Bumps a thread to the top of the list after a new turn. Scoped by id only
+// (no userId) — callers must already have verified ownership of `id`.
 export const touchUpdatedAt = async (db: Db, id: string): Promise<void> => {
     await db
         .update(aiConversations)

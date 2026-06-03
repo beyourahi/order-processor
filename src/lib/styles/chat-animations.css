@@ -1,3 +1,11 @@
+/*
+ * Copilot chat keyframe animations — pure CSS, deliberately outside the GSAP
+ * motion system. These are high-frequency, always-on loops (orb float, typing
+ * dots, generating-wave bars) and one-shot message entrances that are cheaper
+ * as CSS than as managed GSAP tweens. The reduced-motion block at the bottom is
+ * the gate that disables them; keep new chat animations covered by it.
+ */
+
 @keyframes chat-message-in {
     from {
         opacity: 0;

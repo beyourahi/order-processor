@@ -1,4 +1,11 @@
 <script lang="ts">
+    /**
+     * Empty-state shown by copilot-sidebar before the first message. Clicking a
+     * suggestion does not send — it prefills the composer via `onSuggestionClick`
+     * so the user can edit before submitting. The `query` strings are deliberately
+     * phrased to exercise the read-only tools (getBatchSummary, getRows, the
+     * capabilities prompt), keeping the first interaction safe.
+     */
     import { FileSpreadsheet, Truck, AlertTriangle, HelpCircle } from "@lucide/svelte";
 
     let { onSuggestionClick }: { onSuggestionClick: (text: string) => void } = $props();

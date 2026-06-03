@@ -17,6 +17,10 @@ interface AuthEnv {
  *
  * Drizzle adapter uses `usePlural: true`; schema column names MUST be
  * snake_case (silent auth failures otherwise).
+ *
+ * Authorization is authentication-only (CLAUDE.md warning #7): every Google
+ * user who signs in is authorized — there is no email allowlist here. Adding
+ * one would be the place to gate access.
  */
 export function createAuth(d1: D1Database, env: AuthEnv) {
     const db = drizzle(d1, { schema });

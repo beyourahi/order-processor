@@ -12,6 +12,16 @@ export interface RevealParams {
     delay?: number;
 }
 
+/**
+ * Fade-rise reveal action. On mount it animates the node from offset+transparent
+ * to its resting state; with `onScroll` the tween is deferred to a one-shot
+ * ScrollTrigger instead. Honours reduced motion and skips entirely during a
+ * route View Transition (the transition owns motion then).
+ *
+ * @remarks Sets `opacity: 0` synchronously to avoid a flash before GSAP loads.
+ * If GSAP fails to load it restores opacity so content never stays hidden, and
+ * `clearProps` removes inline styles after the tween so CSS can take over.
+ */
 export const reveal: Action<HTMLElement, RevealParams | undefined> = (node, params) => {
     let cleanup: (() => void) | undefined;
     let cancelled = false;

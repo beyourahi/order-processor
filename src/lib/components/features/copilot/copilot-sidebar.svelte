@@ -1,4 +1,16 @@
 <script lang="ts">
+    /**
+     * Entry for the Copilot chat rail — composes the whole chat shell (header,
+     * conversations panel, welcome/message-list, composer) and owns the only
+     * mutable UI state the shell needs (the in-progress composer text + image).
+     * Everything else reads from the `copilot` store; sends/new-conversation go
+     * through `chat-client`. The server never sees this state — it ships the full
+     * history each turn (warning #23) and tool calls run client-side (#17).
+     *
+     * `bare` drops the rounded border/shadow so the mobile sheet can mount the
+     * same shell edge-to-edge; `onClose` is wired only when there is a chrome to
+     * close (mobile sheet) and stays undefined for the docked desktop rail.
+     */
     import { copilot } from "$lib/stores/copilot.svelte";
     import { sendMessage, createNewConversation } from "$lib/ai/chat-client";
     import { cn } from "$lib/utils";
@@ -13,6 +25,8 @@
     let composerValue = $state("");
     let composerImage = $state<string | null>(null);
 
+    // Collapse the store's two independent flags into the header's single status
+    // pill: a live error wins over an in-flight turn, which wins over idle.
     const status = $derived<"online" | "connecting" | "error">(
         copilot.error ? "error" : copilot.inputBusy ? "connecting" : "online"
     );

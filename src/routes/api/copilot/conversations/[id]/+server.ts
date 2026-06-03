@@ -4,6 +4,10 @@ import { z } from "zod";
 import { deleteConversation, renameConversation } from "$lib/server/repositories/ai-conversations";
 import type { RequestHandler } from "./$types";
 
+// Ownership is enforced in the repository layer: both calls scope by locals.user.id,
+// so another user's id yields no match. rename → 404 (we report the miss); delete is
+// idempotent (no 404 — deleting an absent/foreign row is a silent no-op).
+
 const renameSchema = z.object({ title: z.string().min(1).max(120) });
 
 export const PATCH: RequestHandler = async ({ locals, platform, params, request }) => {

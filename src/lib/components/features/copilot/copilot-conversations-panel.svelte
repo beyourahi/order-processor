@@ -1,4 +1,12 @@
 <script lang="ts">
+    /**
+     * History list shown when the header's history toggle is open (collapsible
+     * region inside copilot-sidebar). Lists the store's conversations and switches
+     * the active one. Switch/rename/delete all go through `chat-client`, which
+     * persists to D1 (warning #23) and lazily loads messages on switch — this
+     * panel never touches the network itself. Rename/delete intentionally use the
+     * native `prompt`/`confirm` dialogs to stay dependency-free.
+     */
     import { copilot } from "$lib/stores/copilot.svelte";
     import { switchConversation, renameConversation, deleteConversation } from "$lib/ai/chat-client";
     import { Pencil, Trash2 } from "@lucide/svelte";

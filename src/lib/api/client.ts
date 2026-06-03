@@ -1,12 +1,17 @@
 /**
- * The debounceSync helper coalesces rapid edits per-key so simultaneous edits
- * to different fields never cancel each other.
+ * Client-side HTTP layer. Two exports:
+ * - `api`: a typed fetch wrapper that THROWS on any non-2xx (callers don't
+ *   check `res.ok`); 204/non-JSON responses resolve to `undefined`.
+ * - `debounceSync`: per-key debounce so simultaneous edits to different fields
+ *   never cancel each other (same key resets the timer).
  */
 
 import type { SaveState } from "$lib/types";
 
 type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
+// Throws Error(text || "<METHOD> <path> failed with <status>") on non-2xx. The
+// `T` cast is unchecked — there is no runtime validation of the response body.
 const send = async <T>(method: Method, path: string, body?: unknown): Promise<T> => {
     const init: RequestInit = { method };
     if (body !== undefined) {
@@ -40,6 +45,8 @@ const pending = new Map<string, ReturnType<typeof setTimeout>>();
 /**
  * Schedule fn to run after delayMs of quiet on `key`. Subsequent calls with
  * the same key reset the timer; calls with different keys run independently.
+ * Fire-and-forget: never throws/rejects — fn failures are caught and surfaced
+ * via `onState("error", err)`, with progress reported as saving → saved/error.
  */
 export const debounceSync = <T>(
     key: string,

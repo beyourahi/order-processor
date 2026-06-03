@@ -1,3 +1,12 @@
+/**
+ * D1 access for Copilot messages. Scoped by `conversationId`, NOT `userId` —
+ * tenant isolation is the caller's job (verify conversation ownership before
+ * reading/appending). Best-effort like the conversations repo: a write failure
+ * must not abort the live chat stream (CLAUDE.md warning #23).
+ *
+ * `toolCalls` round-trips as a JSON column; `toRow` coerces the untyped JSON
+ * back to `AiMessageToolCall[]` and normalizes the absent case to `null`.
+ */
 import { asc, eq } from "drizzle-orm";
 import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { aiMessages } from "$lib/server/schema";

@@ -1,3 +1,11 @@
+/**
+ * Static RAG corpus — the source of truth for what the Copilot knows about the
+ * app itself. Each chunk is embedded and upserted into the `order-processor-kb`
+ * Vectorize index by `POST /api/copilot/seed`. Editing this file does NOT change
+ * retrieval until the index is re-seeded (CLAUDE.md warning #25). `id` doubles
+ * as the Vectorize vector id, so reusing one overwrites that vector on re-seed;
+ * keep ids stable and unique.
+ */
 export interface KnowledgeChunk {
     id: string;
     text: string;

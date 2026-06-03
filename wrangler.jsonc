@@ -9,6 +9,7 @@
         "binding": "ASSETS",
         "directory": ".svelte-kit/cloudflare"
     },
+    // D1 (SQLite): auth sessions, brand_settings, and Copilot chat history.
     "d1_databases": [
         {
             "binding": "DB",
@@ -17,9 +18,13 @@
             "migrations_dir": "migrations"
         }
     ],
+    // Workers AI: required by /api/copilot/chat (returns 503 if absent), RAG
+    // embeddings, and the seed endpoint. Rerun `bun run cf-typegen` after edits.
     "ai": {
         "binding": "AI"
     },
+    // Copilot RAG knowledge store. Index dims must match the qwen3 embedding
+    // model (1024); changing the model means recreating the index + re-seeding.
     "vectorize": [
         {
             "binding": "VECTORIZE",
@@ -32,6 +37,9 @@
     "limits": {
         "cpu_ms": 300000
     },
+    // AI_GATEWAY_SLUG keys the AI Gateway dynamic route `dynamic/copilot-chain`;
+    // openGatewayChat() throws without it. The model cascade lives in the
+    // Cloudflare dashboard route, NOT in code (CLAUDE.md #22).
     "vars": {
         "BETTER_AUTH_URL": "https://order-processor.beyourahi.workers.dev",
         "AI_GATEWAY_SLUG": "order-processor-ai"

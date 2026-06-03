@@ -1,3 +1,8 @@
+// Motion design tokens — the single source of truth for all GSAP timing and
+// offsets. Mirrored as `--motion-*` CSS variables at the end of app.css; keep
+// the two in sync. Values are intentionally restrained (150-350ms, 8-16px) to
+// preserve cross-app cohesion. DURATION is seconds (GSAP); DURATION_MS is the
+// millisecond twin for non-GSAP code (e.g. setTimeout, CSS-equivalent timing).
 export const DURATION = {
     fast: 0.15,
     base: 0.25,

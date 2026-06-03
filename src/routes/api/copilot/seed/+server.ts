@@ -3,6 +3,14 @@ import type { RequestHandler } from "./$types";
 import { KNOWLEDGE_CORPUS } from "$lib/ai/knowledge";
 import { embedDocuments } from "$lib/ai/embeddings";
 
+/**
+ * Embeds the full KNOWLEDGE_CORPUS with qwen3 and upserts it into Vectorize for
+ * Copilot RAG (warning #25). Re-run after editing knowledge.ts. Not auth-gated by
+ * session — guarded by a shared SEED_SECRET via the x-seed-secret header (401 on
+ * mismatch/absent, 503 if AI/Vectorize bindings are missing). The vector-count
+ * mismatch throw below guards against silently seeding misaligned id↔embedding
+ * pairs if the embed call returns fewer rows than the corpus.
+ */
 export const POST: RequestHandler = async ({ platform, request }) => {
     const env = platform?.env;
     if (!env?.AI || !env.VECTORIZE) {

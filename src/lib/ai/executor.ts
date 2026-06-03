@@ -398,6 +398,8 @@ const runUpdateBrandSettings = (
     if (patch.merchantId !== undefined && patch.merchantId.trim().length > 0) {
         const prev = before.merchantId ?? "";
         brandSettings.updateField("merchantId", patch.merchantId);
+        // Deliberately no revert when there was no prior Merchant ID: undo must
+        // not blank out a required field the user had nothing in before.
         if (prev.length > 0) reverts.push(() => brandSettings.updateField("merchantId", prev));
         applied.push("Merchant ID");
     }
