@@ -1,29 +1,29 @@
 <script lang="ts">
     /**
      * The input dock (child of copilot-sidebar): auto-growing textarea, drag/drop
-     * image zone, send button. `value`/`image` are `$bindable` so the sidebar owns
-     * the draft and can clear it on new-conversation. `focusNonce` is a focus
-     * *signal*, not a flag — the sidebar bumps it (via the store) to pull focus
-     * here after a suggestion click; the effect ignores its 0 seed value so it
-     * doesn't steal focus on mount. Drop events are delegated to the child upload
-     * component through its exported `addFile`, reusing its validation/re-encode.
+     * image zone, send button. `value` is `$bindable` so the sidebar owns the
+     * draft and can clear it on new-conversation; pending image attachments live
+     * on the copilot store (max 3). `focusNonce` is a focus *signal*, not a flag —
+     * the sidebar bumps it (via the store) to pull focus here after a suggestion
+     * click; the effect ignores its 0 seed value so it doesn't steal focus on
+     * mount. Drop events are delegated to the child upload component through its
+     * exported `addFile`, reusing its validation/re-encode.
      */
     import { ArrowUp, ImagePlus } from "@lucide/svelte";
     import { cn } from "$lib/utils";
+    import { copilot } from "$lib/stores/copilot.svelte";
     import CopilotImageUpload from "./copilot-image-upload.svelte";
 
     let {
         value = $bindable<string>(""),
-        image = $bindable<string | null>(null),
         disabled = false,
         focusNonce = 0,
         onSend
     }: {
         value: string;
-        image: string | null;
         disabled?: boolean;
         focusNonce?: number;
-        onSend: (text: string, image: string | null) => void;
+        onSend: (text: string) => void;
     } = $props();
 
     const MAX_HEIGHT = 200;
@@ -34,7 +34,9 @@
     let imageError = $state<string | null>(null);
 
     const trimmed = $derived(value.trim());
-    const canSubmit = $derived((trimmed.length > 0 || image !== null) && !disabled);
+    const hasImages = $derived(copilot.pendingImages.length > 0);
+    const attachFull = $derived(copilot.pendingImages.length >= copilot.maxPendingImages);
+    const canSubmit = $derived((trimmed.length > 0 || hasImages) && !disabled);
 
     $effect(() => {
         if (!textareaEl) return;
@@ -50,9 +52,8 @@
 
     const handleSubmit = () => {
         if (!canSubmit) return;
-        onSend(trimmed, image);
+        onSend(trimmed);
         value = "";
-        image = null;
         if (textareaEl) {
             textareaEl.style.height = "auto";
         }
@@ -68,8 +69,8 @@
     const handleDrop = (event: DragEvent) => {
         event.preventDefault();
         dragging = false;
-        const file = event.dataTransfer?.files?.[0];
-        if (file && uploadRef) void uploadRef.addFile(file);
+        const files = Array.from(event.dataTransfer?.files ?? []);
+        for (const file of files) void uploadRef?.addFile(file);
     };
 
     const handleDragOver = (event: DragEvent) => {
@@ -104,7 +105,7 @@
             </div>
         {/if}
 
-        <CopilotImageUpload bind:this={uploadRef} bind:image onError={handleImageError} />
+        <CopilotImageUpload bind:this={uploadRef} onError={handleImageError} />
 
         <textarea
             bind:this={textareaEl}
@@ -136,13 +137,16 @@
         <div class="absolute right-3 bottom-2.5 flex items-center gap-2">
             <button
                 type="button"
-                aria-label="Attach an image"
+                disabled={disabled || attachFull}
+                aria-label={attachFull ? `Attachment limit reached (${copilot.maxPendingImages})` : "Attach an image"}
+                title={attachFull ? `Up to ${copilot.maxPendingImages} images` : "Attach an image"}
                 onclick={() => uploadRef?.triggerUpload()}
                 class={cn(
                     "relative rounded-lg p-2 transition-all duration-200",
-                    image
+                    hasImages
                         ? "bg-chat-accent-muted text-chat-text-primary"
-                        : "text-chat-text-muted hover:text-chat-text-secondary"
+                        : "text-chat-text-muted hover:text-chat-text-secondary",
+                    (disabled || attachFull) && "cursor-not-allowed opacity-50"
                 )}
             >
                 <ImagePlus class="h-4 w-4" aria-hidden="true" />

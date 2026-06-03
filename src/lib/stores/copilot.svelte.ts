@@ -65,6 +65,8 @@ const createCopilotStore = () => {
     let railOpen = $state(false);
     let mobileOpen = $state(false);
     let inputFocusNonce = $state(0);
+    let pendingImages = $state<string[]>([]);
+    const MAX_PENDING_IMAGES = 3;
 
     // Defensive: should always find one, but recovers if state was somehow nuked.
     const active = (): Conversation => {
@@ -119,6 +121,12 @@ const createCopilotStore = () => {
         get inputFocusNonce() {
             return inputFocusNonce;
         },
+        get pendingImages() {
+            return pendingImages;
+        },
+        get maxPendingImages() {
+            return MAX_PENDING_IMAGES;
+        },
 
         setStreaming(v: boolean) {
             streaming = v;
@@ -140,6 +148,17 @@ const createCopilotStore = () => {
         },
         requestInputFocus() {
             inputFocusNonce++;
+        },
+        /** Pending vision attachments for the next turn (max {@link MAX_PENDING_IMAGES}). */
+        addPendingImage(dataUrl: string) {
+            if (pendingImages.length >= MAX_PENDING_IMAGES) return;
+            pendingImages = [...pendingImages, dataUrl];
+        },
+        removePendingImage(index: number) {
+            pendingImages = pendingImages.filter((_, i) => i !== index);
+        },
+        clearPendingImages() {
+            pendingImages = [];
         },
 
         // Seeds the conversation list from D1 (summaries only — messages load
@@ -195,7 +214,7 @@ const createCopilotStore = () => {
             if (conv) conv.loaded = true;
         },
 
-        appendUserMessage(id: string, content: string, image?: string) {
+        appendUserMessage(id: string, content: string, images?: string[]) {
             const conv = active();
             const msg: CopilotMessage = {
                 id,
@@ -205,7 +224,7 @@ const createCopilotStore = () => {
                 createdAt: new Date().toISOString(),
                 streaming: false
             };
-            if (image) msg.image = image;
+            if (images && images.length > 0) msg.images = images;
             conv.messages.push(msg);
             if (conv.messages.filter((m) => m.role === "user").length === 1) {
                 conv.title = titleFromMessage(content);

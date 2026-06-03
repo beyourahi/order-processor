@@ -11,7 +11,7 @@ import { error } from "@sveltejs/kit";
 import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod";
 import type { RequestHandler } from "./$types";
-import { runChatFrames, describeImage, type AiBinding, type RunChatEnv } from "$lib/ai/client";
+import { runChatFrames, type RunChatEnv } from "$lib/ai/client";
 import { sseStream } from "$lib/ai/streaming";
 import { buildSystemContext, FEW_SHOTS, titleFromMessage } from "$lib/ai/prompts";
 import { TOOLS_CATALOG } from "$lib/ai/tools-catalog";
@@ -33,7 +33,7 @@ const bodySchema = z.object({
         .min(1)
         .max(80),
     contextText: z.string().max(60000),
-    image: z.string().max(8_000_000).optional()
+    images: z.array(z.string().max(8_000_000)).max(3).optional()
 });
 
 interface ValidatedCall {
@@ -104,8 +104,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     if (!locals.user) {
         error(401, { message: "Not authenticated" });
     }
-    const aiBinding = platform?.env?.AI as AiBinding | undefined;
-    if (!aiBinding) {
+    if (!platform?.env?.AI) {
         error(503, { message: "AI is not available in this environment." });
     }
 
@@ -123,17 +122,6 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
     let userMessage = lastMessage.content;
     const history = parsed.messages.slice(0, -1);
-
-    // Two-stage vision: llama-3.2-vision transcribes the image, the transcript
-    // is folded into the user message for the text-only chat model.
-    if (parsed.image) {
-        const transcript = await describeImage(aiBinding, parsed.image);
-        if (transcript.length > 0) {
-            userMessage = `${userMessage}\n\n[Attached image — transcribed contents:]\n${transcript}`;
-        } else {
-            userMessage = `${userMessage}\n\n[An image was attached but could not be read.]`;
-        }
-    }
 
     if (platform?.env?.VECTORIZE) {
         try {
@@ -202,6 +190,9 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                     history: withFewShots,
                     userMessage,
                     conversationId,
+                    // Conditional spread: exactOptionalPropertyTypes forbids passing
+                    // `images: undefined` to an optional `images?: string[]` param.
+                    ...(parsed.images ? { images: parsed.images } : {}),
                     tools: TOOLS_CATALOG
                 })
             );

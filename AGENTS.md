@@ -34,21 +34,21 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 
 ## Tech Stack
 
-| Layer           | Technology                                                                             |
-| --------------- | -------------------------------------------------------------------------------------- |
-| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                    |
-| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`) |
-| Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)                                      |
-| UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA                                  |
-| Auth            | Better Auth with Google OAuth, Drizzle adapter                                         |
-| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                 |
-| CSV Parsing     | PapaParse                                                                              |
-| Excel Export    | SheetJS (`xlsx`)                                                                       |
-| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                |
-| AI Copilot      | Workers AI via AI Gateway dynamic route (kimi → gemma → scout fallback), Zod tool schemas |
+| Layer           | Technology                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                              |
+| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`)           |
+| Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)                                                |
+| UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA                                            |
+| Auth            | Better Auth with Google OAuth, Drizzle adapter                                                   |
+| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                           |
+| CSV Parsing     | PapaParse                                                                                        |
+| Excel Export    | SheetJS (`xlsx`)                                                                                 |
+| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                          |
+| AI Copilot      | Workers AI via AI Gateway dynamic route (kimi → gemma → scout fallback), Zod tool schemas        |
 | AI RAG          | Cloudflare Vectorize (`order-processor-kb`) + qwen3 embeddings (`@cf/qwen/qwen3-embedding-0.6b`) |
-| Package Manager | Bun                                                                                    |
-| Linting         | ESLint 10 flat config + Prettier                                                       |
+| Package Manager | Bun                                                                                              |
+| Linting         | ESLint 10 flat config + Prettier                                                                 |
 
 ## Core Architecture
 
@@ -123,10 +123,12 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
 - **Model routing** (`$lib/ai/gateway.ts`): chat runs through the AI Gateway **dynamic route**
   `dynamic/copilot-chain`, which cascades `MODEL_CHAIN` — `@cf/moonshotai/kimi-k2.6` →
   `@cf/google/gemma-4-26b-a4b-it` → `@cf/meta/llama-4-scout-17b-16e-instruct` — on failure.
-  Requires the `AI_GATEWAY_SLUG` var; `openGatewayChat()` throws if it is unset. Image turns
-  route through `VISION_MODEL_ID` (`@cf/meta/llama-3.2-11b-vision-instruct`) in `client.ts` for
-  transcription. The server derives a `stableConversationId` (SHA-256 of first user message) for
-  gateway session affinity without leaking content.
+  Requires the `AI_GATEWAY_SLUG` var; `openGatewayChat()` throws if it is unset. Images ride as
+  native multimodal `image_url` content parts through the SAME model chain — no separate vision
+  model. `client.ts` (`buildUserContent`) emits a plain string when there are no images, otherwise
+  a `[text, ...image_url]` content-part array; the chat endpoint caps uploads at 3 images, 8MB
+  each. The server derives a `stableConversationId` (SHA-256 of first user message) for gateway
+  session affinity without leaking content.
 - **RAG** (`$lib/ai/rag.ts` + `embeddings.ts` + `knowledge.ts`): a static `KNOWLEDGE_CORPUS` is
   embedded with qwen3 (`@cf/qwen/qwen3-embedding-0.6b`, 1024 dims) into the `VECTORIZE` index
   `order-processor-kb`. Each turn retrieves top-4 passages (score ≥ 0.4) and folds them into the
@@ -215,6 +217,7 @@ src/
     +layout.svelte / +layout.server.ts   -- root layout, loads user/session
     +page.svelte / +page.server.ts       -- main page; loads brandSettings from D1 + hydrates store
     +error.svelte                         -- error boundary
+    changelog/+page.svelte               -- public, customer-facing changelog (groups CHANGELOG_ENTRIES by date)
     login/                               -- login page with Google OAuth
     api/brand-settings/+server.ts        -- brand settings CRUD (GET + PATCH)
     api/copilot/chat/+server.ts          -- AI Copilot streaming chat endpoint (SSE, AI Gateway)
@@ -243,6 +246,8 @@ src/
     config/
       app.ts                             -- app metadata
       couriers.ts                        -- courier options with logos
+    data/
+      changelog.ts                       -- hand-curated customer-facing changelog entries (newest-first, ISO dates)
     constants/
       files.ts                           -- file-related constants
       indexes.ts                         -- CSV column index mappings
@@ -494,6 +499,8 @@ When encountering unfamiliar patterns, check these sources in order:
 24. **Vectorize index dims must match the embedding model** -- the `order-processor-kb` index is created for qwen3's 1024-dim output (`EMBEDDING_DIMS` in `embeddings.ts`). Changing the embedding model requires recreating the index at the new dimension and re-running `POST /api/copilot/seed`. RAG retrieval drops matches below `MIN_SCORE` (0.4) and is best-effort — chat still works if Vectorize is down.
 
 25. **`/api/copilot/seed` is gated by `SEED_SECRET`** -- it embeds and upserts the entire `KNOWLEDGE_CORPUS`, so it is protected by an `x-seed-secret` header compared against the `SEED_SECRET` env var (401 on mismatch, 503 if AI/Vectorize absent). Set the secret with `wrangler secret put SEED_SECRET`; never commit it. Re-seed after editing `knowledge.ts`.
+
+26. **Changelog is hand-curated, not generated** -- `src/lib/data/changelog.ts` (`CHANGELOG_ENTRIES`) is the single source for the public `/changelog` route, written in plain merchant-facing English (no commit hashes/jargon). Entries must stay newest-first with ISO `YYYY-MM-DD` dates; the page tags the newest group "Latest" and relies on the ordering instead of sorting. NEVER render relative dates ("x days ago") — they mismatch the SSR render and trip hydration. Prepend new entries when shipping user-visible changes.
 
 ---
 

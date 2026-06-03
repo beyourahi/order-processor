@@ -70,8 +70,8 @@ export interface ChatRequestBody {
     messages: ChatHistoryMessage[];
     /** Pre-rendered CURRENT STATE block — the client owns editor state. */
     contextText: string;
-    /** Optional image data-URL for vision turns (e.g. screenshot amount-fill). */
-    image?: string;
+    /** Optional image data-URLs for vision turns (max 3); sent natively as `image_url` parts. */
+    images?: string[];
 }
 
 /* ── Client message model ─────────────────────────────────────────────────── */
@@ -99,8 +99,8 @@ export interface CopilotMessage {
     toolCalls: CopilotToolCall[];
     createdAt: string;
     streaming: boolean;
-    /** Data-URL preview when the user attached an image to this turn. */
-    image?: string;
+    /** Data-URL previews when the user attached images to this turn (max 3). */
+    images?: string[];
 }
 
 export interface Conversation {

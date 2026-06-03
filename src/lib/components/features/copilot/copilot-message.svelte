@@ -61,12 +61,16 @@
         )}
     >
         {#if isUser}
-            {#if message.image}
-                <img
-                    src={message.image}
-                    alt="Attached"
-                    class="border-chat-border-subtle max-h-44 rounded-2xl rounded-br-md border border-solid object-cover"
-                />
+            {#if message.images && message.images.length > 0}
+                <div class="flex flex-wrap justify-end gap-1.5">
+                    {#each message.images as image, i (i)}
+                        <img
+                            src={image}
+                            alt="Attachment {i + 1}"
+                            class="border-chat-border-subtle max-h-44 rounded-2xl rounded-br-md border border-solid object-cover"
+                        />
+                    {/each}
+                </div>
             {/if}
             {#if message.content}
                 <div
@@ -133,7 +137,7 @@
             </div>
         {/if}
 
-        {#if (message.content || message.image) && timeLabel}
+        {#if (message.content || (message.images && message.images.length > 0)) && timeLabel}
             <span class="text-chat-text-muted px-1 text-[10px] tabular-nums">{timeLabel}</span>
         {/if}
     </div>

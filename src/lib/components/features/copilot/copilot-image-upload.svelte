@@ -1,9 +1,9 @@
 <script lang="ts">
     /**
-     * Image attachment handler for the composer. Owns the hidden file input,
-     * validation, and the `image` data-URL ($bindable up to the composer). Exposes
-     * an imperative surface (`triggerUpload`, `addFile`) the composer calls so it
-     * can route the file picker button and drag-drop through one validated path.
+     * Image attachment handler for the composer. Pushes validated, WebP-re-encoded
+     * data URLs onto the copilot store's `pendingImages` (max 3) and renders their
+     * thumbnails. Exposes an imperative surface (`triggerUpload`, `addFile`) the
+     * composer routes its picker button and drag-drop through one validated path.
      *
      * Non-obvious: uploads are re-encoded to WebP in an OffscreenCanvas to shrink
      * the data URL before it rides the chat payload to the vision model — GIFs are
@@ -11,24 +11,24 @@
      * Any failure (no OffscreenCanvas, decode error) silently falls back to the
      * original file, so the path degrades rather than blocking the attachment.
      */
+    import { copilot } from "$lib/stores/copilot.svelte";
     import { X, Loader2 } from "@lucide/svelte";
 
     const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/heic", "image/heif"];
     const MAX_SIZE = 8 * 1024 * 1024;
 
-    let {
-        image = $bindable<string | null>(null),
-        onError
-    }: {
-        image: string | null;
-        onError: (msg: string) => void;
-    } = $props();
+    let { onError }: { onError: (msg: string) => void } = $props();
 
     let fileInput = $state<HTMLInputElement | null>(null);
-    let processing = $state(false);
+    // Counter, not a boolean — concurrent encodes must each hold a slot so the
+    // cap check in handleFileSelect can't be raced by in-flight files.
+    let processing = $state(0);
+
+    const remaining = $derived(copilot.maxPendingImages - copilot.pendingImages.length);
+    const isFull = $derived(remaining <= 0);
 
     export const triggerUpload = () => {
-        if (!processing) fileInput?.click();
+        if (processing === 0 && !isFull) fileInput?.click();
     };
 
     const reencodeToWebp = async (file: File): Promise<File> => {
@@ -69,61 +69,66 @@
             onError("That image is too large — keep it under 8 MB.");
             return;
         }
-        processing = true;
+        processing += 1;
         try {
             const sanitized = await reencodeToWebp(file);
             const dataUrl = await toDataUrl(sanitized);
-            image = dataUrl;
+            copilot.addPendingImage(dataUrl);
         } catch {
             onError("Couldn't read that image. Please try a different file.");
         } finally {
-            processing = false;
+            processing -= 1;
         }
     };
 
     const handleFileSelect = (event: Event) => {
         const input = event.target as HTMLInputElement;
-        const file = input.files?.[0];
+        const files = Array.from(input.files ?? []);
         input.value = "";
-        if (file) void addFile(file);
+        // Subtract in-flight encodes so concurrent selections can't exceed the cap.
+        const slots = copilot.maxPendingImages - copilot.pendingImages.length - processing;
+        if (files.length > slots) {
+            onError(`You can attach up to ${copilot.maxPendingImages} images.`);
+        }
+        for (const file of files.slice(0, Math.max(slots, 0))) void addFile(file);
     };
 
-    const clear = () => {
-        image = null;
-    };
+    const placeholders = $derived(Array.from({ length: processing }, (_, i) => i));
 </script>
 
 <input
     bind:this={fileInput}
     type="file"
     accept={ACCEPTED.join(",")}
+    multiple
     onchange={handleFileSelect}
-    aria-label="Upload image"
+    aria-label="Upload images"
     class="hidden"
 />
 
-{#if image || processing}
+{#if copilot.pendingImages.length > 0 || processing > 0}
     <div class="flex flex-wrap items-center gap-1.5 px-1 pt-1 pb-2">
-        {#if image}
-            <div class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-                <img src={image} alt="Attached" class="h-full w-full object-cover" />
+        {#each copilot.pendingImages as image, index (image)}
+            <div
+                class="border-chat-border-subtle relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-solid"
+            >
+                <img src={image} alt="Attachment {index + 1}" class="h-full w-full object-cover" />
                 <button
                     type="button"
-                    onclick={clear}
-                    aria-label="Remove attached image"
-                    class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:opacity-100"
+                    onclick={() => copilot.removePendingImage(index)}
+                    aria-label="Remove attachment {index + 1}"
+                    class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 backdrop-blur-sm transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none"
                 >
                     <X class="h-3.5 w-3.5 text-white" aria-hidden="true" />
                 </button>
             </div>
-        {/if}
-        {#if processing}
+        {/each}
+        {#each placeholders as placeholder (placeholder)}
             <div
                 class="border-chat-border-subtle flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed"
             >
                 <Loader2 class="text-chat-text-muted h-4 w-4 animate-spin" aria-hidden="true" />
             </div>
-        {/if}
-        <span class="text-chat-text-muted text-[10px]">image attached</span>
+        {/each}
     </div>
 {/if}

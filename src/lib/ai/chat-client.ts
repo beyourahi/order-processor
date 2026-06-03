@@ -48,15 +48,17 @@ const requestConfirmation = (req: ConfirmationRequest): Promise<boolean> =>
         });
     });
 
-export const sendMessage = async (text: string, image?: string): Promise<void> => {
+export const sendMessage = async (text: string): Promise<void> => {
     const trimmed = text.trim();
-    if ((trimmed.length === 0 && !image) || copilot.inputBusy) return;
+    const images = copilot.pendingImages.length > 0 ? [...copilot.pendingImages] : undefined;
+    if ((trimmed.length === 0 && !images) || copilot.inputBusy) return;
 
     const localConversationId = copilot.activeConversationId;
     const persistedConversationId = copilot.activeConversation.persisted ? localConversationId : null;
 
     const userMessageId = crypto.randomUUID();
-    copilot.appendUserMessage(userMessageId, trimmed || "(image attached)", image);
+    const userText = trimmed.length > 0 ? trimmed : "Please read the attached image.";
+    copilot.appendUserMessage(userMessageId, userText, images);
 
     // Snapshot history BEFORE startAssistantMessage so the in-progress placeholder isn't included.
     const history = copilot.messages
@@ -79,7 +81,7 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
 
     try {
         const body: ChatRequestBody = { messages: history, contextText, conversationId: persistedConversationId };
-        if (image) body.image = image;
+        if (images) body.images = images;
 
         const response = await fetch("/api/copilot/chat", {
             method: "POST",
@@ -93,6 +95,10 @@ export const sendMessage = async (text: string, image?: string): Promise<void> =
             copilot.setStreaming(false);
             return;
         }
+
+        // Request accepted — drop the composer attachments (already mirrored onto
+        // the user message and the request body); a failed POST above keeps them.
+        copilot.clearPendingImages();
 
         for await (const frame of streamFrames(response.body)) {
             if (frame.t === "text") {

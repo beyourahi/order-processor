@@ -1,18 +1,11 @@
 /**
  * Workers AI bridge.
- * - runChatFrames: chat + tool-calling, streamed via OpenAI-compatible SSE
- *   chunks (data: lines with choices[].delta).
- * - describeImage: image transcription for vision turns (chat model is text-only).
+ * - runChatFrames: chat + tool-calling (and native multimodal vision via
+ *   `image_url` content parts), streamed via OpenAI-compatible SSE chunks
+ *   (data: lines with choices[].delta).
  */
 import type { Frame, ParsedToolCall, ToolCatalogEntry } from "./types";
 import { openGatewayChat, type GatewayEnv } from "./gateway";
-
-export const VISION_MODEL_ID = "@cf/meta/llama-3.2-11b-vision-instruct" as const;
-
-// Structural type — the generated `Ai` binding omits some models, so we cast.
-export interface AiBinding {
-    run(model: string, input: Record<string, unknown>): Promise<unknown>;
-}
 
 export type RunChatEnv = GatewayEnv;
 
@@ -22,6 +15,7 @@ export interface RunChatParams {
     userMessage: string;
     conversationId: string;
     tools: ToolCatalogEntry[];
+    images?: string[];
     maxTokens?: number;
 }
 
@@ -43,6 +37,14 @@ const buildToolsPayload = (tools: ToolCatalogEntry[]) =>
         function: { name: t.name, description: t.description, parameters: t.parameters }
     }));
 
+type ContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+
+/** Plain string when no images; otherwise a multimodal content-part array (text + image_url). */
+const buildUserContent = (text: string, images?: string[]): string | ContentPart[] => {
+    if (!images || images.length === 0) return text;
+    return [{ type: "text", text }, ...images.map((url): ContentPart => ({ type: "image_url", image_url: { url } }))];
+};
+
 /**
  * Streams one chat turn. Yields text deltas live; tool_calls are accumulated
  * across the SSE stream (OpenAI tool-call deltas split args.string by index)
@@ -56,7 +58,7 @@ export const runChatFrames = async function* (
     const messages = [
         { role: "system", content: params.systemContext },
         ...params.history.map((m) => ({ role: m.role, content: m.content })),
-        { role: "user", content: params.userMessage }
+        { role: "user", content: buildUserContent(params.userMessage, params.images) }
     ];
 
     // `thinking: false` suppresses chain-of-thought emission — chain models in
@@ -168,30 +170,3 @@ export interface RawChatResult {
     text: string;
     toolCalls: ParsedToolCall[];
 }
-
-const dataUrlToBytes = (dataUrl: string): number[] => {
-    const comma = dataUrl.indexOf(",");
-    const base64 = comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
-    const binary = atob(base64);
-    const bytes = new Array<number>(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes;
-};
-
-/**
- * Vision-model image transcription. Best-effort: errors return "" so the chat
- * model still gets a useful (image-less) turn. Caller folds the result into the
- * user message; see /api/copilot/chat/+server.ts.
- */
-export const describeImage = async (ai: AiBinding, imageDataUrl: string): Promise<string> => {
-    try {
-        const raw = (await ai.run(VISION_MODEL_ID, {
-            image: dataUrlToBytes(imageDataUrl),
-            prompt: "This is a screenshot from an e-commerce order workflow. Transcribe every order you can see — recipient name, phone, delivery address, and the order total/amount — as a plain text list. Be exact with numbers. If a field is not visible, omit it.",
-            max_tokens: 1024
-        })) as { response?: string; description?: string };
-        return (raw.response ?? raw.description ?? "").trim();
-    } catch {
-        return "";
-    }
-};

@@ -2,7 +2,8 @@
     /**
      * Entry for the Copilot chat rail — composes the whole chat shell (header,
      * conversations panel, welcome/message-list, composer) and owns the only
-     * mutable UI state the shell needs (the in-progress composer text + image).
+     * mutable UI state the shell needs (the in-progress composer text; pending
+     * image attachments live on the `copilot` store).
      * Everything else reads from the `copilot` store; sends/new-conversation go
      * through `chat-client`. The server never sees this state — it ships the full
      * history each turn (warning #23) and tool calls run client-side (#17).
@@ -23,7 +24,6 @@
     let { bare = false, onClose }: { bare?: boolean; onClose?: () => void } = $props();
 
     let composerValue = $state("");
-    let composerImage = $state<string | null>(null);
 
     // Collapse the store's two independent flags into the header's single status
     // pill: a live error wins over an in-flight turn, which wins over idle.
@@ -36,14 +36,14 @@
         copilot.requestInputFocus();
     };
 
-    const handleSend = (text: string, image: string | null) => {
-        void sendMessage(text, image ?? undefined);
+    const handleSend = (text: string) => {
+        void sendMessage(text);
     };
 
     const handleNewConversation = () => {
         createNewConversation();
         composerValue = "";
-        composerImage = null;
+        copilot.clearPendingImages();
     };
 
     const handleToggleHistory = () => {
@@ -88,7 +88,6 @@
 
     <CopilotComposer
         bind:value={composerValue}
-        bind:image={composerImage}
         disabled={copilot.inputBusy}
         focusNonce={copilot.inputFocusNonce}
         onSend={handleSend}
