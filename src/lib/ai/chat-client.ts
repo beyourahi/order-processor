@@ -61,9 +61,16 @@ export const sendMessage = async (text: string): Promise<void> => {
     copilot.appendUserMessage(userMessageId, userText, images);
 
     // Snapshot history BEFORE startAssistantMessage so the in-progress placeholder isn't included.
+    // A tool-only assistant turn has empty text; keep it (using its tool-call
+    // summaries as content) so the model sees the action was already completed
+    // and doesn't re-fire the prior instruction on the next turn.
     const history = copilot.messages
-        .filter((m) => m.role === "user" || m.content.trim().length > 0)
-        .map((m) => ({ role: m.role, content: m.content }));
+        .filter((m) => m.role === "user" || m.content.trim().length > 0 || m.toolCalls.length > 0)
+        .map((m) => {
+            if (m.content.trim().length > 0) return { role: m.role, content: m.content };
+            const done = m.toolCalls.map((c) => c.summary?.trim()).filter((s): s is string => !!s);
+            return { role: m.role, content: done.length > 0 ? done.join(" ") : "(action completed)" };
+        });
 
     const contextText = projectBatchState(
         copilotBridge.editor,

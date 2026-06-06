@@ -146,7 +146,7 @@ export const TOOLS_CATALOG: ToolCatalogEntry[] = [
     {
         name: "updateBrandSettings",
         description:
-            "Update the user's saved brand settings — Contact Name, Contact Phone, and SteadFast Merchant ID. Use when onboarding settings from a pasted SteadFast email. Persisted to the account.",
+            "Update the user's saved brand settings — Contact Name, Contact Phone, and SteadFast Merchant ID. Call this WHENEVER the user asks to set or change any of these directly (e.g. 'set my merchant ID to 123456', 'my contact phone is 01700000000', 'change the contact name to Acme') as well as when onboarding settings from a pasted SteadFast email. Persisted to the account.",
         parameters: {
             type: "object",
             properties: {

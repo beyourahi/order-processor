@@ -20,15 +20,20 @@
     ],
     // Workers AI: required by /api/copilot/chat (returns 503 if absent), RAG
     // embeddings, and the seed endpoint. Rerun `bun run cf-typegen` after edits.
+    // `remote: true` so `wrangler dev` (local) reaches real Workers AI.
     "ai": {
-        "binding": "AI"
+        "binding": "AI",
+        "remote": true
     },
     // Copilot RAG knowledge store. Index dims must match the qwen3 embedding
     // model (1024); changing the model means recreating the index + re-seeding.
+    // `remote: true` is REQUIRED: Vectorize has no local emulator, so without it
+    // `wrangler dev` cannot query the index and RAG silently returns nothing.
     "vectorize": [
         {
             "binding": "VECTORIZE",
-            "index_name": "order-processor-kb"
+            "index_name": "order-processor-kb",
+            "remote": true
         }
     ],
     "observability": {

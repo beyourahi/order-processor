@@ -148,7 +148,7 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
   snapshots full editor state; reverting restores it. Tool-card Undo + `undoLastChange` pop it.
 - **Confirmation** (`copilot-confirm-dialog.svelte`): any mutation touching > 1 row shows a
   diff panel before applying. Enforced centrally in `executor.ts`.
-- **Multilingual**: the system prompt (`prompts.ts`, `PROMPT_VERSION` `v3`) replies in Bangla
+- **Multilingual**: the system prompt (`prompts.ts`, `PROMPT_VERSION` `v4`) replies in Bangla
   (Bengali script or romanized) when the user writes Bangla, English otherwise, leaving names,
   amounts, phones, addresses, and identifiers unchanged.
 - **State** (`$lib/stores/copilot.svelte.ts`): a D1-backed closure-rune store holding the working

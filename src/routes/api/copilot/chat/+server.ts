@@ -70,6 +70,26 @@ const correctiveMessage = (invalid: ValidatedCall[]): string =>
 const LEAK_RETRY_MESSAGE =
     "Your previous response wrote the action as a chat message instead of calling a tool, so nothing happened. Re-issue it now as a real tool call through the tool interface. If you genuinely cannot, reply with one short plain-language sentence — never JSON or code.";
 
+/** Retry prompt for when the model should have acted on an instruction but called no tool. */
+const ACTION_RETRY_MESSAGE =
+    "Your previous reply did not call any tool, so nothing changed. The user gave an instruction to change the batch or their settings. Emit the correct tool call now through the tool interface. Do NOT ask the user to confirm in chat (the UI handles confirmation) and do NOT claim anything was done. Only if the request is genuinely out of scope or impossible, say so plainly in one short sentence.";
+
+/**
+ * The user gave an imperative instruction (not a question) — they expect an
+ * action. The gateway chain models intermittently narrate an action ("Done…",
+ * "Adding a new row…", "Confirm to append…") WITHOUT calling a tool, so nothing
+ * runs. We detect that from the user's intent rather than the model's wording.
+ */
+const IMPERATIVE_RE =
+    /\b(set|add|change|update|delete|remove|edit|fix|mark|make|apply|append|insert|rename|clear|replace|assign|move|undo|revert|create|correct|adjust|drop|fill|put)\b/i;
+const looksImperative = (text: string): boolean => {
+    const t = text.trim();
+    return t.length > 0 && !t.endsWith("?") && IMPERATIVE_RE.test(t);
+};
+/** A genuine refusal/clarification we must NOT suppress as a false action narration. */
+const REFUSAL_RE =
+    /\b(can'?t|cannot|can not|unable|won'?t|not able|out of scope|outside|only help|only assist|don'?t|do not|no batch|no csv|upload a csv)\b/i;
+
 /**
  * Heuristic: did the model emit tool args as a JSON literal in chat text?
  * `@cf/openai/gpt-oss-120b` does this intermittently — surfacing it as text
@@ -201,11 +221,22 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             let replyText = first.text;
             const invalid = validated.filter((v) => !v.valid);
             const leakedAsText = first.toolCalls.length === 0 && looksLikeLeakedToolCall(first.text);
+            const userImperative = looksImperative(lastMessage.content);
+            // Model failed to act: an imperative instruction produced no tool call,
+            // it wasn't leaked JSON, and the reply isn't a clarifying question.
+            const failedToAct =
+                first.toolCalls.length === 0 && !leakedAsText && userImperative && !first.text.includes("?");
 
-            // Exactly one corrective retry: malformed args OR tool call written
-            // as chat text. No retry on retry — failures fall through to a
-            // friendly fallback reply.
-            if ((invalid.length > 0 || leakedAsText) && !errored) {
+            // Exactly one corrective retry: malformed args, a tool call written as
+            // chat text, OR an instruction that produced no tool call. No retry on
+            // retry — failures fall through to a friendly fallback reply.
+            if ((invalid.length > 0 || leakedAsText || failedToAct) && !errored) {
+                const retryMessage =
+                    invalid.length > 0
+                        ? correctiveMessage(invalid)
+                        : leakedAsText
+                          ? LEAK_RETRY_MESSAGE
+                          : ACTION_RETRY_MESSAGE;
                 const retry = await consume(
                     runChatFrames(gatewayEnv, {
                         systemContext,
@@ -217,8 +248,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                                 content: "[The assistant did not produce a valid tool call.]"
                             }
                         ],
-                        userMessage:
-                            leakedAsText && invalid.length === 0 ? LEAK_RETRY_MESSAGE : correctiveMessage(invalid),
+                        userMessage: retryMessage,
                         conversationId,
                         tools: TOOLS_CATALOG
                     })
@@ -230,11 +260,16 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
             const validCalls = validated.filter((entry) => entry.valid);
 
-            // Final safety net: never emit text that still looks like leaked
-            // JSON. If retry also failed and no calls were extracted, fall back
-            // to a friendly message rather than empty output.
-            let outText = looksLikeLeakedToolCall(replyText) ? "" : replyText;
-            if (leakedAsText && validCalls.length === 0 && outText.trim().length === 0) {
+            // Final safety net: drop leaked JSON, and never let an action narration
+            // stand when no tool ran (the model "did" nothing). Genuine refusals and
+            // clarifying questions are preserved; a narration alongside a real call
+            // is true, so it's kept.
+            let outText = replyText;
+            if (looksLikeLeakedToolCall(outText)) outText = "";
+            else if (validCalls.length === 0 && userImperative && !outText.includes("?") && !REFUSAL_RE.test(outText)) {
+                outText = "";
+            }
+            if ((leakedAsText || failedToAct) && validCalls.length === 0 && outText.trim().length === 0) {
                 outText = "I couldn't apply that change — could you rephrase your request?";
             }
             if (outText.trim().length > 0) {
