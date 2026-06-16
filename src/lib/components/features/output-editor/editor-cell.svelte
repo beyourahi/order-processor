@@ -237,8 +237,7 @@
                 onkeydown={handleInputKeydown}
                 oninput={handleTextareaInput}
                 class="text-foreground block max-h-[40vh] w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-base leading-snug outline-none focus:ring-0"
-                aria-label="Editing {column}, row {rowIndex + 1}"
-            ></textarea>
+                aria-label="Editing {column}, row {rowIndex + 1}"></textarea>
         {:else}
             <input
                 bind:this={inputRef}

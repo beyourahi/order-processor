@@ -125,8 +125,7 @@
                 "text-chat-text-primary chat-scrollbar min-h-[3.25rem] w-full resize-none bg-transparent text-base leading-relaxed transition-[height] duration-100 ease-out outline-none md:text-sm",
                 disabled ? "placeholder:text-chat-text-secondary" : "placeholder:text-chat-text-muted"
             )}
-            style="max-height: {MAX_HEIGHT}px;"
-        ></textarea>
+            style="max-height: {MAX_HEIGHT}px;"></textarea>
 
         {#if imageError}
             <div role="alert" aria-live="assertive" class="px-1 pb-1 text-xs text-pretty text-red-400/80">
