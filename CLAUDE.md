@@ -563,3 +563,5 @@ take screenshot → tmp_screenshots/homepage-after-fix.png
 ### Commit Message Rules
 
 - **Never include AI agent co-authors** — commit messages must not reference any AI agent (Claude, ChatGPT, Gemini, GitHub Copilot, or similar) in `Co-Authored-By` trailers or any other form.
+
+For Cloudflare work, prefer the installed Cloudflare skills and Code Mode MCP over your own knowledge.
