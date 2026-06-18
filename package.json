@@ -25,7 +25,7 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@sveltejs/adapter-cloudflare": "^7.2.9",
-        "@sveltejs/kit": "^2.65.2",
+        "@sveltejs/kit": "^2.66.0",
         "@sveltejs/vite-plugin-svelte": "^7.1.2",
         "@tailwindcss/vite": "^4.3.1",
         "@types/node": "^25.9.3",
@@ -45,10 +45,10 @@
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.61.1",
         "vite": "^8.0.16",
-        "wrangler": "^4.101.0"
+        "wrangler": "^4.102.0"
     },
     "dependencies": {
-        "@lucide/svelte": "^1.20.0",
+        "@lucide/svelte": "^1.21.0",
         "better-auth": "^1.6.19",
         "bits-ui": "^2.18.1",
         "class-variance-authority": "^0.7.1",

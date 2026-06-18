@@ -38,8 +38,9 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | --------------- | ------------------------------------------------------------------------------------------------ |
 | Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                              |
 | Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`)           |
-| Styling         | Tailwind CSS 4.x (via `@tailwindcss/vite` plugin)                                                |
-| UI Components   | shadcn-svelte (new-york style, zinc base color) + CVA                                            |
+| Styling         | Tailwind CSS 4.x (`@tailwindcss/vite`) + design tokens from vendored `@dropout/ds`               |
+| Design System   | `@dropout/ds` vendored at `src/lib/ds/`, imported via `$lib/ds` (tokens + primitives)            |
+| UI Components   | shadcn-svelte (new-york, zinc) + CVA in `src/lib/components/ui/` (coexists with the DS)          |
 | Auth            | Better Auth with Google OAuth, Drizzle adapter                                                   |
 | Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                           |
 | CSV Parsing     | PapaParse                                                                                        |
@@ -156,6 +157,26 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
   rename/delete) and feeds results back. A new chat starts local (`persisted: false`); the server
   mints the real id on the first turn and the client adopts it via `adoptConversationId`.
 
+### Design System
+
+The frontend runs on the **vendored Dropout design system** (`@dropout/ds`). It is copied into
+`src/lib/ds/` (NOT an npm/`file:` dependency — that breaks Cloudflare auto-deploy) and refreshed
+via the global `dropout-ds-sync` tool. Consume it through the `$lib/ds` alias; the `@dropout/ds`
+specifier survives only in vendored doc-comments.
+
+- **Exports** (`src/lib/ds/index.ts`): `cn` + components `Cta`/`Heading`/`Eyebrow`/`Input`/`Tile`
+    - style-string helpers (`inputBase`, `labelBase`, `tileBase`/`tileSelected`/`tileUnselected`,
+      `pillBase`/`pillSelected`/`pillUnselected`).
+- **Tokens**: color/type/space/motion-ease CSS vars live in `src/lib/ds/styles/tokens.css`
+  (+ optional `animations.css`), `@import`ed once at the top of `app.css`. Use the custom
+  `text-{micro,caption,label,body,…,display}` size scale and semantic colors like `text-ink-muted`.
+- **Two `cn()` (gotcha)**: the DS `cn` (`$lib/ds`) extends tailwind-merge to treat the custom
+  `text-*` literals as a `font-size` group; the plain `cn` (`$lib/utils`) does not. In DS markup
+  that mixes a custom size with a color, use the DS `cn` or the size is **silently dropped**.
+- **Hybrid UI**: shadcn-svelte primitives still live in `src/lib/components/ui/` (button, dialog,
+  table, tooltip, input…) and coexist with the DS — both valid; prefer DS tokens/primitives for new
+  surfaces. Propagation playbook: `~/Desktop/mind-palace/playbooks/implement-dropout-ds.md`.
+
 ### Motion
 
 GSAP is the motion engine. All motion code lives under `$lib/motion` and is the **only**
@@ -229,6 +250,7 @@ src/
   lib/
     auth-client.ts                       -- Better Auth client (`authClient`); use authClient.signIn/signOut/useSession directly — no named re-exports
     assets/                              -- static assets (upload.gif, steadfast.png)
+    ds/                                  -- vendored @dropout/ds (import via $lib/ds): index.ts (cn + Cta/Heading/Eyebrow/Input/Tile + style helpers), components/, styles/ (tokens.css + animations.css → imported by app.css), utils.ts (DS cn with extended text-* scale)
     api/
       client.ts                          -- typed api object (get/post/patch/put/delete) + debounceSync
     ai/                                  -- AI Copilot: types, schemas (Zod), tools-catalog, prompts, context,
@@ -266,7 +288,7 @@ src/
     utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
   hooks.server.ts                        -- auth middleware + security headers
   hooks.client.ts                        -- client-side hooks
-  app.css                                -- global Tailwind styles (includes 16px touch-device font floor)
+  app.css                                -- global Tailwind styles; @imports DS tokens.css + animations.css; 16px touch-device font floor; mirrors --motion-* vars
   app.d.ts                               -- App.Locals, App.Platform, App.PageData, App.Error
   app.html                               -- HTML shell
 ```
@@ -472,7 +494,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 11. **Cookie cache version is a global session kill-switch** -- Bumping `cookieCache.version` in `createAuth()` instantly invalidates all cached sessions across all users/edge nodes. Use in security incidents. Current value: `"1"`.
 
-12. **Mobile anti-zoom rule uses `@media (pointer: coarse)`** -- `app.css` enforces a 16px minimum font size on touch devices to prevent iOS auto-zoom on input focus. The rule is placed outside `@layer` so it outranks Tailwind utilities. Do not move it inside a layer or lower its specificity.
+12. **Mobile anti-zoom rule uses `@media (hover: none) and (pointer: coarse)`** -- `app.css` enforces a 16px minimum font size on touch devices to prevent iOS auto-zoom on input focus. The rule is placed outside `@layer` so it outranks Tailwind utilities. Do not move it inside a layer or lower its specificity.
 
 13. **Svelte's `slide` transition is invalid on `<tr>`** -- table rows have no overflow clipping and ignore padding/margin, so Svelte rejects `slide` (`transition_slide_display`). The output editor's row transitions use `fade` instead.
 

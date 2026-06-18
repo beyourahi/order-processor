@@ -16,27 +16,27 @@ import { extendTailwindMerge } from "tailwind-merge";
  * `tokens.css`.
  */
 const twMerge = extendTailwindMerge({
-	extend: {
-		classGroups: {
-			"font-size": [
-				{
-					text: [
-						"micro",
-						"caption",
-						"label",
-						"body",
-						"body-lg",
-						"lead",
-						"subtitle",
-						"title-sm",
-						"title",
-						"title-lg",
-						"display"
-					]
-				}
-			]
-		}
-	}
+    extend: {
+        classGroups: {
+            "font-size": [
+                {
+                    text: [
+                        "micro",
+                        "caption",
+                        "label",
+                        "body",
+                        "body-lg",
+                        "lead",
+                        "subtitle",
+                        "title-sm",
+                        "title",
+                        "title-lg",
+                        "display"
+                    ]
+                }
+            ]
+        }
+    }
 });
 
 /**
