@@ -4,8 +4,8 @@
  * Color / type / space / motion-ease tokens come from @dropout/ds — the single
  * source of visual truth (ink ramp, semantic aliases, editorial layer
  * signal/ink-muted/hair, type scale, fonts, radius, shadows, --ease, shell vars,
- * @custom-variant set, base layer). `@source` is REQUIRED so Tailwind v4 emits the
- * DS component classes (bg-signal, border-hair, …) that live in node_modules.
+ * @custom-variant set, base layer). DS is VENDORED at src/lib/ds (`bun run
+ * sync-ds` refreshes it); Tailwind v4 auto-scans src/, so no `@source` is needed.
  *
  * This file keeps ONLY what DS doesn't cover: tool-specific aliases (--popover,
  * --surface, --courier-accent, --chat-*, copilot-rail) repointed to DS tokens so
@@ -13,9 +13,8 @@
  * launcher animation, and view-transition rules. DARK-ONLY (DS canonical theme).
  */
 @import "tailwindcss";
-@source "../node_modules/@dropout/ds";
-@import "@dropout/ds/tokens.css";
-@import "@dropout/ds/animations.css";
+@import "./lib/ds/styles/tokens.css";
+@import "./lib/ds/styles/animations.css";
 @import "tw-animate-css";
 @import "./lib/styles/chat-animations.css";
 

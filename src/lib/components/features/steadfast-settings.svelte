@@ -8,7 +8,7 @@
 <script lang="ts">
     import { brandSettings } from "$lib/stores";
     import { Input } from "$lib/components/ui/input";
-    import { Eyebrow, labelBase } from "@dropout/ds";
+    import { Eyebrow, labelBase } from "$lib/ds";
     import { Loader2, AlertCircle } from "@lucide/svelte";
 
     interface Props {

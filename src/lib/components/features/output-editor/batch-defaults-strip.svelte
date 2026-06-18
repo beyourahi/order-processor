@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Eyebrow } from "@dropout/ds";
+    import { Eyebrow } from "$lib/ds";
     import { Input } from "$lib/components/ui/input";
     import { cn } from "$lib/utils";
     import { BATCH_CONSTANT_COLUMNS, type BatchDefaults } from "./columns";

@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "vite dev --open --host",
+        "sync-ds": "rsync -a --delete ../../dropout-design-system/src/lib/ ./src/lib/ds/",
         "build": "vite build",
         "preview": "bun run build && wrangler dev",
         "deploy": "bun run build && wrangler deploy",
@@ -47,7 +48,6 @@
         "wrangler": "^4.101.0"
     },
     "dependencies": {
-        "@dropout/ds": "file:../../dropout-design-system",
         "@lucide/svelte": "^1.20.0",
         "better-auth": "^1.6.19",
         "bits-ui": "^2.18.1",

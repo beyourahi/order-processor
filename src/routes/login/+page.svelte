@@ -3,7 +3,7 @@
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
     import { Heading } from "$lib/components";
-    import { Cta, cn } from "@dropout/ds";
+    import { Cta, cn } from "$lib/ds";
 
     let isLoading = $state(false);
     let error = $state<string | null>(null);
