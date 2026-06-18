@@ -8,6 +8,7 @@
 <script lang="ts">
     import { brandSettings } from "$lib/stores";
     import { Input } from "$lib/components/ui/input";
+    import { Eyebrow, labelBase } from "@dropout/ds";
     import { Loader2, AlertCircle } from "@lucide/svelte";
 
     interface Props {
@@ -53,7 +54,7 @@
     <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center" aria-live="polite" aria-atomic="true">
         {#if state === "saving" || state === "saved"}
             <Loader2
-                class="text-courier-accent h-3.5 w-3.5 animate-spin"
+                class="text-signal h-3.5 w-3.5 animate-spin"
                 aria-label={state === "saving" ? "Saving" : "Saved"}
             />
         {:else if state === "error"}
@@ -70,7 +71,7 @@
             <button
                 type="button"
                 onclick={() => brandSettings.dismissError(field)}
-                class="text-muted-foreground hover:text-foreground focus-visible:ring-ring cursor-pointer rounded underline focus:outline-none focus-visible:ring-2"
+                class="text-ink-muted hover:text-foreground focus-visible:outline-signal ease-[var(--ease)] cursor-pointer rounded underline transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
             >
                 Dismiss
             </button>
@@ -81,18 +82,18 @@
 {#if visible}
     <div class="animate-in fade-in slide-in-from-top-2 w-full max-w-sm duration-300">
         <div class="mb-4 flex items-center gap-3">
-            <div class="bg-border h-px flex-1"></div>
-            <span class="text-muted-foreground text-xs font-medium tracking-wider whitespace-nowrap uppercase"
-                >SteadFast Settings</span
+            <div class="bg-hair h-px flex-1"></div>
+            <Eyebrow as="span" class="text-[clamp(0.5625rem,0.5rem+0.35vw,0.625rem)] whitespace-nowrap"
+                >SteadFast Settings</Eyebrow
             >
-            <div class="bg-border h-px flex-1"></div>
+            <div class="bg-hair h-px flex-1"></div>
         </div>
 
-        <div class="sleek border-border bg-card rounded-xl border border-solid p-4 shadow-sm">
+        <div class="sleek border-hair bg-card rounded-xl border border-solid p-4 shadow-sm">
             <div class="space-y-4">
                 <div>
-                    <label for="contact-name" class="text-muted-foreground mb-1.5 block text-xs font-medium">
-                        Contact Name <span class="text-muted-foreground/70">(optional)</span>
+                    <label for="contact-name" class={labelBase}>
+                        Contact Name <span class="text-ink-muted/70 normal-case">(optional)</span>
                     </label>
                     <div class="relative">
                         <Input
@@ -108,8 +109,8 @@
                 </div>
 
                 <div>
-                    <label for="contact-phone" class="text-muted-foreground mb-1.5 block text-xs font-medium">
-                        Contact Phone <span class="text-muted-foreground/70">(optional)</span>
+                    <label for="contact-phone" class={labelBase}>
+                        Contact Phone <span class="text-ink-muted/70 normal-case">(optional)</span>
                     </label>
                     <div class="relative">
                         <Input
@@ -126,7 +127,7 @@
                 </div>
 
                 <div>
-                    <label for="merchant-id" class="text-muted-foreground mb-1.5 block text-xs font-medium">
+                    <label for="merchant-id" class={labelBase}>
                         Merchant ID <span class="text-destructive">*</span>
                     </label>
                     <div class="relative">
@@ -148,8 +149,6 @@
             </div>
         </div>
 
-        <p class="text-muted-foreground mt-3 text-center text-xs text-pretty">
-            Your personal SteadFast delivery settings
-        </p>
+        <p class="text-ink-muted mt-3 text-center text-xs text-pretty">Your personal SteadFast delivery settings</p>
     </div>
 {/if}

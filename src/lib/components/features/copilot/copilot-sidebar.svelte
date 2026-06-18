@@ -56,7 +56,7 @@
         "bg-chat-bg flex h-full min-h-[30rem] flex-col overflow-hidden",
         !bare && "border-chat-border rounded-2xl border border-solid shadow-[var(--chat-shadow)]"
     )}
-    aria-label="AI Copilot"
+    aria-label="AI chat"
 >
     <CopilotHeader
         {onClose}
@@ -83,7 +83,7 @@
     {/if}
 
     {#if copilot.error}
-        <div class="px-4 py-2 text-center text-xs text-pretty text-red-400/80" role="alert">{copilot.error}</div>
+        <div class="text-destructive px-4 py-2 text-center text-xs text-pretty" role="alert">{copilot.error}</div>
     {/if}
 
     <CopilotComposer

@@ -44,7 +44,7 @@
         return false;
     };
 
-    const controlBase = "border border-solid border-border bg-secondary shadow-sm";
+    const controlBase = "border border-solid border-hair bg-ink-2";
 
     // Row motion uses `fade` (NOT `slide`) — Svelte rejects `slide` on
     // <tr> (transition_slide_display) because table rows have no overflow
@@ -60,10 +60,7 @@
     data-selected={isSelected ? "true" : undefined}
     in:rowMotion={{ animate: animateEntry }}
     out:rowMotion={{ animate: true }}
-    class={cn(
-        "border-border hover:bg-muted/40 border-b border-solid transition-colors",
-        isSelected && "bg-secondary/40"
-    )}
+    class={cn("border-hair hover:bg-ink-2/60 border-b border-solid transition-colors", isSelected && "bg-ink-2/50")}
 >
     <Table.Cell class="sticky left-0 z-10 w-14 bg-inherit p-0 align-middle">
         <div class="flex items-center justify-center gap-1">
@@ -71,7 +68,7 @@
                 class={cn(
                     "sleek flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10",
                     controlBase,
-                    "focus-within:ring-ring hover:border-border-strong hover:bg-muted focus-within:ring-2"
+                    "focus-within:ring-ring hover:border-signal/50 hover:bg-ink-2 focus-within:ring-2"
                 )}
                 aria-label="Select row {rowIndex + 1}"
             >
@@ -85,18 +82,18 @@
                             onToggleSelect(e as unknown as MouseEvent);
                         }
                     }}
-                    class="accent-courier-accent h-4 w-4 cursor-pointer focus:outline-none"
+                    class="accent-signal h-4 w-4 cursor-pointer focus:outline-none"
                 />
             </label>
         </div>
     </Table.Cell>
 
-    <Table.Cell class="text-muted-foreground w-10 px-2 text-xs tabular-nums">
+    <Table.Cell class="text-ink-muted w-10 px-2 font-mono text-xs tabular-nums">
         {rowIndex + 1}
     </Table.Cell>
 
     {#each columns as column (column.key)}
-        <Table.Cell class="border-border border-l border-solid p-0 align-middle">
+        <Table.Cell class="border-hair border-l border-solid p-0 align-middle">
             <EditorCell
                 value={row[column.key as keyof SteadFastOrder] ?? ""}
                 column={column.key}
@@ -112,15 +109,15 @@
         </Table.Cell>
     {/each}
 
-    <Table.Cell class="border-border sticky right-0 z-10 w-20 border-l border-solid bg-inherit p-0 align-middle">
+    <Table.Cell class="border-hair sticky right-0 z-10 w-20 border-l border-solid bg-inherit p-0 align-middle">
         <div class="flex min-h-[44px] items-center justify-center gap-0.5 sm:min-h-10">
             <button
                 type="button"
                 onclick={onDuplicate}
                 class={cn(
-                    "sleek text-muted-foreground flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek text-ink-muted flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     controlBase,
-                    "hover:border-border-strong hover:bg-muted hover:text-foreground active:bg-muted",
+                    "hover:border-signal/50 hover:bg-ink-2 hover:text-foreground active:bg-ink-2",
                     "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
                 )}
                 title="Duplicate row"
@@ -142,7 +139,7 @@
                 type="button"
                 onclick={onDelete}
                 class={cn(
-                    "sleek text-muted-foreground flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek text-ink-muted flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     controlBase,
                     "hover:bg-destructive/15 hover:border-destructive/30 hover:text-destructive active:bg-destructive/25",
                     "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"

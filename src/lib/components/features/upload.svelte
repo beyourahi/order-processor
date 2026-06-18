@@ -28,11 +28,14 @@
         class="h-16 w-16 object-contain sm:h-20 sm:w-20 md:h-24 md:w-24"
         class:grayscale={disabled}
     />
-    <div class="flex flex-col items-center gap-1.5 text-center sm:gap-2">
-        <p class="text-foreground text-base font-medium text-balance sm:text-lg">
+    <div class="flex flex-col items-center gap-2 text-center sm:gap-2.5">
+        <p
+            class="text-foreground font-mono text-micro tracking-[0.28em] text-balance uppercase sm:text-caption"
+            class:text-ink-muted={disabled}
+        >
             {title}
         </p>
-        <p class="text-muted-foreground text-xs text-pretty sm:text-sm">
+        <p class="text-ink-muted text-xs text-pretty sm:text-sm">
             {subtitle}
         </p>
     </div>

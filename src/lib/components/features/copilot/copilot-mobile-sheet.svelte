@@ -5,7 +5,7 @@
      * shared store flag `copilot.mobileOpen`, so the FAB and this sheet stay in sync.
      * Implements a manual focus trap: Tab/Shift+Tab cycle within the panel, Escape
      * closes, focus moves to the first focusable on open, and on close focus is
-     * restored to the FAB (queried by its `aria-label="Open AI Copilot"`). Hidden on
+     * restored to the FAB (queried by its `aria-label="Open AI chat"`). Hidden on
      * `lg+` where the persistent rail takes over.
      */
     import { fade, fly } from "svelte/transition";
@@ -55,7 +55,7 @@
             void tick().then(() => focusable()[0]?.focus());
         } else if (wasOpen) {
             wasOpen = false;
-            void tick().then(() => document.querySelector<HTMLElement>('[aria-label="Open AI Copilot"]')?.focus());
+            void tick().then(() => document.querySelector<HTMLElement>('[aria-label="Open AI chat"]')?.focus());
         }
     });
 </script>
@@ -63,11 +63,11 @@
 <svelte:window onkeydown={onKeydown} />
 
 {#if copilot.mobileOpen}
-    <div class="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="AI Copilot">
+    <div class="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="AI chat">
         <button
             type="button"
             class="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
-            aria-label="Close Copilot"
+            aria-label="Close chat"
             onclick={close}
             transition:fade={{ duration: 200 }}
         ></button>

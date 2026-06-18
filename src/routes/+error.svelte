@@ -6,7 +6,7 @@
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-4">
     <div class="flex flex-col items-center gap-4 text-center">
-        <p class="text-destructive text-6xl font-bold" aria-label="HTTP status code {page.status}">
+        <p class="text-destructive text-6xl font-semibold" aria-label="HTTP status code {page.status}">
             {page.status}
         </p>
         <h1 class="text-foreground text-2xl font-semibold text-balance">

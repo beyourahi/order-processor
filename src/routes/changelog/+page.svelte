@@ -1,6 +1,7 @@
 <script lang="ts">
     import { CHANGELOG_ENTRIES, type ChangelogEntry } from "$lib/data/changelog";
     import { reveal } from "$lib/motion";
+    import { Heading, Eyebrow } from "@dropout/ds";
 
     type ChangelogGroup = {
         date: string;
@@ -43,50 +44,52 @@
     />
 </svelte:head>
 
-<section class="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
-    <div class="flex flex-col gap-12 sm:gap-16">
-        <header class="space-y-4 text-center sm:space-y-6">
-            <p class="text-4xl sm:text-5xl">🗒️</p>
-            <div class="space-y-1.5 sm:space-y-2">
-                <h1 class="text-foreground text-2xl font-black tracking-tight text-balance sm:text-3xl lg:text-4xl">
-                    Changelog
-                </h1>
-                <p class="text-muted-foreground text-xs sm:text-sm lg:text-base">Every update, in plain English</p>
-            </div>
-        </header>
+<main class="mx-auto w-full max-w-2xl px-4 py-14 sm:px-6 sm:py-20">
+    <header class="flex flex-col gap-4 sm:gap-5" use:reveal={{ distance: "sm" }}>
+        <Eyebrow>What's new</Eyebrow>
+        <Heading as="h1" size="title" weight={560} class="lowercase">changelog</Heading>
+        <p class="text-ink-muted max-w-md text-label text-pretty sm:text-body">
+            Every meaningful update to Order Processor, written in plain language.
+        </p>
+    </header>
 
+    <div class="border-hair my-12 border-t sm:my-16"></div>
+
+    <div class="space-y-14 sm:space-y-20">
         {#each groups as group, groupIndex (group.date)}
-            <div class="flex flex-col gap-4 sm:gap-5">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            <section class="space-y-6">
+                <div
+                    class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5"
+                    use:reveal={{ distance: "sm", delay: groupIndex === 0 ? 0.05 : 0 }}
+                >
+                    <span class="text-ink-muted font-mono text-micro tracking-[0.28em] uppercase tabular-nums">
                         {group.label}
-                    </h2>
+                    </span>
                     {#if groupIndex === 0}
                         <span
-                            class="border-border bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-[0.625rem] font-medium tracking-wide uppercase"
+                            class="border-hair text-ink-muted rounded-full border px-2 py-0.5 font-mono text-micro tracking-[0.18em] uppercase"
                         >
                             Latest
                         </span>
                     {/if}
                 </div>
 
-                <div class="flex flex-col gap-3 sm:gap-4">
+                <div class="border-hair space-y-8 border-l pl-5 sm:pl-6">
                     {#each group.entries as entry, entryIndex (entry.title)}
-                        <article
-                            use:reveal={{ onScroll: true, delay: Math.min(entryIndex, 4) * 0.05 }}
-                            class="border-border bg-card flex flex-col gap-2 rounded-lg border p-4 sm:p-5"
-                        >
-                            <span
-                                class="border-border bg-muted text-muted-foreground w-fit rounded-full border px-2 py-0.5 text-xs"
-                            >
+                        <article class="space-y-2.5" use:reveal={{ distance: "sm", delay: 0.06 * entryIndex }}>
+                            <span class="text-ink-muted block font-mono text-micro tracking-[0.22em] uppercase">
                                 {entry.category}
                             </span>
-                            <h3 class="text-foreground font-semibold">{entry.title}</h3>
-                            <p class="text-muted-foreground text-sm leading-relaxed">{entry.summary}</p>
+                            <Heading as="h2" size="lead" weight={560} class="text-balance">
+                                {entry.title}
+                            </Heading>
+                            <p class="text-ink-muted text-label leading-relaxed text-pretty">
+                                {entry.summary}
+                            </p>
                         </article>
                     {/each}
                 </div>
-            </div>
+            </section>
         {/each}
     </div>
-</section>
+</main>

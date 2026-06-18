@@ -16,8 +16,8 @@ export const APP_CONFIG: AppConfig = {
         url: "https://github.com/beyourahi/order-processor"
     },
     author: {
-        name: "Rahi Khan",
-        url: "https://beyourahi.com"
+        name: "Dropout Studio",
+        url: "https://dropoutstudio.co"
     },
     siblings: [
         {

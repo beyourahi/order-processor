@@ -482,10 +482,10 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     >
         <div
-            class="border-border bg-popover w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-solid p-6 shadow-2xl"
+            class="border-hair bg-popover w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-solid p-6 shadow-2xl"
         >
             <h2 id="discard-title" class="text-foreground text-base font-medium text-balance">Discard your edits?</h2>
-            <p class="text-muted-foreground mt-2 text-sm text-pretty">
+            <p class="text-ink-muted mt-2 text-sm text-pretty">
                 This can't be undone. Your edits will be lost and you'll return to the upload zone.
             </p>
             <div class="mt-6 flex items-center justify-end gap-2">
@@ -493,14 +493,14 @@
                     type="button"
                     onclick={cancelDiscard}
                     use:focusOnMount
-                    class="border-border bg-background text-foreground hover:bg-muted focus-visible:ring-ring inline-flex h-9 cursor-pointer items-center rounded-md border border-solid px-4 text-sm focus:outline-none focus-visible:ring-2"
+                    class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 focus-visible:ring-ring inline-flex h-9 cursor-pointer items-center rounded-full border border-solid px-5 font-mono text-xs tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
                     onclick={confirmDiscard}
-                    class="bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/30 inline-flex h-9 cursor-pointer items-center rounded-md px-4 text-sm font-medium text-red-300 focus:outline-none focus-visible:ring-2"
+                    class="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/30 inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono text-xs font-medium tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
                 >
                     Discard
                 </button>

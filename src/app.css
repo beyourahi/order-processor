@@ -1,24 +1,23 @@
+/**
+ * Global stylesheet — Tailwind v4 CSS-first.
+ *
+ * Color / type / space / motion-ease tokens come from @dropout/ds — the single
+ * source of visual truth (ink ramp, semantic aliases, editorial layer
+ * signal/ink-muted/hair, type scale, fonts, radius, shadows, --ease, shell vars,
+ * @custom-variant set, base layer). `@source` is REQUIRED so Tailwind v4 emits the
+ * DS component classes (bg-signal, border-hair, …) that live in node_modules.
+ *
+ * This file keeps ONLY what DS doesn't cover: tool-specific aliases (--popover,
+ * --surface, --courier-accent, --chat-*, copilot-rail) repointed to DS tokens so
+ * every existing utility stays strictly monochrome, plus app keyframes, the
+ * launcher animation, and view-transition rules. DARK-ONLY (DS canonical theme).
+ */
 @import "tailwindcss";
+@source "../node_modules/@dropout/ds";
+@import "@dropout/ds/tokens.css";
+@import "@dropout/ds/animations.css";
 @import "tw-animate-css";
 @import "./lib/styles/chat-animations.css";
-
-@custom-variant dark (&:is(.dark *));
-
-@custom-variant hover {
-    @media (hover: hover) and (pointer: fine) {
-        &:hover {
-            @slot;
-        }
-    }
-}
-
-@custom-variant group-hover {
-    @media (hover: hover) and (pointer: fine) {
-        &:is(:where(.group):hover *) {
-            @slot;
-        }
-    }
-}
 
 @font-face {
     font-family: "Google Sans Flex Fallback";
@@ -29,30 +28,22 @@
     line-gap-override: 0%;
 }
 
+/* =============================================================================
+   TOOL-EXTRAS — tokens DS doesn't define, repointed to DS primitives so every
+   existing utility (bg-surface, text-courier-accent, bg-chat-surface, bg-popover)
+   keeps working but resolves to strict-monochrome DS values. App is dark-only, so
+   var(--signal)/var(--hair)/var(--ink-muted)/… resolve to their .dark (white-led)
+   values everywhere. DS owns the semantic palette; we never redefine it.
+   ============================================================================= */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(1 0 0);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    /* shadcn popover + raised surfaces → DS card / faint raised fill */
+    --popover: var(--card);
+    --popover-foreground: var(--card-foreground);
+    --surface: var(--card);
+    --surface-raised: var(--ink-2);
+    --border-strong: var(--color-ink-600);
 
-    --surface: oklch(0.97 0 0);
-    --surface-raised: oklch(0.99 0 0);
-    --border-strong: oklch(0.85 0 0);
+    /* selected-courier accent — original SteadFast green (courier-picker reads this) */
     --courier-accent: oklch(0.69 0.17 162);
 
     /* Copilot right-rail sizing (CLAUDE.md warning #21). +layout.svelte reserves
@@ -61,99 +52,30 @@
     --copilot-rail-width: 26rem;
     --copilot-rail-width-xl: 28rem;
 
-    --chat-bg: oklch(0.145 0 0);
-    --chat-surface: oklch(0.205 0 0);
-    --chat-surface-hover: oklch(0.269 0 0);
-    --chat-accent: oklch(0.985 0 0 / 0.9);
-    --chat-accent-muted: oklch(0.985 0 0 / 0.1);
-    --chat-accent-subtle: oklch(0.985 0 0 / 0.06);
-    --chat-text-primary: oklch(0.985 0 0);
-    --chat-text-secondary: oklch(0.708 0 0);
-    --chat-text-muted: oklch(0.62 0 0);
-    --chat-border: oklch(0.275 0 0);
-    --chat-border-subtle: oklch(0.22 0 0);
-    --chat-icon-muted: oklch(0.556 0 0);
-    --chat-user-bubble: oklch(0.985 0 0 / 0.1);
-    --chat-bot-bubble: oklch(0.205 0 0);
-    --chat-shadow: 0 8px 32px oklch(0 0 0 / 0.4), 0 2px 8px oklch(0 0 0 / 0.2);
-
-    --font-sans:
-        "Google Sans Flex", "Google Sans Flex Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --font-mono: "Google Sans Code", ui-monospace, "SF Mono", Consolas, "Courier New", monospace;
-    --radius: 1rem;
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
-}
-
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.371 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(0.275 0 0);
-    --input: oklch(0.325 0 0);
-    --ring: oklch(0.556 0 0);
-
-    --surface: oklch(0.205 0 0);
-    --surface-raised: oklch(0.269 0 0);
-    --border-strong: oklch(0.371 0 0);
-    --courier-accent: oklch(0.69 0.17 162);
-
-    --chat-bg: oklch(0.145 0 0);
-    --chat-surface: oklch(0.205 0 0);
-    --chat-surface-hover: oklch(0.269 0 0);
-    --chat-accent: oklch(0.985 0 0 / 0.9);
-    --chat-accent-muted: oklch(0.985 0 0 / 0.1);
-    --chat-accent-subtle: oklch(0.985 0 0 / 0.06);
-    --chat-text-primary: oklch(0.985 0 0);
-    --chat-text-secondary: oklch(0.708 0 0);
-    --chat-text-muted: oklch(0.62 0 0);
-    --chat-border: oklch(0.275 0 0);
-    --chat-border-subtle: oklch(0.22 0 0);
-    --chat-icon-muted: oklch(0.556 0 0);
-    --chat-user-bubble: oklch(0.985 0 0 / 0.1);
-    --chat-bot-bubble: oklch(0.205 0 0);
+    /* AI Copilot surfaces → DS semantic tokens (already monochrome; signal is the accent) */
+    --chat-bg: var(--background);
+    --chat-surface: var(--card);
+    --chat-surface-hover: var(--ink-2);
+    --chat-accent: var(--signal);
+    --chat-accent-muted: oklch(1 0 0 / 0.1);
+    --chat-accent-subtle: oklch(1 0 0 / 0.06);
+    --chat-text-primary: var(--foreground);
+    --chat-text-secondary: var(--ink-muted);
+    --chat-text-muted: var(--ink-muted);
+    --chat-border: var(--hair);
+    --chat-border-subtle: var(--hair-soft);
+    --chat-icon-muted: var(--ink-muted);
+    --chat-user-bubble: oklch(1 0 0 / 0.1);
+    --chat-bot-bubble: var(--card);
     --chat-shadow: 0 8px 32px oklch(0 0 0 / 0.4), 0 2px 8px oklch(0 0 0 / 0.2);
 }
 
 @theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
+    /* shadcn popover + tool-only color utilities. The semantic palette
+       (background/foreground/card/primary/…/destructive/border/input/ring),
+       fonts, radius-*, shadow-*, text-*, and leading-* all come from DS. */
     --color-popover: var(--popover);
     --color-popover-foreground: var(--popover-foreground);
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-secondary: var(--secondary);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-muted: var(--muted);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-destructive: var(--destructive);
-    --color-destructive-foreground: var(--destructive-foreground);
-    --color-border: var(--border);
-    --color-input: var(--input);
-    --color-ring: var(--ring);
-
     --color-surface: var(--surface);
     --color-surface-raised: var(--surface-raised);
     --color-border-strong: var(--border-strong);
@@ -174,36 +96,6 @@
     --color-chat-user-bubble: var(--chat-user-bubble);
     --color-chat-bot-bubble: var(--chat-bot-bubble);
 
-    --font-sans: var(--font-sans);
-    --font-mono: var(--font-mono);
-
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
-
-    --shadow-xs: var(--shadow-xs);
-    --shadow-sm: var(--shadow-sm);
-    --shadow: var(--shadow);
-    --shadow-md: var(--shadow-md);
-    --shadow-lg: var(--shadow-lg);
-    --shadow-xl: var(--shadow-xl);
-    --shadow-2xl: var(--shadow-2xl);
-
-    --text-micro: 0.625rem;
-    --text-caption: 0.75rem;
-    --text-label: 0.875rem;
-    --text-body: 1rem;
-    --text-body-lg: 1.0625rem;
-    --text-lead: 1.125rem;
-    --text-subtitle: 1.5rem;
-    --text-title-sm: 1.875rem;
-    --text-title: 2.25rem;
-    --text-title-lg: 3rem;
-    --text-display: 3.75rem;
-    --leading-tight-custom: 1.2;
-    --leading-heading: 1.25;
-    --leading-body: 1.625;
     --tracking-tight-custom: -0.025em;
     --tracking-caption-custom: 0.1em;
 }

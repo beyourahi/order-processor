@@ -52,7 +52,7 @@
             class="bg-chat-bg border-chat-border flex max-h-[85vh] w-[min(30rem,calc(100vw-2rem))] flex-col rounded-2xl border border-solid shadow-[var(--chat-shadow)]"
         >
             <div class="border-chat-border flex items-center gap-2 border-b border-solid px-5 py-4">
-                <ShieldCheck class="size-4 shrink-0 text-amber-300" aria-hidden="true" />
+                <ShieldCheck class="text-chat-text-primary size-4 shrink-0" aria-hidden="true" />
                 <h2 id="copilot-confirm-title" class="text-chat-text-primary text-sm font-medium text-balance">
                     Confirm this change
                 </h2>
@@ -67,17 +67,17 @@
                     >
                         {#each pending.diff as row, i (i)}
                             <div class="space-y-1">
-                                <div class="text-chat-text-muted font-mono text-[10px] tracking-wide uppercase">
+                                <div class="text-chat-text-muted font-mono text-[10px] tracking-[0.12em] uppercase">
                                     {row.label}
                                 </div>
                                 <div class="flex items-start gap-2 text-xs">
-                                    <span class="shrink-0 font-mono text-red-300/70 select-none">−</span>
+                                    <span class="text-destructive shrink-0 font-mono select-none">−</span>
                                     <span class="text-chat-text-muted min-w-0 break-words line-through">
                                         {row.current}
                                     </span>
                                 </div>
                                 <div class="flex items-start gap-2 text-xs">
-                                    <span class="text-courier-accent shrink-0 font-mono select-none">+</span>
+                                    <span class="text-chat-text-primary shrink-0 font-mono select-none">+</span>
                                     <span class="text-chat-text-primary min-w-0 font-medium break-words">
                                         {row.proposed}
                                     </span>
@@ -102,14 +102,14 @@
                     type="button"
                     onclick={onReject}
                     use:focusOnMount
-                    class="border-chat-border bg-chat-surface text-chat-text-primary hover:bg-chat-surface-hover focus-visible:ring-chat-accent inline-flex h-9 cursor-pointer items-center rounded-md border border-solid px-4 text-sm transition-colors focus:outline-none focus-visible:ring-2"
+                    class="border-hair bg-chat-surface text-chat-text-primary hover:border-signal hover:bg-ink-2 focus-visible:ring-signal ease-[var(--ease)] inline-flex h-9 cursor-pointer items-center rounded-full border px-5 font-mono text-[12px] tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
                 >
                     Reject
                 </button>
                 <button
                     type="button"
                     onclick={onConfirm}
-                    class="bg-chat-accent text-chat-bg hover:bg-chat-accent/90 focus-visible:ring-chat-accent inline-flex h-9 cursor-pointer items-center rounded-md px-4 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2"
+                    class="bg-signal text-background hover:bg-signal/90 focus-visible:ring-signal ease-[var(--ease)] inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono text-[12px] font-medium tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
                 >
                     Confirm
                 </button>

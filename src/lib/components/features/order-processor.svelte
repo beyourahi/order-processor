@@ -224,13 +224,13 @@
             role="button"
             tabindex={isDisabled ? -1 : 0}
             class={cn(
-                "flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
+                "flex w-full flex-col items-center justify-center rounded-xl border border-dashed transition-all duration-200 ease-[var(--ease)]",
                 "h-56 sm:h-64 md:h-72 lg:h-80",
                 "ring-offset-background focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 isDisabled
-                    ? "border-border cursor-not-allowed opacity-50"
-                    : "border-border-strong hover:bg-card/60 hover:border-border-strong/80 cursor-pointer",
-                zoneHover && "bg-card border-courier-accent/60",
+                    ? "border-hair cursor-not-allowed opacity-50"
+                    : "border-signal/40 bg-ink-2 cursor-pointer hover:border-signal/70 hover:bg-ink-800",
+                zoneHover && "bg-ink-2 border-signal/60",
                 error && "border-destructive/60"
             )}
             ondragover={handleDragOver}
@@ -256,7 +256,7 @@
                             e.stopPropagation();
                             error = null;
                         }}
-                        class="sleek text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:ring-ring cursor-pointer rounded-lg px-4 py-2 text-sm focus:outline-none focus-visible:ring-2 active:scale-95"
+                        class="sleek text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring border-hair cursor-pointer rounded-full border border-solid px-5 py-2 font-mono text-xs tracking-[0.12em] uppercase focus:outline-none focus-visible:ring-2 active:scale-95"
                     >
                         Try again
                     </button>
@@ -264,7 +264,7 @@
             {:else if isProcessing}
                 <div class="flex flex-col items-center gap-3 sm:gap-4">
                     <LoadingSpinner size="lg" colorClass="border-t-foreground" />
-                    <p class="text-muted-foreground text-sm sm:text-base">Processing...</p>
+                    <p class="text-ink-muted font-mono text-micro tracking-[0.28em] uppercase">Processing</p>
                 </div>
             {:else}
                 <Upload disabled={isDisabled} {needsMerchantId} />

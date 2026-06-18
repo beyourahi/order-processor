@@ -217,10 +217,10 @@
     class={cn(
         "ring-offset-background focus-visible:ring-ring group relative min-h-[44px] min-w-[10rem] cursor-text px-3 text-base focus:outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-10",
         "flex items-center transition-colors",
-        isSelected && "bg-secondary/40",
-        warning && "ring-1 ring-amber-500/60 ring-inset",
+        isSelected && "bg-ink-2/50",
+        warning && "ring-1 ring-destructive/60 ring-inset",
         isOverride &&
-            "before:bg-courier-accent/80 before:absolute before:top-1 before:bottom-1 before:left-0 before:w-[2px] before:rounded-r"
+            "before:bg-signal/80 before:absolute before:top-1 before:bottom-1 before:left-0 before:w-[2px] before:rounded-r"
     )}
 >
     {#if isEditing}
@@ -255,14 +255,14 @@
             />
         {/if}
     {:else}
-        <span class={cn("block w-full truncate", value ? "text-foreground/90" : "text-muted-foreground italic")}>
+        <span class={cn("block w-full truncate", value ? "text-foreground/90" : "text-ink-muted italic")}>
             {value || "—"}
         </span>
         {#if warning}
             <span
                 id="cell-warn-{rowIndex}-{column}"
                 transition:scale={{ duration: motionDuration("fast"), start: 0.6 }}
-                class="pointer-events-none absolute top-0.5 right-1 text-xs leading-none text-amber-400"
+                class="text-destructive pointer-events-none absolute top-0.5 right-1 text-xs leading-none"
                 aria-hidden="true">⚠</span
             >
         {/if}

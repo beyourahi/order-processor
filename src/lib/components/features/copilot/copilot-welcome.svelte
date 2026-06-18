@@ -7,6 +7,7 @@
      * capabilities prompt), keeping the first interaction safe.
      */
     import { FileSpreadsheet, Truck, AlertTriangle, HelpCircle } from "@lucide/svelte";
+    import { Heading } from "@dropout/ds";
 
     let { onSuggestionClick }: { onSuggestionClick: (text: string) => void } = $props();
 
@@ -32,7 +33,7 @@
         {
             icon: HelpCircle,
             title: "what can I do",
-            desc: "list the Copilot's abilities",
+            desc: "see what's possible",
             query: "What can I do here?"
         }
     ];
@@ -51,14 +52,11 @@
         <div></div>
         <div></div>
     </div>
+    <div class="text-center" style="animation: chat-greeting-stagger 0.4s ease-out both; animation-delay: 100ms;">
+        <Heading as="h2" size="subtitle" weight={560} class="text-balance">tell us what to fix.</Heading>
+    </div>
     <p
-        class="text-chat-text-primary text-center text-lg font-medium text-balance md:text-xl"
-        style="animation: chat-greeting-stagger 0.4s ease-out both; animation-delay: 100ms;"
-    >
-        Tell the Copilot what to fix.
-    </p>
-    <p
-        class="text-chat-text-secondary mt-2 max-w-md text-center text-xs text-pretty md:mt-3 md:text-sm"
+        class="text-chat-text-secondary mt-2.5 max-w-md text-center text-xs text-pretty md:mt-3 md:text-sm"
         style="animation: chat-greeting-stagger 0.4s ease-out both; animation-delay: 200ms;"
     >
         Describe an edit in plain words — it updates the right rows, repairs warnings, and flags risky orders before you

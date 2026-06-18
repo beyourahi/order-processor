@@ -16,7 +16,7 @@
 
     let { call }: { call: CopilotToolCall } = $props();
 
-    const label = $derived(TOOL_LABELS[call.name as ToolName] ?? "Copilot action");
+    const label = $derived(TOOL_LABELS[call.name as ToolName] ?? "Action");
 
     const statusLabel = $derived.by(() => {
         switch (call.status) {
