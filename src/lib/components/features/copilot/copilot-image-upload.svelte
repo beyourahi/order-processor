@@ -12,10 +12,10 @@
      * original file, so the path degrades rather than blocking the attachment.
      */
     import { copilot } from "$lib/stores/copilot.svelte";
+    import { MAX_IMAGE_BYTES } from "$lib/ai/image-limits";
     import { X, Loader2 } from "@lucide/svelte";
 
     const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/heic", "image/heif"];
-    const MAX_SIZE = 8 * 1024 * 1024;
 
     let { onError }: { onError: (msg: string) => void } = $props();
 
@@ -65,7 +65,7 @@
             onError("Please choose an image file (PNG, JPEG, WebP, or GIF).");
             return;
         }
-        if (file.size > MAX_SIZE) {
+        if (file.size > MAX_IMAGE_BYTES) {
             onError("That image is too large — keep it under 8 MB.");
             return;
         }

@@ -17,8 +17,10 @@ import { buildSystemContext, FEW_SHOTS, titleFromMessage } from "$lib/ai/prompts
 import { TOOLS_CATALOG } from "$lib/ai/tools-catalog";
 import { argSchemas, isKnownToolName } from "$lib/ai/schemas";
 import { retrieveAppKnowledge, formatKnowledge, type RagEnv } from "$lib/ai/rag";
+import { MAX_IMAGE_DATA_URL_CHARS, MAX_IMAGES } from "$lib/ai/image-limits";
 import { createConversation, getConversation, touchUpdatedAt } from "$lib/server/repositories/ai-conversations";
 import { appendMessage } from "$lib/server/repositories/ai-messages";
+import { checkChatRateLimit } from "$lib/server/rate-limit";
 import type { ParsedToolCall } from "$lib/ai/types";
 
 const bodySchema = z.object({
@@ -33,7 +35,7 @@ const bodySchema = z.object({
         .min(1)
         .max(80),
     contextText: z.string().max(60000),
-    images: z.array(z.string().max(8_000_000)).max(3).optional()
+    images: z.array(z.string().max(MAX_IMAGE_DATA_URL_CHARS)).max(MAX_IMAGES).optional()
 });
 
 interface ValidatedCall {
@@ -128,6 +130,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
         error(503, { message: "AI is not available in this environment." });
     }
 
+    // D1 handle reused for the per-user rate limit below and turn persistence
+    // further down. Null when D1 is unbound (degraded mode) — both uses fail open.
+    const db = platform?.env?.DB ? drizzle(platform.env.DB) : null;
+    // Capture once: control-flow narrowing of `locals.user` (from the 401 guard
+    // above) does not reach the deferred sseStream callback below.
+    const userId = locals.user.id;
+
     let parsed: z.infer<typeof bodySchema>;
     try {
         parsed = bodySchema.parse(await request.json());
@@ -142,6 +151,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
     let userMessage = lastMessage.content;
     const history = parsed.messages.slice(0, -1);
+
+    // Per-user spend guard: each turn drives real Workers AI (gateway chain +
+    // corrective retry + RAG embedding). Reuses the rate_limits table; skipped
+    // when D1 is unavailable. friendlyHttpError() maps the 429 to a banner.
+    if (db && !(await checkChatRateLimit(db, userId))) {
+        error(429, { message: "You're sending messages too quickly. Please wait a moment and try again." });
+    }
 
     if (platform?.env?.VECTORIZE) {
         try {
@@ -166,14 +182,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     // D1 persistence runs alongside the stateless model flow above — the model
     // still receives the client-shipped history; D1 only records the turn so
     // conversations survive reloads. Persistence failures never abort the turn.
-    const db = platform?.env?.DB ? drizzle(platform.env.DB) : null;
     let persistedConversationId: string | null = null;
     if (db) {
         try {
             const requestedId = parsed.conversationId ?? null;
-            let conversation = requestedId ? await getConversation(db, locals.user.id, requestedId) : null;
+            let conversation = requestedId ? await getConversation(db, userId, requestedId) : null;
             if (!conversation) {
-                conversation = await createConversation(db, locals.user.id, titleFromMessage(lastMessage.content));
+                conversation = await createConversation(db, userId, titleFromMessage(lastMessage.content));
             }
             persistedConversationId = conversation.id;
             await appendMessage(db, persistedConversationId, { role: "user", content: lastMessage.content });
@@ -296,7 +311,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                     content: assistantText,
                     toolCalls: persistedToolCalls.length > 0 ? persistedToolCalls : null
                 });
-                await touchUpdatedAt(db, persistedConversationId);
+                await touchUpdatedAt(db, userId, persistedConversationId);
             } catch {
                 // Persistence is best-effort; the live turn already streamed.
             }

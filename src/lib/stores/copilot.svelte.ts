@@ -13,6 +13,7 @@
  * see CLAUDE.md warning #18). Bounded by MAX_UNDO to cap memory.
  */
 import { titleFromMessage } from "$lib/ai/prompts";
+import { MAX_IMAGES } from "$lib/ai/image-limits";
 import type {
     AiUndoEntry,
     Conversation,
@@ -66,7 +67,7 @@ const createCopilotStore = () => {
     let mobileOpen = $state(false);
     let inputFocusNonce = $state(0);
     let pendingImages = $state<string[]>([]);
-    const MAX_PENDING_IMAGES = 3;
+    const MAX_PENDING_IMAGES = MAX_IMAGES;
 
     // Defensive: should always find one, but recovers if state was somehow nuked.
     const active = (): Conversation => {

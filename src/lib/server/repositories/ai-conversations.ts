@@ -81,12 +81,13 @@ export const deleteConversation = async (db: Db, userId: string, id: string): Pr
         .run();
 };
 
-// Bumps a thread to the top of the list after a new turn. Scoped by id only
-// (no userId) — callers must already have verified ownership of `id`.
-export const touchUpdatedAt = async (db: Db, id: string): Promise<void> => {
+// Bumps a thread to the top of the list after a new turn. Scoped by `userId`
+// like every other mutation here — the tenant-isolation invariant holds even if
+// a future caller passes an unverified id.
+export const touchUpdatedAt = async (db: Db, userId: string, id: string): Promise<void> => {
     await db
         .update(aiConversations)
         .set({ updatedAt: sql`(unixepoch())` })
-        .where(eq(aiConversations.id, id))
+        .where(and(eq(aiConversations.id, id), eq(aiConversations.userId, userId)))
         .run();
 };
