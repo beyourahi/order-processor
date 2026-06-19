@@ -278,6 +278,8 @@ src/
       courier-service.ts                 -- main orchestrator
       data-processing.ts                 -- CSV prep utilities
       processors/steadfast.ts            -- SteadFast processor
+    styles/
+      chat-animations.css                -- Copilot chat keyframes (ported from canonical reference); @imported by app.css
     stores/
       app.svelte.ts                      -- courierService facade + hasMerchantId() (backed by brandSettings store)
       brand-settings.svelte.ts           -- closure-based runes store; per-field SaveState (fieldState/fieldError/dismissError) + aggregate saveState; debounced PATCH with retry
@@ -288,7 +290,7 @@ src/
     utils/                               -- cn() (clsx + tailwind-merge), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
   hooks.server.ts                        -- auth middleware + security headers
   hooks.client.ts                        -- client-side hooks
-  app.css                                -- global Tailwind styles; @imports DS tokens.css + animations.css; 16px touch-device font floor; mirrors --motion-* vars
+  app.css                                -- global Tailwind styles; @imports DS tokens.css + animations.css + lib/styles/chat-animations.css; 16px touch-device font floor; mirrors --motion-* vars
   app.d.ts                               -- App.Locals, App.Platform, App.PageData, App.Error
   app.html                               -- HTML shell
 ```
@@ -318,6 +320,9 @@ bun run format           # prettier --write
 
 # Cloudflare
 bun run cf-typegen       # regenerate worker-configuration.d.ts
+
+# Design System (vendored @dropout/ds)
+bun run sync-ds          # rsync ../../dropout-design-system/src/lib/ -> src/lib/ds/ (local mirror of the global dropout-ds-sync)
 
 # Database (Drizzle Kit + D1)
 bun run db:generate      # generate migration SQL from schema changes
