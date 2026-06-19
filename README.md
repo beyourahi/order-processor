@@ -4,22 +4,25 @@ Converts Shopify order export CSVs into courier-ready Excel files for the [Stead
 
 **Live**: https://order-processor.beyourahi.workers.dev
 
+Part of the Dropout Studio tools, alongside [Invoice Generator](https://github.com/beyourahi/invoice-generator) and [Day Zero](https://github.com/beyourahi/day-zero) — same stack, same Dropout Design System.
+
 ---
 
 ## Tech Stack
 
-| Layer         | Technology                     |
-| ------------- | ------------------------------ |
-| Framework     | SvelteKit 2 + Svelte 5 (runes) |
-| Styling       | Tailwind CSS v4                |
-| UI Components | shadcn-svelte                  |
-| Auth          | Better Auth (Google OAuth)     |
-| Database      | Cloudflare D1 + Drizzle ORM    |
-| CSV Parsing   | PapaParse                      |
-| Excel Export  | SheetJS                        |
-| AI Copilot    | Cloudflare Workers AI          |
-| Deployment    | Cloudflare Workers             |
-| Package mgr   | Bun                            |
+| Layer              | Technology                                       |
+| ------------------ | ------------------------------------------------ |
+| Framework          | SvelteKit 2 + Svelte 5 (runes)                   |
+| Language           | TypeScript (strict)                              |
+| Styling            | Tailwind CSS v4                                  |
+| UI / Design System | Dropout Design System (vendored) + shadcn-svelte |
+| Auth               | Better Auth (Google OAuth)                       |
+| Database           | Cloudflare D1 + Drizzle ORM                      |
+| AI Copilot         | Cloudflare Workers AI                            |
+| CSV Parsing        | PapaParse                                        |
+| Excel Export       | SheetJS                                          |
+| Deployment         | Cloudflare Workers                               |
+| Package manager    | Bun                                              |
 
 ---
 
@@ -33,16 +36,14 @@ cd order-processor
 bun install
 ```
 
-Create `.dev.vars` (read by the Workers runtime for authentication):
+Create `.dev.vars` at the project root (Worker runtime secrets, read by the dev server):
 
 ```dotenv
-BETTER_AUTH_SECRET=    # openssl rand -base64 32
+BETTER_AUTH_SECRET=      # openssl rand -base64 32
 BETTER_AUTH_URL=http://localhost:5173
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 ```
-
-The `CLOUDFLARE_*` variables are only needed for the optional `db:push` / `db:studio` / `db:pull` commands. If you use those, put them in a separate `.env` file — see [Environment Variables](#environment-variables).
 
 Apply migrations and start:
 
@@ -51,21 +52,32 @@ bun run db:migrate:local
 bun run dev              # http://localhost:5173
 ```
 
+`vite dev` binds the local D1 database and reads `.dev.vars` through the Cloudflare platform proxy, so Google sign-in works at `http://localhost:5173`.
+
 ---
 
 ## Environment Variables
 
-| Variable                 | Required | Description                                                         |
-| ------------------------ | -------- | ------------------------------------------------------------------- |
-| `BETTER_AUTH_SECRET`     | Yes      | Random secret for session signing                                   |
-| `BETTER_AUTH_URL`        | Yes      | Deployed URL (also set in `wrangler.jsonc`)                         |
-| `GOOGLE_CLIENT_ID`       | Yes      | Google OAuth client ID                                              |
-| `GOOGLE_CLIENT_SECRET`   | Yes      | Google OAuth client secret                                          |
-| `CLOUDFLARE_ACCOUNT_ID`  | No       | Cloudflare account ID — `db:push`/`db:studio`/`db:pull` only        |
-| `CLOUDFLARE_DATABASE_ID` | No       | D1 database ID — `db:push`/`db:studio`/`db:pull` only               |
-| `CLOUDFLARE_D1_TOKEN`    | No       | Cloudflare API token with D1 edit — `db:push`/`db:studio`/`db:pull` |
+Two gitignored files at the project root, each read by a different tool. Never commit either.
 
-The auth variables go in `.dev.vars`; the `CLOUDFLARE_*` variables (D1 CLI only) go in `.env`. Both files are gitignored — never commit them. `BETTER_AUTH_URL` is also a non-secret binding in `wrangler.jsonc` for production.
+`.dev.vars` — Worker runtime secrets, loaded by the dev server and Wrangler:
+
+| Variable               | Description                                    |
+| ---------------------- | ---------------------------------------------- |
+| `BETTER_AUTH_SECRET`   | Random secret for session signing              |
+| `BETTER_AUTH_URL`      | App base URL — `http://localhost:5173` locally |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client ID                         |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                     |
+
+`.env` — Cloudflare credentials for the Drizzle CLI, used only by the remote `db:*` commands (loaded by Bun):
+
+| Variable                 | Description                                  |
+| ------------------------ | -------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID`  | Cloudflare account ID                        |
+| `CLOUDFLARE_DATABASE_ID` | D1 database ID                               |
+| `CLOUDFLARE_D1_TOKEN`    | Cloudflare API token with D1 edit permission |
+
+In production, set the `.dev.vars` values as Worker secrets via `wrangler secret put`; `BETTER_AUTH_URL` is a non-secret binding in `wrangler.jsonc`.
 
 ---
 
@@ -77,7 +89,7 @@ The auth variables go in `.dev.vars`; the `CLOUDFLARE_*` variables (D1 CLI only)
 | `bun run preview`          | Wrangler local preview on `:8787`      |
 | `bun run build`            | Production build                       |
 | `bun run deploy`           | Build + deploy to Cloudflare Workers   |
-| `bun run check`            | TypeScript validation                  |
+| `bun run check`            | Type & Svelte checking (svelte-check)  |
 | `bun run lint`             | Prettier + ESLint                      |
 | `bun run format`           | Prettier auto-format                   |
 | `bun run cf-typegen`       | Regenerate Cloudflare types            |
