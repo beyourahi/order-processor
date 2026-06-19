@@ -1,35 +1,36 @@
-# Contributing to Order Processor
+# Contributing
 
-Thank you for your interest in contributing. This document covers everything you need to work on this project effectively — from local setup to submitting changes.
+Thank you for taking the time to contribute. This guide covers everything you need to work on the project effectively — local setup, conventions, and how to submit changes.
 
 ---
 
 ## Table of Contents
 
-- [Philosophy](#philosophy)
-- [Local Development Setup](#local-development-setup)
-- [Project Structure](#project-structure)
-- [Architecture Guidelines](#architecture-guidelines)
-- [Coding Standards](#coding-standards)
-- [Git Workflow](#git-workflow)
-- [Commit Message Conventions](#commit-message-conventions)
-- [Submitting Issues and Feature Requests](#submitting-issues-and-feature-requests)
-- [Pull Request Workflow](#pull-request-workflow)
-- [Testing](#testing)
-- [Database Migrations](#database-migrations)
-- [Documentation Standards](#documentation-standards)
-- [Code of Conduct](#code-of-conduct)
+1. [Contribution Philosophy](#contribution-philosophy)
+2. [Local Development Setup](#local-development-setup)
+3. [Project Structure](#project-structure)
+4. [Coding Standards](#coding-standards)
+5. [Git Workflow](#git-workflow)
+6. [Commit Message Conventions](#commit-message-conventions)
+7. [Reporting Issues and Feature Requests](#reporting-issues-and-feature-requests)
+8. [Pull Request Workflow](#pull-request-workflow)
+9. [Testing and Validation](#testing-and-validation)
+10. [Database Migrations](#database-migrations)
+11. [Documentation Standards](#documentation-standards)
+12. [Code of Conduct](#code-of-conduct)
 
 ---
 
-## Philosophy
+## Contribution Philosophy
 
-Order Processor is an internal tool — correctness and reliability matter more than feature breadth. Contributions should:
+This is a small, focused, single-purpose tool. Correctness and reliability matter more than feature breadth. Contributions should:
 
-- **Solve a concrete problem** — avoid speculative features or premature abstractions
-- **Fit the existing architecture** — read the codebase before proposing changes
-- **Leave the codebase cleaner than you found it** — small, focused changes over large rewrites
-- **Not introduce security regressions** — auth flows, session handling, and header policies are sensitive
+- **Solve a concrete problem.** A bug fix does not need surrounding refactors; avoid speculative features and premature abstractions. Three explicit lines beat a premature abstraction.
+- **Prefer existing abstractions.** Read the codebase before adding a new utility — the core pipeline is usually already covered under `src/lib/`.
+- **Leave the codebase cleaner than you found it.** Small, focused changes over large rewrites.
+- **Not introduce security regressions.** Auth flows, session handling, and security headers are sensitive — flag any change that touches them.
+- **Respect type safety.** TypeScript strict mode is enabled. No `any`, no loose casts, no suppression comments.
+- **Ship self-documenting code.** Code should explain itself through naming and structure. A comment is warranted only when the _why_ is genuinely non-obvious.
 
 When in doubt, open an issue to discuss the change before writing code.
 
@@ -39,465 +40,384 @@ When in doubt, open an issue to discuss the change before writing code.
 
 ### Prerequisites
 
-| Tool                                                            | Version                      | Install                                     |
-| --------------------------------------------------------------- | ---------------------------- | ------------------------------------------- |
-| [Bun](https://bun.sh)                                           | Latest                       | `curl -fsSL https://bun.sh/install \| bash` |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Included as devDep           | `bunx wrangler`                             |
-| [Node.js](https://nodejs.org)                                   | 20+ (for type compatibility) | Via `nvm` or direct                         |
+| Tool                                                            | Minimum Version | Notes                                                |
+| --------------------------------------------------------------- | --------------- | ---------------------------------------------------- |
+| [Bun](https://bun.sh)                                           | 1.2+            | Package manager and runtime                          |
+| [Node.js](https://nodejs.org)                                   | 20.19+ / 22.12+ | Required by the Vite/SvelteKit toolchain             |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | 4.x             | Cloudflare Workers CLI, installed as a dev dependency |
+| Git                                                             | 2.5+            | Required for worktree support                        |
 
-A Google Cloud Console project with OAuth 2.0 credentials is required for authentication during development.
+Authentication uses Google OAuth, so a Google Cloud Console project with OAuth 2.0 credentials is required to exercise auth-gated routes during development.
 
-### Step-by-Step Setup
+### Installation
 
 ```bash
-# 1. Clone the repository
-git clone <repo-url> order-processor
-cd order-processor
-
-# 2. Install dependencies
+git clone <repository-url>
+cd <project>
 bun install
+```
 
-# 3. Create the local environment file
-#    .dev.vars is read by `wrangler dev` and `bun run preview`
+### Running the Development Server
 
-# 4. Fill in required values in .dev.vars:
-#    BETTER_AUTH_SECRET  — generate: openssl rand -base64 32
-#    BETTER_AUTH_URL     — http://localhost:5173 for local dev
-#    GOOGLE_CLIENT_ID    — from Google Cloud Console
-#    GOOGLE_CLIENT_SECRET — from Google Cloud Console
-
-# 5. Apply database migrations to the local D1 instance
-bun run db:migrate:local
-
-# 6. Start the dev server
+```bash
 bun run dev
 ```
 
-The app will open at `http://localhost:5173`.
+This starts the Vite dev server and opens the app in your browser.
 
-### Local Cloudflare Workers Preview
+> **Note:** The plain Vite dev server does not provide a Cloudflare D1 binding. Authentication is silently disabled and every route treats the session as unauthenticated. Use `bun run preview` (Wrangler-backed) to test auth and D1 locally.
 
-To test the app as it runs in production (Workers runtime with D1 bindings):
+### Environment Variables
+
+Two gitignored env files live at the project root, each read by a different tool. Create them and fill in the values:
 
 ```bash
-bun run preview   # builds + starts wrangler dev on :8787
+# .dev.vars — read by `wrangler dev` / `bun run preview`
+BETTER_AUTH_SECRET     # generate with: openssl rand -base64 32
+BETTER_AUTH_URL        # your local dev origin
+GOOGLE_CLIENT_ID       # from Google Cloud Console
+GOOGLE_CLIENT_SECRET   # from Google Cloud Console
+
+# .env — read by drizzle-kit for remote D1 commands
+CLOUDFLARE_ACCOUNT_ID
+CLOUDFLARE_DATABASE_ID
+CLOUDFLARE_D1_TOKEN
 ```
 
-### Available Scripts
+Wrangler reads `.dev.vars` for the Worker runtime; Bun loads `.env` for `bun run` scripts. **Never commit `.dev.vars` or `.env`** — they contain secrets.
 
-| Script                | Description                            |
-| --------------------- | -------------------------------------- |
-| `bun run dev`         | Vite dev server on `:5173`             |
-| `bun run build`       | Production build                       |
-| `bun run preview`     | Build + Wrangler local Workers preview |
-| `bun run deploy`      | Build + deploy to Cloudflare Workers   |
-| `bun run check`       | TypeScript and Svelte type checking    |
-| `bun run check:watch` | Type checking in watch mode            |
-| `bun run lint`        | Prettier check + ESLint                |
-| `bun run format`      | Auto-format with Prettier              |
-| `bun run cf-typegen`  | Regenerate `worker-configuration.d.ts` |
+### Common Scripts
+
+| Script                     | Description                                              |
+| -------------------------- | ------------------------------------------------------- |
+| `bun run dev`              | Vite dev server                                         |
+| `bun run build`            | Production build                                        |
+| `bun run preview`          | Build + Wrangler local Workers preview (real D1/runtime) |
+| `bun run check`            | TypeScript + Svelte type checking                       |
+| `bun run lint`             | Prettier check + ESLint                                 |
+| `bun run format`           | Auto-format with Prettier                               |
+| `bun run cf-typegen`       | Regenerate Cloudflare Worker type definitions           |
+| `bun run db:generate`      | Generate a Drizzle migration from schema changes        |
+| `bun run db:migrate:local` | Apply migrations to the local D1 instance               |
+| `bun run db:migrate`       | Apply migrations to the remote (production) D1 instance |
+
+### Regenerating Cloudflare Types
+
+After any change to `wrangler.jsonc`, regenerate the Worker type definitions:
+
+```bash
+bun run cf-typegen
+```
+
+### Clean Rebuild
+
+If the dev server behaves unexpectedly, do a full clean:
+
+```bash
+rm -rf node_modules/ .wrangler/ .svelte-kit/ && bun install
+```
 
 ---
 
 ## Project Structure
 
+The project follows the standard SvelteKit layout:
+
 ```
-src/
-  routes/                           # SvelteKit file-based routing
-    +layout.svelte / +layout.server.ts   # Root layout, loads auth state
-    +page.svelte / +page.server.ts       # Main order processing page
-    +error.svelte                        # Error boundary
-    login/                               # Google OAuth login page
-    api/brand-settings/+server.ts        # Brand settings CRUD API
-    api/copilot/chat/+server.ts          # AI Copilot streaming chat endpoint (SSE, Workers AI)
-    api/logout/+server.ts                # Logout endpoint
-  lib/
-    auth-client.ts                  # Better Auth browser client
-    api/client.ts                   # Typed fetch wrapper + per-key debounceSync
-    ai/                             # AI Copilot: Zod schemas, tools catalog, prompts, Workers AI client, executor, safety
-    server/
-      auth.ts                       # createAuth() factory (per-request, NOT singleton)
-      schema.ts                     # Drizzle ORM schema (6 tables)
-    components/
-      features/                     # Feature components: upload, courier-picker, order-processor, steadfast-settings, user
-      features/output-editor/       # In-app editable courier-batch grid (the review step before export)
-      features/copilot/             # AI Copilot UI: chat sidebar, tool cards, confirmation dialog
-      ui/                           # shadcn-svelte generated components (DO NOT EDIT MANUALLY)
-    config/
-      app.ts                        # App metadata
-      couriers.ts                   # Courier options and logos
-    constants/
-      files.ts                      # File-related constants
-      indexes.ts                    # CSV column index mappings (Shopify-specific)
-    services/
-      courier-service.ts            # Main orchestrator (format detection → processing → export)
-      data-processing.ts            # CSV cleaning, deduplication, extraction utilities
-      processors/steadfast.ts       # SteadFast courier processor
-    stores/                         # Closure-based runes stores (*.svelte.ts): brandSettings, courierService facade, copilot, copilot-bridge
-    hooks/use-current-user.ts       # Derives CurrentUser from Better Auth session
-    types/                          # Shared TypeScript interfaces (courier, user, ui, brand-settings)
-    utils/                          # cn(), csv.ts, excel.ts, phone.ts, validate.ts, types.ts
-  hooks.server.ts                   # Auth middleware + security headers (CSP, HSTS, etc.)
-  hooks.client.ts                   # Client-side hooks
-  app.css                           # Global Tailwind styles
-  app.d.ts                          # App.Locals, App.Platform, App.PageData, App.Error
-migrations/                         # Drizzle-generated SQL migrations (never edit manually)
+.
+├── migrations/          # Drizzle-generated D1 SQL migrations (never edit by hand)
+├── src/
+│   ├── routes/          # SvelteKit file-based routing (+page, +layout, +server, api/)
+│   ├── lib/
+│   │   ├── server/      # Server-only code: auth factory, Drizzle schema, repositories, validation
+│   │   ├── stores/      # Closure-based Svelte 5 rune stores (*.svelte.ts)
+│   │   ├── components/  # UI components (ui/ holds auto-generated shadcn-svelte primitives)
+│   │   └── ...          # Domain libraries, utilities, types, config
+│   ├── app.css          # Tailwind v4 CSS-first config + global styles
+│   ├── app.d.ts         # App.Locals / App.Platform / App.PageData / App.Error types
+│   ├── app.html         # HTML shell
+│   ├── hooks.server.ts  # Auth session middleware + security headers
+│   └── hooks.client.ts  # Client-side error handling
+├── static/              # Static assets
+├── wrangler.jsonc       # Cloudflare Workers config + bindings
+├── svelte.config.js     # SvelteKit config + path aliases
+├── vite.config.ts       # Vite config
+├── drizzle.config.ts    # Drizzle ORM config
+├── tsconfig.json        # TypeScript strict config
+└── eslint.config.js     # ESLint flat config
 ```
 
 ### Path Aliases
 
-| Alias  | Maps to   |
-| ------ | --------- |
-| `$lib` | `src/lib` |
-
-`$lib` is the only configured alias (the SvelteKit default). Always use it — never use relative paths from route files.
-
----
-
-## Architecture Guidelines
-
-### Data Processing Pipeline
-
-Changes to the CSV processing pipeline must preserve this flow:
-
-```
-CSV Upload → PapaParse → isShopifyExport() → Column extraction/deduplication
-  → Phone normalization (BD +880 format) → CourierProcessor → in-app output editor → .xlsx export
-```
-
-- `CourierService` is the orchestrator; do not add business logic directly to route files
-- `CourierProcessor<T>` is generic — adding a new courier means implementing this interface, not modifying existing processors
-- Column indexes in `constants/indexes.ts` are hardcoded to Shopify's current export format; any change there requires explicit testing against a real Shopify CSV export
-
-### Authentication
-
-- `createAuth()` in `src/lib/server/auth.ts` is a **factory function**, not a singleton — Cloudflare Workers provide a fresh D1 binding per request. Never cache the auth instance at module scope.
-- The `if (building)` guard in `hooks.server.ts` is critical — D1 bindings are unavailable during SvelteKit's build/prerender step. Do not remove it.
-- Session expiry is 7 days, rolling (refreshed daily), with a 5-minute cookie cache. The `cookieCache.version` string is a global kill-switch for all sessions — bump it only in a security incident.
-
-### Components
-
-- `src/lib/components/ui/` contains **auto-generated shadcn-svelte components**. Do not edit these manually. Use `bunx shadcn-svelte@latest add <component>` to add or update them, then wrap in `features/` if customization is needed.
-- Feature components live in `src/lib/components/features/`. Each should be self-contained with a clear, single responsibility.
-
-### AI Copilot
-
-The AI Copilot (`src/lib/ai/`) is a conversational assistant that edits the courier batch through natural-language tool calls.
-
-- **Tool execution is client-side.** `/api/copilot/chat` only _decides_ tool calls; `executor.ts` _runs_ them in the browser against the editor's `$state`. Never move mutation logic server-side.
-- Grid tools operate through `copilotBridge` and require a mounted output editor — they fail gracefully with a friendly error when no CSV is loaded.
-- The `AI` binding in `wrangler.jsonc` is required; rerun `bun run cf-typegen` after changing it. The chat endpoint returns 503 if the binding is absent.
-- Copilot conversations are in-memory only — no D1 tables. They clear on reload, matching the ephemeral CSV batch.
-
-### Database Schema
-
-- All column names must be `snake_case` — the Better Auth Drizzle adapter with `usePlural: true` requires this. Deviations cause silent auth failures.
-- Never edit existing migration files. Always generate new ones with `bun run db:generate`.
+Use the path aliases configured in `svelte.config.js` (`$lib` for `src/lib/`, plus any others the project defines). **Never use relative paths from route files** — always import through an alias.
 
 ---
 
 ## Coding Standards
 
-### TypeScript
+### Svelte 5 Runes (mandatory)
 
-- **Strict mode** is enforced with additional flags: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `verbatimModuleSyntax`
-- Optional properties must use explicit `| undefined` for `exactOptionalPropertyTypes` compatibility
-- Export barrel files (`index.ts`) in every module directory
-- Use the path aliases defined above — never relative paths from route files
-
-### Svelte 5 (Runes Mode)
-
-All components must use Svelte 5 runes syntax. Legacy reactivity (`$: reactive`, `writable` for component-local state) is not permitted in new code:
+Use Svelte 5 rune syntax exclusively. Legacy `export let`, `$:` reactive statements, and `writable` stores for component-local state are not permitted in new code.
 
 ```svelte
 <script lang="ts">
-    // Props
-    let { user, onSubmit }: Props = $props();
+	// Props
+	let { user, onSubmit }: Props = $props();
 
-    // Local state
-    let value = $state("");
-    let length = $derived(value.length);
+	// State
+	let value = $state("");
 
-    // Side effects
-    $effect(() => {
-        console.log(value);
-    });
+	// Derived
+	let length = $derived(value.length);
+
+	// Effects — only for synchronizing with external systems
+	$effect(() => {
+		document.title = value;
+	});
 </script>
 ```
 
-Cross-component global state lives in closure-based rune stores in `src/lib/stores/*.svelte.ts` — not Svelte `writable()` stores.
+Use `onMount` for DOM/lifecycle work. Reach for `$effect` only when reacting to state changes that must synchronize with an external system. Cross-component global state lives in closure-based rune stores in `src/lib/stores/*.svelte.ts` — not Svelte `writable()` stores.
 
-### Styling
+### TypeScript
 
-- **Tailwind CSS v4** exclusively — no inline styles, no CSS modules
-- Configuration is CSS-first in `app.css` using `@import 'tailwindcss'` — do not create `tailwind.config.js`
-- Use `cn()` from `$lib/utils` for conditional or merged Tailwind classes
+- Strict mode is enforced. No `any`. No type assertions (`as T`) without justification.
+- Use `import type { ... }` for type-only imports.
+- Define all component prop types explicitly.
+- Use `cn()` from `$lib/utils` for conditional or merged class names.
 
-### Formatting (Prettier)
+### Tailwind CSS v4
 
-| Setting         | Value                                                   |
-| --------------- | ------------------------------------------------------- |
-| Indent          | 4 spaces (no tabs)                                      |
-| Quotes          | Double                                                  |
-| Trailing commas | None                                                    |
-| Print width     | 120                                                     |
-| Plugins         | `prettier-plugin-svelte`, `prettier-plugin-tailwindcss` |
+Configuration is CSS-first, living entirely in `src/app.css` via `@import "tailwindcss"` and `@theme`. **There is no `tailwind.config.js` — do not create one.**
 
-Run `bun run format` before committing. The CI equivalent is `bun run lint`.
+- Reference CSS variables for colors; never hardcode raw hex/rgb/oklch values in class attributes.
+- The design is dark-only — there is no light mode.
 
-### ESLint
+### Vendored & Generated Code — Do Not Hand-Edit
 
-Flat config in `eslint.config.js`. Key rules:
+- Files under `src/lib/components/ui/` are auto-generated by the shadcn-svelte CLI. Never modify them by hand — add or update them via `bunx shadcn-svelte@latest add <component>` and wrap them elsewhere if customization is needed.
+- If the project vendors a shared design system under `src/lib/ds/`, treat it as read-only — it is a mirror refreshed from upstream, and local edits are overwritten on the next sync.
 
-- Unused variables with `_` prefix are allowed (`argsIgnorePattern: "^_"`)
-- `svelte/no-navigation-without-resolve` is disabled (no base path in use)
-- Ignored paths: `build/`, `.svelte-kit/`, `dist/`, `node_modules/`, `scripts/`, `worker-configuration.d.ts`
+### Formatting
+
+Formatting is owned entirely by Prettier (with the Svelte and Tailwind plugins). Do not hand-format or fight the formatter — run it before committing:
+
+```bash
+bun run format
+```
+
+The CI-equivalent check is `bun run lint`.
 
 ### Comments
 
-Default to no comments. Add one only when the **why** is non-obvious — a hidden constraint, a subtle invariant, a workaround for a known upstream bug. Do not describe what the code does; well-named identifiers already do that.
+Default to zero comments in shipped code. The only acceptable comment is one that explains a non-obvious _why_ — a hidden constraint, a subtle invariant, or a workaround for a specific upstream bug. Never describe _what_ the code does; that belongs in the names and structure of the code itself. Never remove load-bearing directives (`@ts-*`, `eslint-disable*`, `svelte-ignore`, license headers).
 
 ---
 
 ## Git Workflow
 
-This project uses a **git worktree workflow** instead of feature branches. All commits go directly to `main`.
+This project uses **git worktrees** for parallel development. **Never create branches** (`git checkout -b` or `git branch`) — this is a hard requirement of the workspace workflow. All commits go directly to `main`.
 
 ### Why Worktrees Instead of Branches
 
-Worktrees allow parallel development on isolated copies of the repo without branch switching or stashing. Each worktree has its own working tree; the git history stays linear and easy to follow.
+- Multiple contributors (or AI agents) can work on separate features simultaneously without stashing or checkout conflicts.
+- Git history stays linear and readable.
+- No branch-management overhead.
 
-### Creating a Worktree
-
-```bash
-# Navigate to the project root
-cd ~/Desktop/projects/order-processor
-
-# Create a worktree for your work
-git worktree add ../order-processor-<feature-name>
-
-# Work in the isolated copy
-cd ../order-processor-<feature-name>
-
-# When done, commit and remove the worktree
-git add <files>
-git commit -m "feat: your change"
-git worktree remove ../order-processor-<feature-name>
-```
-
-### Worktree Hygiene
+### Working with Worktrees
 
 ```bash
-git worktree list    # List all active worktrees
-git worktree prune   # Clean up stale references
+# Start work on a new feature (run from the project root)
+git worktree add ../<project>-<feature-name>
+cd ../<project>-<feature-name>
+
+# List all active worktrees
+git worktree list
+
+# Remove a worktree when the work is merged
+git worktree remove ../<project>-<feature-name>
+
+# Clean up stale references
+git worktree prune
 ```
 
-**Never create branches** (`git checkout -b` or `git branch`) — this is a hard requirement of the workspace workflow.
+Each worktree shares the same `.git` directory, so commits from any worktree are immediately visible to all others.
 
 ---
 
 ## Commit Message Conventions
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/):
+This project follows [Conventional Commits](https://www.conventionalcommits.org/).
+
+### Format
 
 ```
-<type>: <short summary in present tense, lowercase, no period>
+<type>: <short description>
 
-[optional body: explain WHY, not WHAT]
+[optional body — explains why, not what]
 ```
 
 ### Types
 
 | Type       | When to use                                |
 | ---------- | ------------------------------------------ |
-| `feat`     | New user-facing feature                    |
+| `feat`     | New feature or capability                  |
 | `fix`      | Bug fix                                    |
 | `refactor` | Code restructuring with no behavior change |
-| `style`    | Visual/UI-only changes                     |
-| `chore`    | Tooling, config, dependency updates        |
-| `docs`     | Documentation changes only                 |
+| `style`    | Visual or UI-only changes                  |
+| `chore`    | Tooling, config, dependencies              |
+| `docs`     | Documentation changes                      |
 | `perf`     | Performance improvements                   |
 | `test`     | Adding or updating tests                   |
 
-### Examples
-
-```
-feat: add editable merchant ID to brand settings
-fix: include city in SteadFast address field
-refactor: extract phone normalization into standalone util
-chore: upgrade drizzle-kit to 0.31.10
-docs: document Shopify CSV column index assumptions
-```
-
 ### Rules
 
-- Subject line: 50–70 characters, imperative mood, lowercase
-- Body: explain _why_ the change was made, not _what_ it does
-- Atomic commits — one logical change per commit
-- Never amend already-pushed commits
+- Subject line: 50–70 characters, imperative mood ("add", "fix", "remove" — not "added", "fixes"), lowercase, no trailing period.
+- Body: optional; explain _why_, not _what_.
+- One logical change per commit (atomic).
+- Never commit `.env`, `.dev.vars`, or any file containing secrets.
+- The build must pass at every commit — no broken intermediate states.
+- Never reference an AI agent in commit messages (no AI `Co-Authored-By` trailers).
 
 ---
 
-## Submitting Issues and Feature Requests
+## Reporting Issues and Feature Requests
+
+### Before Opening an Issue
+
+1. Search existing issues to avoid duplicates.
+2. Confirm the problem reproduces on the latest commit of `main`.
 
 ### Bug Reports
 
-Include:
+A useful bug report includes:
 
-1. **Description** — what you expected vs. what happened
-2. **Reproduction steps** — minimal steps to trigger the bug
-3. **Environment** — OS, browser, Bun version, relevant env vars (never paste secrets)
-4. **Relevant output** — error messages, console logs, or screenshot
+- **Environment** — OS, browser, Bun version, Wrangler version (never paste secrets).
+- **Steps to reproduce** — minimal, numbered, and precise.
+- **Expected behavior** — what should have happened.
+- **Actual behavior** — what happened instead.
+- **Evidence** — error messages, console output, or screenshots where relevant.
 
 ### Feature Requests
 
-Include:
+A useful feature request includes:
 
-1. **Problem statement** — what gap does this fill?
-2. **Proposed solution** — how would it work?
-3. **Alternatives considered** — what else did you evaluate?
-4. **Scope** — is this a small addition or a larger architectural change?
+- **Problem statement** — what are you trying to accomplish?
+- **Proposed solution** — how would it work?
+- **Alternatives considered** — what else did you evaluate?
+- **Scope** — does it fit the tool's focused purpose, or is it a larger architectural change?
 
-Features that require changes to the auth flow, security headers, or Cloudflare bindings should be flagged explicitly so they receive extra scrutiny.
+Changes that touch the auth flow, security headers, or Cloudflare bindings warrant extra scrutiny — flag them explicitly.
 
 ---
 
 ## Pull Request Workflow
 
-Since this project uses direct commits to `main` via worktrees, "pull requests" refer to collaborative review requests opened against `main`.
+Because the project commits directly to `main` via worktrees, "pull requests" are collaborative review requests opened against `main`.
 
 ### Before Opening a PR
 
-- [ ] `bun run check` passes (no TypeScript or Svelte type errors)
-- [ ] `bun run lint` passes (Prettier + ESLint)
-- [ ] The app starts without errors (`bun run dev`)
-- [ ] For UI changes: visual verification done via screenshot or Playwright
-- [ ] For database changes: migration generated and tested locally (`bun run db:migrate:local`)
-- [ ] No `.env`, `.dev.vars`, or secrets committed
-- [ ] No manually edited files inside `src/lib/components/ui/`
+Run the full validation suite and confirm everything passes:
 
-### PR Description Template
-
-```markdown
-## What does this change?
-
-[Short description]
-
-## Why?
-
-[Motivation — link to issue if applicable]
-
-## How was it tested?
-
-[Steps taken, screenshots if UI work]
-
-## Checklist
-
-- [ ] Type check passes
-- [ ] Lint passes
-- [ ] No secrets committed
-- [ ] DB migration included (if schema changed)
+```bash
+bun run format   # Auto-format all files
+bun run lint     # ESLint + Prettier check
+bun run check    # svelte-check TypeScript validation
+bun run build    # Confirm the production build succeeds
 ```
+
+No PR should be opened with failing lint, type, or build errors.
+
+### PR Checklist
+
+- [ ] `bun run check` passes (no TypeScript or Svelte type errors)
+- [ ] `bun run lint` passes (no errors or warnings)
+- [ ] `bun run format` has been run and the changes are committed
+- [ ] `bun run build` succeeds
+- [ ] No `.env`, `.dev.vars`, or secret values are committed
+- [ ] No `tmp_screenshots/` or `.playwright-mcp/` artifacts are committed
+- [ ] No `any` types or suppressed TypeScript errors introduced
+- [ ] No legacy Svelte patterns (`export let`, `$:`) introduced in component files
+- [ ] No relative imports from route files (use path aliases)
+- [ ] No hand-edits to auto-generated files under `src/lib/components/ui/`
+- [ ] A database migration is generated and tested locally if the schema changed
+- [ ] Commit messages follow Conventional Commits and each commit builds independently
+
+### PR Description
+
+Include:
+
+- **What changed** — a brief summary of the modification.
+- **Why** — motivation or issue reference.
+- **How to test** — steps to verify the change manually.
+- **Screenshots** — before/after for any UI change.
 
 ### Review Expectations
 
-- Reviews will focus on correctness, security, and fit with existing architecture
-- Expect feedback on auth-related changes, security headers, and any new D1 queries
-- Address all review comments before merging; mark resolved threads explicitly
+- Reviews focus on correctness, security, scope, and fit with the existing architecture — not style preferences that Prettier already handles.
+- Expect extra scrutiny on auth-related changes, security headers, and new D1 queries.
+- Address review comments with follow-up commits, not force-pushes. Resolve threads explicitly.
 
 ---
 
-## Testing
+## Testing and Validation
 
-No test framework is currently configured in the project. When adding tests:
+There is currently no automated test suite configured. Validation is done through the type checker, linter, build, and manual testing.
 
-- Use **Vitest** (compatible with the existing Vite setup)
-- Add `vitest` to `devDependencies` and a `test` script to `package.json`
-- Place test files co-located with source: `*.test.ts` or `*.spec.ts`
-
-### Priority Test Targets
-
-| File                                       | What to test                                             |
-| ------------------------------------------ | -------------------------------------------------------- |
-| `src/lib/services/data-processing.ts`      | CSV deduplication, row slicing edge cases                |
-| `src/lib/services/processors/steadfast.ts` | Phone normalization (+880, leading zeros), field mapping |
-| `src/lib/services/courier-service.ts`      | Shopify format detection logic                           |
-| `src/lib/hooks/use-current-user.ts`        | Null handling, name/email extraction                     |
-
-### Validation Before Commit
-
-Even without a test suite, always validate:
+### Required Validation Steps
 
 ```bash
-bun run check   # TypeScript + Svelte type safety
-bun run lint    # Prettier + ESLint
-bun run build   # Full production build
+bun run check   # svelte-check — TypeScript and Svelte-specific issues
+bun run lint    # ESLint + Prettier
+bun run build   # Confirms the production build succeeds
 ```
+
+Run all three before every commit. Never commit a build that fails any of them. For UI changes, verify visually (screenshot or Playwright) and check both desktop and mobile breakpoints.
+
+### Adding Tests
+
+When tests are added, use [Vitest](https://vitest.dev/) — it integrates with the existing Vite setup. Add `vitest` to `devDependencies` and a `test` script to `package.json`, and co-locate test files with their source using the `.test.ts` (or `.spec.ts`) suffix. Prioritize pure functions and the core data pipeline — they give the most coverage per test.
 
 ---
 
 ## Database Migrations
 
-**Never edit existing migration files in `migrations/`.** Drizzle tracks state against these files; modifying them causes schema drift.
+Persistence uses Cloudflare D1 (SQLite) through Drizzle ORM. **Never edit existing files in `migrations/`** — Drizzle tracks state against them, and modifying them causes schema drift.
 
 ### Migration Workflow
 
 ```bash
-# 1. Edit the schema
-$EDITOR src/lib/server/schema.ts
-
+# 1. Edit the schema (src/lib/server/schema.ts)
 # 2. Generate a new migration SQL file
 bun run db:generate
 
-# 3. Review the generated SQL in migrations/
-# Verify it does exactly what you intended.
+# 3. Review the generated SQL in migrations/ — verify it does exactly what you intended
 
-# 4. Apply locally and test
+# 4. Apply locally and verify the app works
 bun run db:migrate:local
-bun run dev   # verify the app works
+bun run dev
 
 # 5. Commit the schema change and migration file together
-git add src/lib/server/schema.ts migrations/
-
-# 6. Apply to production (after merge)
+# 6. Apply to production after merge
 bun run db:migrate
 ```
 
 ### Schema Rules
 
-- All column names in `snake_case` — required by the Better Auth Drizzle adapter
-- Index names should be descriptive and prefixed with the table name
-- Always pair schema changes with a migration; never use `db:push` in production
+- All column names use `snake_case` — required by the Better Auth Drizzle adapter. Deviations cause silent auth failures.
+- Index names should be descriptive and prefixed with the table name.
+- Always pair a schema change with a generated migration; never use `db:push` against production.
 
 ---
 
 ## Documentation Standards
 
-- **`CLAUDE.md`** is the primary architectural reference — keep it accurate when making structural changes
-- **`CONTRIBUTING.md`** (this file) covers workflow and contributor process
-- **Inline comments** only for non-obvious constraints, not for describing what code does
-- **JSDoc** on public service functions where parameter intent is ambiguous
-
-If you introduce a new courier processor, document:
-
-- The courier's expected CSV schema
-- Any phone or address normalization specifics
-- Column index assumptions
+- **`CLAUDE.md`** at the project root is the authoritative architectural reference for AI coding assistants. Keep it accurate and up to date when making structural changes.
+- **`CONTRIBUTING.md`** (this file) covers workflow and contributor process.
+- **Inline comments** are reserved for non-obvious constraints — never for describing what the code does.
 
 ---
 
 ## Code of Conduct
 
-Contributors are expected to interact professionally and constructively. This includes:
-
-- Respectful, focused code review feedback
-- Clear and specific bug reports and feature requests
-- Keeping discussion on-topic and actionable
-
-Disrespectful, harassing, or off-topic behavior will not be tolerated.
-
----
-
-## Questions
-
-If something in this guide is unclear or outdated, open an issue or reach out directly. Feedback on the contributor experience is welcome.
+This project adopts the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). By participating, you agree to uphold these standards. Report instances of unacceptable behavior to the project maintainer at **beyourahi@gmail.com**.
