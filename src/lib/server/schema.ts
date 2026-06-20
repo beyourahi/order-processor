@@ -1,6 +1,6 @@
 // MUST be snake_case columns — Better Auth's Drizzle adapter (usePlural: true)
 // rejects camelCase silently (see CLAUDE.md warning #3).
-import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, blob, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
     id: text("id").primaryKey(),
@@ -98,6 +98,24 @@ export const brandSettings = sqliteTable(
     (table) => [index("idx_brand_settings_user_id").on(table.userId)]
 );
 
+// Per-user bring-your-own Cloudflare account for the Copilot. Inference runs on
+// the user's OWN account (billed to them) over the Workers AI REST API, not the
+// owner's bound `env.AI`. Mirrors username-extractor's BYO columns.
+export const userSettings = sqliteTable("user_settings", {
+    userId: text("user_id")
+        .primaryKey()
+        .references(() => users.id, { onDelete: "cascade" }),
+    /**
+     * The user's own Cloudflare API token, AES-GCM encrypted at rest. Layout:
+     * [12-byte IV] || ciphertext+tag (via src/lib/server/crypto.ts + env.TOKEN_ENCRYPTION_KEY).
+     */
+    cloudflareTokenEncrypted: blob("cloudflare_token_encrypted"),
+    /** The user's Cloudflare account id (not secret) — REST target `/accounts/{id}/ai/run/{model}`. */
+    cloudflareAccountId: text("cloudflare_account_id"),
+    /** Selected Workers AI chat model id, e.g. "@cf/moonshotai/kimi-k2.6". Null → DEFAULT_MODEL. */
+    cloudflareModel: text("cloudflare_model")
+});
+
 // Copilot chat history. Written best-effort from /api/copilot/chat AFTER the
 // turn — persistence must never block or abort the live SSE stream (CLAUDE.md
 // warning #23). Messages cascade-delete with their conversation.
@@ -137,3 +155,7 @@ export const aiMessages = sqliteTable(
     },
     (table) => [index("idx_ai_messages_conversation_created").on(table.conversationId, table.createdAt)]
 );
+
+export type User = typeof users.$inferSelect;
+export type UserSettings = typeof userSettings.$inferSelect;
+export type BrandSettings = typeof brandSettings.$inferSelect;

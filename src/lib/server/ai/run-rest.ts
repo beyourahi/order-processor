@@ -1,0 +1,268 @@
+/**
+ * Per-user Cloudflare Workers AI over the REST API.
+ *
+ * The Copilot's chat inference, the per-query RAG embedding, and the model
+ * catalog all run on the END USER's own Cloudflare account (billed to them),
+ * NOT the owner's bound `env.AI`. Every call authenticates with the user's
+ * account-scoped API token (least-privilege: Account → Workers AI).
+ *
+ *   runChatViaRest       → POST /accounts/{id}/ai/run/{model}      (one buffered chat turn)
+ *   runEmbeddingViaRest  → POST /accounts/{id}/ai/run/{model}      (one RAG query embedding)
+ *   listChatModels       → GET  /accounts/{id}/ai/models/search    (function-calling chat models)
+ *
+ * The REST envelope wraps the model output in `{ success, result, errors }`; we
+ * unwrap `result` and return the inner object so the existing consumers keep
+ * working against the shape the binding returns directly.
+ */
+
+const CF_API = "https://api.cloudflare.com/client/v4";
+
+/** Default chat model — head of MODEL_CHAIN in src/lib/ai/gateway.ts. New users start here. */
+export const DEFAULT_MODEL = "@cf/moonshotai/kimi-k2.6";
+
+export interface CloudflareCreds {
+    accountId: string;
+    apiToken: string;
+}
+
+/** A model surfaced in the picker. `id` is the run path (e.g. "@cf/moonshotai/kimi-k2.6"). */
+export interface CfModel {
+    id: string;
+    label: string;
+    task: string;
+    description: string;
+    deprecated: boolean;
+    beta: boolean;
+}
+
+export type CfErrorKind = "auth" | "rate_limit" | "model_unavailable" | "transport";
+
+/** Typed Workers AI REST failure. `kind` drives the consumer's ack-vs-retry decision. */
+export class CfInferenceError extends Error {
+    public readonly status: number;
+    public readonly kind: CfErrorKind;
+    constructor(status: number, kind: CfErrorKind, message: string) {
+        super(message);
+        this.name = "CfInferenceError";
+        this.status = status;
+        this.kind = kind;
+    }
+}
+
+function kindForStatus(status: number): CfErrorKind {
+    if (status === 401 || status === 403) return "auth";
+    if (status === 429) return "rate_limit";
+    if (status === 404) return "model_unavailable";
+    return "transport";
+}
+
+// ── Chat inference ───────────────────────────────────────────────────────────
+
+/** Chat turn input — OpenAI-compatible messages + optional tool definitions. */
+export interface ChatRestInput {
+    messages: Array<{ role: string; content: unknown }>;
+    tools?: unknown[];
+    max_tokens?: number;
+    temperature?: number;
+}
+
+/** Unwrapped chat result. `response` is the assistant text; `tool_calls` the decided calls. */
+export interface ChatRestResult {
+    response?: string;
+    tool_calls?: Array<{ id?: string; name?: string; arguments?: unknown }>;
+    usage?: unknown;
+}
+
+/**
+ * Runs one buffered chat turn through the user's chosen model on the user's
+ * account. Returns the unwrapped model output. Throws `CfInferenceError` on any
+ * non-2xx so the consumer can map it to a user-facing error frame.
+ */
+export async function runChatViaRest(
+    creds: CloudflareCreds,
+    model: string,
+    input: ChatRestInput
+): Promise<ChatRestResult> {
+    let res: Response;
+    try {
+        res = await fetch(`${CF_API}/accounts/${creds.accountId}/ai/run/${model}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${creds.apiToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                messages: input.messages,
+                ...(input.tools && input.tools.length > 0 ? { tools: input.tools } : {}),
+                max_tokens: input.max_tokens ?? 2048,
+                temperature: input.temperature ?? 0.2
+            })
+        });
+    } catch (e) {
+        throw new CfInferenceError(0, "transport", e instanceof Error ? e.message : "network error");
+    }
+
+    if (!res.ok) {
+        throw new CfInferenceError(res.status, kindForStatus(res.status), `Workers AI REST ${res.status}`);
+    }
+
+    // Native Workers AI REST wraps the output: { success, result, errors }.
+    const json = (await res.json()) as { result?: ChatRestResult };
+    return json && typeof json === "object" && json.result ? json.result : ((json ?? {}) as ChatRestResult);
+}
+
+// ── Embeddings ───────────────────────────────────────────────────────────────
+
+/** Embedding output shape (qwen3 returns `{ data: number[][], shape }`). */
+interface EmbeddingRestResult {
+    data?: number[][];
+    shape?: number[];
+}
+
+/**
+ * Runs one embedding through the given model on the user's account. `input` is
+ * the model's body (e.g. `{ text: [...], instruction? }`). Returns the first
+ * vector. Throws `CfInferenceError` on any non-2xx.
+ */
+export async function runEmbeddingViaRest(
+    creds: CloudflareCreds,
+    model: string,
+    input: Record<string, unknown>
+): Promise<number[]> {
+    let res: Response;
+    try {
+        res = await fetch(`${CF_API}/accounts/${creds.accountId}/ai/run/${model}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${creds.apiToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(input)
+        });
+    } catch (e) {
+        throw new CfInferenceError(0, "transport", e instanceof Error ? e.message : "network error");
+    }
+
+    if (!res.ok) {
+        throw new CfInferenceError(res.status, kindForStatus(res.status), `Workers AI REST ${res.status}`);
+    }
+
+    const json = (await res.json()) as { result?: EmbeddingRestResult };
+    const result = json && typeof json === "object" && json.result ? json.result : (json as EmbeddingRestResult);
+    const vector = result.data?.[0];
+    if (!vector) {
+        throw new CfInferenceError(0, "transport", "embedding returned no vector");
+    }
+    return vector;
+}
+
+// ── Model catalog ────────────────────────────────────────────────────────────
+
+/** Raw `/ai/models/search` entry (only the fields we read; shape is defensive). */
+interface RawModel {
+    id?: string;
+    name?: string;
+    description?: string;
+    task?: { name?: string } | null;
+    tags?: string[];
+    properties?: Array<{ property_id?: string; value?: unknown }>;
+}
+
+/**
+ * Known function-calling chat model ids (from the Workers AI catalog). Used as an
+ * extra inclusion signal so we always surface these even if the API's task /
+ * property tagging differs — the dynamic predicate below still adds any other
+ * text-generation model the account exposes. Includes the MODEL_CHAIN members.
+ */
+const KNOWN_CHAT_IDS = new Set([
+    "@cf/moonshotai/kimi-k2.6",
+    "@cf/google/gemma-4-26b-a4b-it",
+    "@cf/meta/llama-4-scout-17b-16e-instruct",
+    "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "@cf/meta/llama-3.1-8b-instruct",
+    "@cf/qwen/qwen2.5-coder-32b-instruct",
+    "@cf/mistralai/mistral-small-3.1-24b-instruct",
+    "@hf/nousresearch/hermes-2-pro-mistral-7b",
+    "@cf/openai/gpt-oss-120b"
+]);
+
+/** True when a model is a text-generation / chat model suitable for tool-calling. */
+function isChatModel(m: RawModel): boolean {
+    const id = m.name ?? m.id ?? "";
+    if (KNOWN_CHAT_IDS.has(id)) return true;
+
+    const task = (m.task?.name ?? "").toLowerCase();
+    if (task === "text generation" || task === "text-generation") return true;
+
+    // Some catalogs flag function-calling via a property or tag rather than the task name.
+    const hay = [
+        ...(m.tags ?? []),
+        ...(m.properties ?? []).map((p) => `${p.property_id ?? ""}:${String(p.value ?? "")}`)
+    ]
+        .join(" ")
+        .toLowerCase();
+    return hay.includes("function") || hay.includes("function_calling");
+}
+
+function hasFlag(m: RawModel, flag: string): boolean {
+    if ((m.tags ?? []).some((t) => t.toLowerCase() === flag)) return true;
+    return (m.properties ?? []).some(
+        (p) => `${p.property_id ?? ""}`.toLowerCase() === flag && String(p.value ?? "").toLowerCase() !== "false"
+    );
+}
+
+function toCfModel(m: RawModel): CfModel {
+    const id = m.name ?? m.id ?? "";
+    return {
+        id,
+        label: id.replace(/^@cf\//, "").replace(/^@hf\//, ""),
+        task: m.task?.name ?? "",
+        description: m.description ?? "",
+        deprecated: hasFlag(m, "deprecated"),
+        beta: hasFlag(m, "beta")
+    };
+}
+
+/**
+ * Lists the account's SUITABLE (function-calling chat) models for the picker.
+ * Always includes the default model (even if the live catalog momentarily omits
+ * it) sorted first. Throws `CfInferenceError` on auth/transport failure (callers
+ * treat that as "token invalid").
+ */
+export async function listChatModels(creds: CloudflareCreds): Promise<CfModel[]> {
+    let res: Response;
+    try {
+        res = await fetch(`${CF_API}/accounts/${creds.accountId}/ai/models/search?per_page=200`, {
+            headers: { Authorization: `Bearer ${creds.apiToken}` }
+        });
+    } catch (e) {
+        throw new CfInferenceError(0, "transport", e instanceof Error ? e.message : "network error");
+    }
+    if (!res.ok) {
+        throw new CfInferenceError(res.status, kindForStatus(res.status), `models/search ${res.status}`);
+    }
+
+    const json = (await res.json()) as { result?: RawModel[] };
+    const chat = (json.result ?? []).filter(isChatModel).map(toCfModel);
+
+    // Guarantee the default is present and first; de-dup by id.
+    const byId = new Map<string, CfModel>();
+    for (const m of chat) byId.set(m.id, m);
+    if (!byId.has(DEFAULT_MODEL)) {
+        byId.set(DEFAULT_MODEL, {
+            id: DEFAULT_MODEL,
+            label: "moonshotai/kimi-k2.6",
+            task: "Text Generation",
+            description: "Default Copilot model (function-calling).",
+            deprecated: false,
+            beta: false
+        });
+    }
+
+    return [...byId.values()].sort((a, b) => {
+        if (a.id === DEFAULT_MODEL) return -1;
+        if (b.id === DEFAULT_MODEL) return 1;
+        if (a.deprecated !== b.deprecated) return a.deprecated ? 1 : -1;
+        return a.id.localeCompare(b.id);
+    });
+}

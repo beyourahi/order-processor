@@ -19,7 +19,7 @@ const config = {
             trustedOrigins: [
                 "http://localhost:5173",
                 "http://localhost:8787",
-                "https://order-processor.beyourahi.workers.dev"
+                "https://order-processor.dropoutstudio.co"
             ]
         }
     }

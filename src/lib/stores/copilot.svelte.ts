@@ -61,6 +61,10 @@ const createCopilotStore = () => {
     let streaming = $state(false);
     let toolsRunning = $state(false);
     let error = $state<string | null>(null);
+    // True when the chat endpoint returned 412 (no BYO Cloudflare account
+    // connected). Drives the "Connect your Cloudflare account in Settings →" CTA
+    // banner instead of a generic error.
+    let connectRequired = $state(false);
     let pendingConfirmations = $state<PendingConfirmation[]>([]);
     let undoStack = $state<AiUndoEntry[]>([]);
     let railOpen = $state(false);
@@ -105,6 +109,9 @@ const createCopilotStore = () => {
         get error() {
             return error;
         },
+        get connectRequired() {
+            return connectRequired;
+        },
         get pendingConfirmations() {
             return pendingConfirmations;
         },
@@ -141,6 +148,9 @@ const createCopilotStore = () => {
         },
         setError(msg: string | null) {
             error = msg;
+        },
+        setConnectRequired(v: boolean) {
+            connectRequired = v;
         },
         toggleRail() {
             railOpen = !railOpen;
@@ -268,6 +278,12 @@ const createCopilotStore = () => {
             if (m) m.streaming = false;
         },
 
+        /** Removes an in-progress assistant placeholder (e.g. when the turn was rejected before any text). */
+        discardAssistantMessage(id: string) {
+            const conv = active();
+            conv.messages = conv.messages.filter((m) => m.id !== id);
+        },
+
         attachToolCall(messageId: string, call: ParsedToolCall) {
             const m = findMessage(messageId);
             if (!m) return;
@@ -324,6 +340,7 @@ const createCopilotStore = () => {
             conversations = [conv, ...conversations];
             activeConversationId = conv.id;
             error = null;
+            connectRequired = false;
             railOpen = false;
             inputFocusNonce++;
         },

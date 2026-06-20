@@ -5,6 +5,16 @@
     "main": ".svelte-kit/cloudflare/_worker.js",
     "compatibility_flags": ["nodejs_compat"],
     "compatibility_date": "2025-05-29",
+    // Served ONLY at the branded custom domain — the public *.workers.dev URL and
+    // preview URLs are disabled so OAuth + CSRF origins are a single known host.
+    "workers_dev": false,
+    "preview_urls": false,
+    "routes": [
+        {
+            "pattern": "order-processor.dropoutstudio.co",
+            "custom_domain": true
+        }
+    ],
     "assets": {
         "binding": "ASSETS",
         "directory": ".svelte-kit/cloudflare"
@@ -46,7 +56,7 @@
     // openGatewayChat() throws without it. The model cascade lives in the
     // Cloudflare dashboard route, NOT in code (CLAUDE.md #22).
     "vars": {
-        "BETTER_AUTH_URL": "https://order-processor.beyourahi.workers.dev",
+        "BETTER_AUTH_URL": "https://order-processor.dropoutstudio.co",
         "AI_GATEWAY_SLUG": "order-processor-ai"
     }
 }

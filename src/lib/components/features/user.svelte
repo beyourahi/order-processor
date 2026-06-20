@@ -6,7 +6,7 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import * as Tooltip from "$lib/components/ui/tooltip";
     import { Eyebrow } from "$lib/ds";
-    import { LogOut } from "@lucide/svelte";
+    import { LogOut, Settings } from "@lucide/svelte";
     import type { CurrentUser } from "$lib/types";
 
     interface Props {
@@ -102,6 +102,14 @@
                     </div>
                 </div>
                 <div class="border-hair border-t p-1.5">
+                    <a
+                        href="/settings"
+                        onclick={() => (mobileOpen = false)}
+                        class="text-foreground pointer-fine:hover:bg-ink-2 focus:bg-ink-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-left transition-colors focus:outline-none"
+                    >
+                        <Settings size={16} aria-hidden="true" />
+                        <span class="text-sm font-medium whitespace-nowrap">Settings</span>
+                    </a>
                     <button
                         type="button"
                         onclick={handleLogout}
@@ -152,6 +160,31 @@
                 </div>
             </div>
         </div>
+
+        <Tooltip.Provider delayDuration={150}>
+            <Tooltip.Root>
+                <Tooltip.Trigger>
+                    {#snippet child({ props })}
+                        <a
+                            href="/settings"
+                            aria-label="Settings"
+                            {...props}
+                            class={cn(
+                                "sleek group border-hair bg-card flex h-10 w-10 items-center justify-center rounded-full border backdrop-blur-sm",
+                                "focus-visible:outline-signal focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2",
+                                "pointer-fine:hover:border-signal/50 pointer-fine:hover:bg-ink-2 active:scale-95"
+                            )}
+                        >
+                            <Settings
+                                class="text-ink-muted pointer-fine:group-hover:text-foreground h-[1.125rem] w-[1.125rem] transition-colors"
+                                aria-hidden="true"
+                            />
+                        </a>
+                    {/snippet}
+                </Tooltip.Trigger>
+                <Tooltip.Content side="bottom">Settings</Tooltip.Content>
+            </Tooltip.Root>
+        </Tooltip.Provider>
 
         <Tooltip.Provider delayDuration={150}>
             <Tooltip.Root>

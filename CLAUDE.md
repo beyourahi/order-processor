@@ -28,9 +28,9 @@ All commits go directly to `main`. No feature branches. No PRs for solo work. Wo
 
 ## Project Overview
 
-SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Any authenticated Google user is authorized — upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions, brand settings, and AI Copilot conversation history.
+SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. **Auth is optional**: logged-out guests get the full CSV→Excel app (settings persist to `localStorage`); signing in (Google OAuth) adds D1 server storage, cross-device sync, and the AI Copilot — which additionally requires a connected **bring-your-own (BYO) Cloudflare account**. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions, brand settings, BYO-Cloudflare credentials, and Copilot conversation history.
 
-**Production URL**: `https://order-processor.beyourahi.workers.dev`
+**Production URL**: `https://order-processor.dropoutstudio.co` (custom domain; the `*.workers.dev` and preview URLs are disabled — `workers_dev: false`, `preview_urls: false`)
 
 ## Tech Stack
 
@@ -46,8 +46,8 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | CSV Parsing     | PapaParse                                                                                        |
 | Excel Export    | SheetJS (`xlsx`)                                                                                 |
 | Deployment      | Cloudflare Workers (adapter-cloudflare)                                                          |
-| AI Copilot      | Workers AI via AI Gateway dynamic route (kimi → gemma → scout fallback), Zod tool schemas        |
-| AI RAG          | Cloudflare Vectorize (`order-processor-kb`) + qwen3 embeddings (`@cf/qwen/qwen3-embedding-0.6b`) |
+| AI Copilot      | Bring-your-own Workers AI — inference runs on each user's OWN Cloudflare account via the REST API (single user-picked model), Zod tool schemas |
+| AI RAG          | Cloudflare Vectorize (`order-processor-kb`, owner's index) + qwen3 query embeddings (`@cf/qwen/qwen3-embedding-0.6b`) run on the user's account |
 | Package Manager | Bun                                                                                              |
 | Linting         | ESLint 10 flat config + Prettier                                                                 |
 
@@ -105,36 +105,44 @@ $lib/stores/app.svelte.ts                   -- thin facades over brandSettings
 ### AI Copilot
 
 A conversational assistant docked beside the output editor that edits the batch via
-natural-language tool calls. Split architecture — the **server only decides** tool calls,
-the **browser executes** them. The chat turn is stateless to the model (client ships full
-history each turn); D1 records the turn separately so conversations survive reloads.
+natural-language tool calls. **Requires login AND a connected bring-your-own (BYO) Cloudflare
+account** — inference runs on the USER's own account (billed to them), not the owner's. Split
+architecture — the **server only decides** tool calls, the **browser executes** them. The chat
+turn is stateless to the model (client ships full history each turn); D1 records the turn
+separately so conversations survive reloads.
 
 ```
 copilot-sidebar.svelte --> chat-client.sendMessage()
-  --> POST /api/copilot/chat  (model-stateless: client ships full history + rendered CURRENT STATE)
-      --> retrieveAppKnowledge() (Vectorize RAG, best-effort) folds APP KNOWLEDGE into the user msg
-      --> client.runChatFrames() --> gateway.openGatewayChat() --> env.AI dynamic route (streaming)
-      --> sseStream() yields Frame union: text | tool_call | end | error
+  --> POST /api/copilot/chat  (401 if logged out · 412 {connect:"/settings"} if no CF account · 429 per-user budget)
+      --> resolveCloudflareCreds() decrypts the user's BYO token (AES-GCM, TOKEN_ENCRYPTION_KEY)
+      --> retrieveAppKnowledge() (Vectorize RAG; query embedded on the USER's account) folds APP KNOWLEDGE in
+      --> client.runChatFrames() --> runChatViaRest() --> POST /accounts/{id}/ai/run/{model} (BUFFERED, user's account)
+      --> sseStream() emits the buffered turn as Frames: text | tool_call | end | error
       --> appendMessage()/touchUpdatedAt() persist the turn to D1 (best-effort, never aborts)
   --> streamFrames() --> executor.executeToolCall()  (runs IN THE BROWSER)
       --> validates args (Zod) --> safety.ts anomaly check --> confirmation dialog
       --> mutates the grid via copilotBridge.editor --> pushes AI undo snapshot
 ```
 
-- **Model routing** (`$lib/ai/gateway.ts`): chat runs through the AI Gateway **dynamic route**
-  `dynamic/copilot-chain`, which cascades `MODEL_CHAIN` — `@cf/moonshotai/kimi-k2.6` →
-  `@cf/google/gemma-4-26b-a4b-it` → `@cf/meta/llama-4-scout-17b-16e-instruct` — on failure.
-  Requires the `AI_GATEWAY_SLUG` var; `openGatewayChat()` throws if it is unset. Images ride as
-  native multimodal `image_url` content parts through the SAME model chain — no separate vision
-  model. `client.ts` (`buildUserContent`) emits a plain string when there are no images, otherwise
-  a `[text, ...image_url]` content-part array; the chat endpoint caps uploads at 3 images, 8MB
-  each. The server derives a `stableConversationId` (SHA-256 of first user message) for gateway
+- **Model routing — BYO REST** (`$lib/ai/client.ts` → `$lib/server/ai/run-rest.ts`): chat runs the
+  user's single chosen model on the user's account via `POST /accounts/{id}/ai/run/{model}` (buffered,
+  not streamed; `client.ts` still emits the same `text`/`tool_call` Frame contract). There is NO runtime
+  fallback chain — `$lib/ai/gateway.ts`/`openGatewayChat` is now **dead code**, kept only for the
+  `MODEL_CHAIN`/`DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.6`) constants. The per-user token is AES-GCM
+  encrypted in `user_settings` and decrypted per request with `TOKEN_ENCRYPTION_KEY`; connecting an
+  account + picking a model happens at `/settings`. Images ride as native multimodal `image_url` content
+  parts on the SAME model — no separate vision model; `buildUserContent` emits a plain string when there
+  are no images, else a `[text, ...image_url]` array. The chat endpoint caps uploads at `MAX_IMAGES` (3)
+  × `MAX_IMAGE_DATA_URL_CHARS` (~8MB, `$lib/ai/image-limits.ts`) and enforces a per-user 20-req/60s budget
+  (`checkChatRateLimit`). `stableConversationId` (SHA-256 of the first user message) is retained for
   session affinity without leaking content.
-- **RAG** (`$lib/ai/rag.ts` + `embeddings.ts` + `knowledge.ts`): a static `KNOWLEDGE_CORPUS` is
-  embedded with qwen3 (`@cf/qwen/qwen3-embedding-0.6b`, 1024 dims) into the `VECTORIZE` index
-  `order-processor-kb`. Each turn retrieves top-4 passages (score ≥ 0.4) and folds them into the
-  user message as "APP KNOWLEDGE". Best-effort — a Vectorize failure degrades silently. Seed the
-  index via `POST /api/copilot/seed` (guarded by the `SEED_SECRET` + `x-seed-secret` header).
+- **RAG** (`$lib/ai/rag.ts` + `embeddings.ts` + `knowledge.ts`): a static `KNOWLEDGE_CORPUS` is embedded
+  with qwen3 (`@cf/qwen/qwen3-embedding-0.6b`, 1024 dims) into the owner's `VECTORIZE` index
+  `order-processor-kb`. Each turn embeds the query on the USER's own account (`runEmbeddingViaRest`),
+  retrieves top-4 passages (score ≥ 0.4) from the owner's index, and folds them into the user message as
+  "APP KNOWLEDGE". Best-effort — a Vectorize/AI failure degrades silently. The one-time owner seed
+  (`POST /api/copilot/seed`, guarded by `SEED_SECRET` + `x-seed-secret`) still embeds the corpus with the
+  owner's bound `env.AI`.
 - **D1 history** (`$lib/server/repositories/ai-conversations.ts` + `ai-messages.ts`):
   conversations + messages persist in the `ai_conversations` / `ai_messages` tables, so chats are
   resumable across reloads. `+page.server.ts` loads conversation summaries; messages load lazily on
@@ -201,19 +209,25 @@ entry point — surface components import from `$lib/motion`, never from `gsap` 
 
 ### Authentication Flow
 
+Auth is **optional** — `hooks.server.ts` always resolves `locals.user`/`session`/`currentUser`
+(null when logged out) and never blocks a route. Guests use the full CSV→Excel app with settings in
+`localStorage`; signing in unlocks D1 storage, cross-device sync, and the Copilot.
+
 ```
 Google OAuth --> Better Auth --> D1 sessions --> hooks.server.ts
-  --> event.locals.user / session / currentUser
-  --> Any authenticated Google user is authorized (authentication is the sole gate)
+  --> event.locals.user / session / currentUser  (all null for guests; the app still works)
 ```
 
 - Auth instance created per-request (Cloudflare Workers provide D1 binding per-request)
 - `createAuth()` factory in `$lib/server/auth.ts` -- not a singleton
 - Session: 7-day expiry, rolling (updated daily), cookie-cached (5 min)
 - Cookie prefix: `order-processor`, secure-only
-- `getCurrentUser()` maps session user to `CurrentUser { name, email }` — any authenticated user is authorized
+- `getCurrentUser()` maps session user to `CurrentUser { name, email }`
 - Rate limiting enabled (20 req/min, D1-backed) — applies across all Cloudflare edge nodes
 - `App.Locals` user/session types derived via `Auth["$Infer"]["Session"]` — don't inline them manually
+- Guest persistence (`$lib/persistence/local.ts`): SSR-safe localStorage helpers; `brandSettings.loadGuest()`
+  re-seeds from localStorage on guest mount, `migrateGuestToServer()` folds guest settings into an empty
+  account on first authed load (never clobbers existing server values)
 
 ### Database Schema (Drizzle ORM)
 
@@ -224,7 +238,8 @@ Tables in `src/lib/server/schema.ts`:
 - `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
 - `verifications` -- OAuth state/email verification tokens
 - `brand_settings` -- editable contact info per user (contact_name, contact_phone, merchant_id, selected_courier), linked via `user_id` FK
-- `rate_limits` -- request counts per IP+path for Better Auth's D1-backed rate limiter (20 req/60s)
+- `user_settings` -- per-user BYO Cloudflare account for the Copilot: `cloudflare_token_encrypted` (BLOB, AES-GCM), `cloudflare_account_id`, `cloudflare_model`; PK = `user_id`. Inference runs on the user's own account, not the owner's
+- `rate_limits` -- request counts keyed by IP+path (Better Auth's D1 limiter) AND by `copilot-chat:<userId>` (the Copilot's per-user 20/60s budget) — one table, two key namespaces
 - `ai_conversations` -- Copilot chat threads per user (title, timestamps), indexed on `(user_id, updated_at)`
 - `ai_messages` -- Copilot messages per conversation (role, content, JSON tool_calls), indexed on `(conversation_id, created_at)`, cascade-deleted with their conversation
 
@@ -235,17 +250,19 @@ All columns use `snake_case` (required by Better Auth Drizzle adapter with `useP
 ```
 src/
   routes/
-    +layout.svelte / +layout.server.ts   -- root layout, loads user/session
-    +page.svelte / +page.server.ts       -- main page; loads brandSettings from D1 + hydrates store
+    +layout.svelte / +layout.server.ts   -- root layout, loads user/session (null for guests)
+    +page.svelte / +page.server.ts       -- main page; loads brandSettings + conversations only when authed, else empty defaults (guests hydrate from localStorage)
     +error.svelte                         -- error boundary
+    settings/+page.svelte / +page.server.ts -- BYO Cloudflare account form (token + account id + live model picker); 303 /login when signed out
     changelog/+page.svelte               -- public, customer-facing changelog (groups CHANGELOG_ENTRIES by date)
     login/                               -- login page with Google OAuth
     api/brand-settings/+server.ts        -- brand settings CRUD (GET + PATCH)
-    api/copilot/chat/+server.ts          -- AI Copilot streaming chat endpoint (SSE, AI Gateway)
+    api/cf/models/+server.ts             -- list the user's function-calling chat models (live, no cache) for the settings picker
+    api/copilot/chat/+server.ts          -- AI Copilot chat endpoint (SSE; BYO Workers AI REST; 401/412/429 gates)
     api/copilot/conversations/+server.ts -- list (GET) + create (POST) Copilot conversations
     api/copilot/conversations/[id]/+server.ts -- rename (PATCH) + delete (DELETE) a conversation
     api/copilot/messages/+server.ts      -- load a conversation's messages (GET ?conversationId=)
-    api/copilot/seed/+server.ts          -- embed + upsert KNOWLEDGE_CORPUS into Vectorize (SEED_SECRET-gated)
+    api/copilot/seed/+server.ts          -- embed + upsert KNOWLEDGE_CORPUS into Vectorize (SEED_SECRET-gated, owner env.AI)
     api/logout/+server.ts                -- logout endpoint
   lib/
     auth-client.ts                       -- Better Auth client (`authClient`); use authClient.signIn/signOut/useSession directly — no named re-exports
@@ -253,17 +270,22 @@ src/
     ds/                                  -- vendored @dropout/ds (import via $lib/ds): index.ts (cn + Cta/Heading/Eyebrow/Input/Tile + style helpers), components/, styles/ (tokens.css + animations.css → imported by app.css), utils.ts (DS cn with extended text-* scale)
     api/
       client.ts                          -- typed api object (get/post/patch/put/delete) + debounceSync
-    ai/                                  -- AI Copilot: types, schemas (Zod), tools-catalog, prompts, context,
-                                            client, gateway (dynamic-route routing), streaming, chat-client,
-                                            executor, safety, markdown, embeddings + rag + knowledge (Vectorize RAG)
+    ai/                                  -- AI Copilot (client): types, schemas (Zod), tools-catalog, prompts, context,
+                                            client (BYO Workers AI REST bridge), streaming, chat-client, executor,
+                                            safety, markdown, image-limits, embeddings + rag + knowledge (Vectorize RAG).
+                                            gateway.ts is dead code (only MODEL_CHAIN/DEFAULT_MODEL constants survive)
+    persistence/local.ts                 -- SSR-safe localStorage helpers for logged-out (guest) persistence
     server/
       auth.ts                            -- createAuth() factory
-      schema.ts                          -- Drizzle ORM schema (8 tables)
+      schema.ts                          -- Drizzle ORM schema (9 tables)
+      crypto.ts                          -- AES-GCM encrypt/decrypt/mask for the BYO Cloudflare token (WebCrypto, TOKEN_ENCRYPTION_KEY)
+      rate-limit.ts                      -- per-user Copilot chat budget (checkChatRateLimit, 20/60s) over the rate_limits table
+      ai/                                -- BYO Cloudflare layer: run-rest.ts (Workers AI REST: chat/embedding/model-list), cloudflare-config.ts (load/resolve creds), errors.ts (user-facing CF error help)
       repositories/                      -- ai-conversations.ts, ai-messages.ts (Copilot history D1 access)
     components/
-      features/                          -- order-processor, upload, courier-picker, user, steadfast-settings
+      features/                          -- order-processor, upload, courier-picker, user, sign-in-button, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-{grid,row,cell}.svelte, columns.ts
-      features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + chat shell (header, welcome, message-list, message, composer, typing-indicator, image-upload) + tool-badge, anomaly-warning, conversations-panel, confirm-dialog, mobile-fab, mobile-sheet, launcher-icon
+      features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + chat shell (header, welcome, message-list, message, composer, typing-indicator, image-upload) + tool-badge, anomaly-warning, conversations-panel, confirm-dialog, desktop-launcher, mobile-fab, mobile-sheet, launcher-icon
       ui/                                -- button, dialog, footer, heading, input, loading-spinner, table, tooltip (shadcn-svelte)
     config/
       app.ts                             -- app metadata
@@ -271,8 +293,7 @@ src/
     data/
       changelog.ts                       -- hand-curated customer-facing changelog entries (newest-first, ISO dates)
     constants/
-      files.ts                           -- file-related constants
-      indexes.ts                         -- CSV column index mappings
+      files.ts                           -- file-related constants (generateFileName). CSV column indexes are now inline in services/data-processing.ts
     motion/                              -- GSAP motion system (SSR-safe); tokens, gsap loader, reveal action, helpers, view-transition
     services/
       courier-service.ts                 -- main orchestrator
@@ -282,7 +303,7 @@ src/
       chat-animations.css                -- Copilot chat keyframes (ported from canonical reference); @imported by app.css
     stores/
       app.svelte.ts                      -- courierService facade + hasMerchantId() (backed by brandSettings store)
-      brand-settings.svelte.ts           -- closure-based runes store; per-field SaveState (fieldState/fieldError/dismissError) + aggregate saveState; debounced PATCH with retry
+      brand-settings.svelte.ts           -- closure-based runes store; per-field SaveState + aggregate saveState; debounced sink is D1 PATCH when authed, localStorage when guest; loadGuest/migrateGuestToServer bridge the two
       copilot.svelte.ts                  -- Copilot runes store (D1-backed): conversations, messages, confirmations, AI undo stack
       copilot-bridge.svelte.ts           -- editor <-> Copilot bridge (EditorController / IngestionController registration)
     hooks/use-current-user.ts            -- getCurrentUser() derives CurrentUser from the session user
@@ -307,7 +328,7 @@ All imports use `$lib/...` — the other aliases (`$src`, `$components`, `$confi
 
 ```bash
 # Development
-bun run dev              # Vite dev server on :5173
+bun run dev              # Vite dev server on :5173 (--open auto-opens a tab, --host exposes on LAN)
 bun run build            # Production build
 bun run preview          # Build + wrangler dev (local Cloudflare preview on :8787)
 bun run deploy           # Build + deploy to Cloudflare Workers
@@ -435,6 +456,8 @@ docs:     documentation changes
     - `BETTER_AUTH_SECRET` -- generate with `openssl rand -base64 32`
     - `BETTER_AUTH_URL` -- `http://localhost:5173` for dev
     - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- from Google Cloud Console
+    - `TOKEN_ENCRYPTION_KEY` -- AES-GCM key (base64, exactly 32 bytes: `openssl rand -base64 32`); encrypts each user's BYO Cloudflare token. The Copilot 412s without it
+    - `SEED_SECRET` (optional) -- gates `POST /api/copilot/seed`
 2. Create `.env` for D1 CLI operations (`db:push`, `db:studio`): `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, `CLOUDFLARE_D1_TOKEN`
 3. Run `bun install` and `bun run dev`
 
@@ -442,25 +465,26 @@ docs:     documentation changes
 
 Configured in `wrangler.jsonc`:
 
+- **Custom domain**: served ONLY at `order-processor.dropoutstudio.co` — `workers_dev: false`, `preview_urls: false` (single known host for OAuth + CSRF)
 - **D1 Database**: binding `DB`, database `order_processor`
-- **Workers AI**: binding `AI` — powers `/api/copilot/chat`, RAG embeddings, and the seed endpoint
-- **Vectorize**: binding `VECTORIZE`, index `order-processor-kb` — Copilot RAG knowledge store
+- **Workers AI**: binding `AI` (`remote: true`) — the chat endpoint hard-checks it (503 if absent), but Copilot inference + RAG query embeddings are BYO (the user's account). `env.AI` is genuinely used only by the owner seed endpoint
+- **Vectorize**: binding `VECTORIZE` (`remote: true`), index `order-processor-kb` — owner's Copilot RAG store (no local emulator; `remote` is required for `wrangler dev` to query it)
 - **Assets**: binding `ASSETS`, directory `.svelte-kit/cloudflare`
 - **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
 - **Observability**: enabled
 - **CPU Limit**: 300,000ms
-- **Vars**: `BETTER_AUTH_URL` (production URL), `AI_GATEWAY_SLUG` (`order-processor-ai`)
-- **Secrets**: `SEED_SECRET` (optional, gates `/api/copilot/seed`)
+- **Vars**: `BETTER_AUTH_URL` (`https://order-processor.dropoutstudio.co`), `AI_GATEWAY_SLUG` (`order-processor-ai`, now vestigial — the gateway route is bypassed by BYO)
+- **Secrets**: `TOKEN_ENCRYPTION_KEY` (AES-GCM base64 32-byte key encrypting BYO tokens; Copilot 412s without it), `SEED_SECRET` (optional, gates `/api/copilot/seed`)
 
 Access in SvelteKit via `event.platform.env.DB`, typed in `app.d.ts` under `App.Platform`.
 
 ### CSRF Protection
 
-Trusted origins configured in `svelte.config.js`:
+Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` in `$lib/server/auth.ts` — keep the two in sync):
 
 - `http://localhost:5173` (Vite dev)
 - `http://localhost:8787` (Wrangler preview)
-- `https://order-processor.beyourahi.workers.dev` (production)
+- `https://order-processor.dropoutstudio.co` (production)
 
 ## Documentation References (Progressive Disclosure)
 
@@ -489,7 +513,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 6. **`prepareSteadFastOrderData` trims first and last rows** -- The `.slice(1, -1)` intentionally removes header and trailing rows for standard CSV format. This does NOT apply to Shopify exports (handled separately).
 
-7. **Authorization is authentication-only** -- Any Google user who successfully authenticates is authorized. There is no email allowlist. Brand settings (contact name, phone, merchant ID) are per-user in D1 and editable via the UI. To restrict access, an email allowlist or similar gate would need to be re-added.
+7. **Auth is optional, not a gate** -- Logged-out guests get the full CSV→Excel app with settings in `localStorage` (`brandSettings` sinks to localStorage instead of D1). Signing in (any Google account; no email allowlist) adds D1 storage, cross-device sync, and the Copilot. Only the Copilot endpoints (`/api/copilot/*`, `/settings`) require a session. To restrict the app itself, a gate would need to be added in `hooks.server.ts` / `+page.server.ts`.
 
 8. **drizzle-kit version sensitivity** -- Previously pinned to 0.30.0 due to a hang bug in early 0.31.x. Current version is `0.31.10` (stable). If migration commands hang, check for upstream regressions before upgrading.
 
@@ -507,19 +531,19 @@ When encountering unfamiliar patterns, check these sources in order:
 
 15. **Copilot grid tools require a mounted editor** -- `editCells`, `addRows`, `deleteRows`, etc. operate through `copilotBridge.editor`, which is null until `output-editor.svelte` mounts. The executor throws a friendly "upload a CSV first" error when nothing is registered. Never assume the bridge is populated.
 
-16. **The `AI` Worker binding is required** -- `wrangler.jsonc` declares `"ai": { "binding": "AI" }`; `app.d.ts` mirrors it on `App.Platform.env`. `/api/copilot/chat` returns 503 if it is absent. The `VECTORIZE` binding (index `order-processor-kb`) and the `AI_GATEWAY_SLUG` var are also required for full Copilot function — RAG retrieval is skipped without Vectorize, and `openGatewayChat()` throws without the slug. After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
+16. **The `AI` binding is still checked, but inference is BYO** -- `/api/copilot/chat` returns 503 if `env.AI` is absent, yet chat inference and the RAG query embedding run on the USER's own Cloudflare account (REST), not `env.AI`. `env.AI` is genuinely used only by the owner seed endpoint. The `VECTORIZE` binding (`order-processor-kb`) is still needed for RAG (skipped silently without it). `AI_GATEWAY_SLUG` is now vestigial — the gateway route is dead code. After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
 
 17. **Copilot tool execution is client-side** -- the chat endpoint only _decides_ tool calls; `executor.ts` _runs_ them in the browser against editor `$state`. The server is stateless — it never sees grid data except the rendered CURRENT STATE text the client ships each turn. Do not move mutation logic server-side.
 
 18. **Copilot AI undo is separate from the editor's Cmd+Z** -- `copilot.undoStack` holds full-editor snapshots; reverting an AI action restores the snapshot (and will also revert any manual edits made since). This is intentional — the editor's native `undoEntry` is untouched by Copilot mutations.
 
-19. **The chat models leak artifacts** -- the gateway chain models intermittently emit reasoning text, stray code fences, and tool calls as plain chat text. The Copilot defends in layers: `prompts.ts` hardens the system prompt, `chat/+server.ts` detects leaked tool-call JSON (`looksLikeLeakedToolCall`) and runs one corrective retry, the message renderer downgrades stray code blocks to plain text, and `chat-client.ts` maps every failure to a friendly message via `friendlyHttpError`. Raw model output, raw errors, and internal tool names must never reach the user — do not strip these guards as redundant.
+19. **The chat models leak artifacts** -- the BYO Workers AI models intermittently emit reasoning text, stray code fences, and tool calls as plain chat text (and sometimes narrate an action without calling a tool). The Copilot defends in layers: `prompts.ts` hardens the system prompt; `chat/+server.ts` detects leaked tool-call JSON (`looksLikeLeakedToolCall`) and failed-to-act narrations (`looksImperative`/`REFUSAL_RE`) and runs ONE corrective retry; the message renderer downgrades stray code blocks to plain text; `chat-client.ts` maps every failure to a friendly message. Raw model output, raw errors, and internal tool names must never reach the user — do not strip these guards as redundant.
 
 20. **`E2E_BYPASS_AUTH` is a preview-only auth shortcut** -- when set to `"true"` in `.dev.vars`, `hooks.server.ts` synthesizes an `e2e-test-user` session and upserts it into the local D1, bypassing Google OAuth entirely. It exists for Wrangler preview / E2E runs. NEVER set it in `wrangler.jsonc`, GitHub Actions, or production secrets. The flag is declared optional on `App.Platform.env` in `app.d.ts` so it can stay absent everywhere else.
 
 21. **Copilot rail width is tokenized** -- `--copilot-rail-width` / `--copilot-rail-width-xl` in `app.css` define the right rail's size; the main column reserves space via `lg:pr-[calc(var(--copilot-rail-width)+1.5rem)]` in `+layout.svelte`. Change the tokens, not the hard-coded values.
 
-22. **Copilot model routing goes through an AI Gateway dynamic route** -- there is no single bound model. `gateway.ts` calls the virtual route `dynamic/copilot-chain`; the gateway cascades `MODEL_CHAIN` (kimi → gemma → scout) on failure. Routing config lives in the Cloudflare AI Gateway dashboard, keyed by `AI_GATEWAY_SLUG` (`order-processor-ai`), NOT in code. Editing `MODEL_CHAIN` documents intent but does not change runtime behaviour unless the dashboard route matches.
+22. **Copilot inference is bring-your-own (BYO) over the Workers AI REST API** -- chat + RAG embedding run on the END USER's own Cloudflare account (`$lib/server/ai/run-rest.ts`, billed to them) with the user's single chosen model — NO runtime fallback chain. `$lib/ai/gateway.ts`/`openGatewayChat` is DEAD code, retained only for the `MODEL_CHAIN`/`DEFAULT_MODEL` constants; do not wire it back in. Connecting an account + picking a model happens at `/settings`; the endpoint returns 412 (with `connect: "/settings"`) until a token + account id are saved.
 
 23. **Copilot chat is model-stateless but D1-persisted** -- the model never sees stored history; the client re-ships the full conversation + rendered CURRENT STATE every turn. Separately, `chat/+server.ts` writes each turn to `ai_conversations` / `ai_messages` so chats resume after reload. Persistence is best-effort and wrapped in try/catch — it must NEVER abort or block the live SSE stream. (This supersedes the old "in-memory only, no D1 tables" design.)
 
@@ -528,6 +552,12 @@ When encountering unfamiliar patterns, check these sources in order:
 25. **`/api/copilot/seed` is gated by `SEED_SECRET`** -- it embeds and upserts the entire `KNOWLEDGE_CORPUS`, so it is protected by an `x-seed-secret` header compared against the `SEED_SECRET` env var (401 on mismatch, 503 if AI/Vectorize absent). Set the secret with `wrangler secret put SEED_SECRET`; never commit it. Re-seed after editing `knowledge.ts`.
 
 26. **Changelog is hand-curated, not generated** -- `src/lib/data/changelog.ts` (`CHANGELOG_ENTRIES`) is the single source for the public `/changelog` route, written in plain merchant-facing English (no commit hashes/jargon). Entries must stay newest-first with ISO `YYYY-MM-DD` dates; the page tags the newest group "Latest" and relies on the ordering instead of sorting. NEVER render relative dates ("x days ago") — they mismatch the SSR render and trip hydration. Prepend new entries when shipping user-visible changes.
+
+27. **BYO Cloudflare token is encrypted at rest** -- the user's API token lives AES-GCM encrypted in `user_settings.cloudflare_token_encrypted` (`[12-byte IV] || ciphertext+tag`, `$lib/server/crypto.ts`), keyed by `TOKEN_ENCRYPTION_KEY` (base64, exactly 32 bytes — `deriveTokenKey` throws otherwise). It is decrypted server-side only: per chat turn to call the REST API, and on the settings load solely to mask it (`maskToken`). The raw secret never reaches the client. The settings `save` action validates a new token by listing the account's models BEFORE encrypting (proves token + account + Workers AI permission); an empty token field preserves the existing blob.
+
+28. **Per-user Copilot rate limit reuses the `rate_limits` table** -- `checkChatRateLimit` (`$lib/server/rate-limit.ts`) enforces 20 chat turns / 60s per user under a `copilot-chat:<userId>` key, separate from Better Auth's own per-route keys in the same table. Fixed window (the window start is NOT bumped per request, so a steady stream can't slide it open). It is a cost guard against BYO model spend; the read-modify-write is intentionally non-atomic and fails open when D1 is unbound.
+
+29. **Served only at the custom domain** -- `wrangler.jsonc` sets `workers_dev: false` + `preview_urls: false`, so the app runs only at `order-processor.dropoutstudio.co`. OAuth redirect URIs, `BETTER_AUTH_URL`, and the CSRF/`trustedOrigins` lists (`svelte.config.js` + `$lib/server/auth.ts`) all assume this single host. Re-enabling `*.workers.dev` or preview URLs means adding those origins everywhere, or auth/CSRF breaks.
 
 ---
 

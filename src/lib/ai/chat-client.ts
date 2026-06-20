@@ -81,6 +81,7 @@ export const sendMessage = async (text: string): Promise<void> => {
 
     const assistantId = crypto.randomUUID();
     copilot.setError(null);
+    copilot.setConnectRequired(false);
     copilot.setStreaming(true);
     copilot.startAssistantMessage(assistantId);
 
@@ -95,6 +96,16 @@ export const sendMessage = async (text: string): Promise<void> => {
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body)
         });
+
+        // 412 = no BYO Cloudflare account connected. Surface the dedicated
+        // "Connect your Cloudflare account in Settings →" CTA banner instead of a
+        // generic error, and drop the empty assistant placeholder.
+        if (response.status === 412) {
+            copilot.setConnectRequired(true);
+            copilot.discardAssistantMessage(assistantId);
+            copilot.setStreaming(false);
+            return;
+        }
 
         if (!response.ok || !response.body) {
             copilot.setError(friendlyHttpError(response.status));

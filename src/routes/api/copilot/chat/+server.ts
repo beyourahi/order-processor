@@ -7,7 +7,7 @@
  * - Validates tool args against argSchemas; one corrective retry per turn.
  * - Frames out: text → tool_call(s) → end | error (see Frame in $lib/ai/types).
  */
-import { error } from "@sveltejs/kit";
+import { error, json } from "@sveltejs/kit";
 import { drizzle } from "drizzle-orm/d1";
 import { z } from "zod";
 import type { RequestHandler } from "./$types";
@@ -16,8 +16,9 @@ import { sseStream } from "$lib/ai/streaming";
 import { buildSystemContext, FEW_SHOTS, titleFromMessage } from "$lib/ai/prompts";
 import { TOOLS_CATALOG } from "$lib/ai/tools-catalog";
 import { argSchemas, isKnownToolName } from "$lib/ai/schemas";
-import { retrieveAppKnowledge, formatKnowledge, type RagEnv } from "$lib/ai/rag";
+import { retrieveAppKnowledge, formatKnowledge } from "$lib/ai/rag";
 import { MAX_IMAGE_DATA_URL_CHARS, MAX_IMAGES } from "$lib/ai/image-limits";
+import { loadCloudflareConfig, resolveCloudflareCreds } from "$lib/server/ai/cloudflare-config";
 import { createConversation, getConversation, touchUpdatedAt } from "$lib/server/repositories/ai-conversations";
 import { appendMessage } from "$lib/server/repositories/ai-messages";
 import { checkChatRateLimit } from "$lib/server/rate-limit";
@@ -152,17 +153,34 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     let userMessage = lastMessage.content;
     const history = parsed.messages.slice(0, -1);
 
-    // Per-user spend guard: each turn drives real Workers AI (gateway chain +
+    // Per-user spend guard: each turn drives real Workers AI (one model call +
     // corrective retry + RAG embedding). Reuses the rate_limits table; skipped
     // when D1 is unavailable. friendlyHttpError() maps the 429 to a banner.
     if (db && !(await checkChatRateLimit(db, userId))) {
         error(429, { message: "You're sending messages too quickly. Please wait a moment and try again." });
     }
 
+    // BYO Cloudflare gate. Inference (and the RAG query embedding) run on the
+    // USER's own account, billed to them — never the owner's bound `env.AI`. A
+    // connected account is REQUIRED: respond 412 with a connect link so the
+    // Copilot UI can render a "Connect your Cloudflare account" CTA instead of a
+    // generic error.
+    const encryptionKey = platform?.env?.TOKEN_ENCRYPTION_KEY;
+    const resolved =
+        db && encryptionKey
+            ? await resolveCloudflareCreds(encryptionKey, await loadCloudflareConfig(db, userId)).catch(() => null)
+            : null;
+    if (!resolved) {
+        return json(
+            { error: "Connect your Cloudflare account in Settings to use the copilot.", connect: "/settings" },
+            { status: 412 }
+        );
+    }
+
     if (platform?.env?.VECTORIZE) {
         try {
             const knowledge = formatKnowledge(
-                await retrieveAppKnowledge(platform.env as unknown as RagEnv, lastMessage.content)
+                await retrieveAppKnowledge(platform.env.VECTORIZE, resolved.creds, lastMessage.content)
             );
             if (knowledge.length > 0) {
                 userMessage = `${userMessage}\n\nAPP KNOWLEDGE:\n${knowledge}`;
@@ -172,7 +190,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
         }
     }
 
-    const gatewayEnv = platform?.env as unknown as RunChatEnv;
+    const chatEnv: RunChatEnv = { creds: resolved.creds, model: resolved.model };
     const systemContext = buildSystemContext(parsed.contextText, TOOLS_CATALOG);
     const withFewShots = history.length === 0 ? [...FEW_SHOTS, ...history] : history;
     const turnId = crypto.randomUUID();
@@ -220,7 +238,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
 
         try {
             const first = await consume(
-                runChatFrames(gatewayEnv, {
+                runChatFrames(chatEnv, {
                     systemContext,
                     history: withFewShots,
                     userMessage,
@@ -253,7 +271,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                           ? LEAK_RETRY_MESSAGE
                           : ACTION_RETRY_MESSAGE;
                 const retry = await consume(
-                    runChatFrames(gatewayEnv, {
+                    runChatFrames(chatEnv, {
                         systemContext,
                         history: [
                             ...withFewShots,

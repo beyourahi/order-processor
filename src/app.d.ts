@@ -25,6 +25,10 @@ declare global {
                 VECTORIZE: VectorizeIndex;
                 SEED_SECRET?: string;
                 AI_GATEWAY_SLUG?: string;
+                // AES-GCM key (base64, 32 bytes) encrypting each user's BYO
+                // Cloudflare token in user_settings. `wrangler secret put` in prod;
+                // .dev.vars locally. Optional so absence degrades gracefully.
+                TOKEN_ENCRYPTION_KEY?: string;
                 BETTER_AUTH_SECRET: string;
                 BETTER_AUTH_URL: string;
                 GOOGLE_CLIENT_ID: string;

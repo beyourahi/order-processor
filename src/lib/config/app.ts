@@ -10,7 +10,7 @@ interface AppConfig {
 export const APP_CONFIG: AppConfig = {
     name: "Order Processor",
     description: "Process and format orders for multiple courier services",
-    url: "https://order-processor.beyourahi.workers.dev",
+    url: "https://order-processor.dropoutstudio.co",
     repository: {
         type: "git",
         url: "https://github.com/beyourahi/order-processor"
@@ -22,7 +22,7 @@ export const APP_CONFIG: AppConfig = {
     siblings: [
         {
             name: "Invoice Generator",
-            url: "https://invoice-generator.beyourahi.workers.dev"
+            url: "https://invoice-generator.dropoutstudio.co"
         }
     ]
 };

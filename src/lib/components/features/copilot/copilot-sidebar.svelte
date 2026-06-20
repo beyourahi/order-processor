@@ -15,6 +15,7 @@
     import { copilot } from "$lib/stores/copilot.svelte";
     import { sendMessage, createNewConversation } from "$lib/ai/chat-client";
     import { cn } from "$lib/utils";
+    import { Cloud, ArrowRight } from "@lucide/svelte";
     import CopilotHeader from "./copilot-header.svelte";
     import CopilotWelcome from "./copilot-welcome.svelte";
     import CopilotMessageList from "./copilot-message-list.svelte";
@@ -25,10 +26,11 @@
 
     let composerValue = $state("");
 
-    // Collapse the store's two independent flags into the header's single status
-    // pill: a live error wins over an in-flight turn, which wins over idle.
+    // Collapse the store's flags into the header's single status pill: a live
+    // error (or a required Cloudflare connection) wins over an in-flight turn,
+    // which wins over idle.
     const status = $derived<"online" | "connecting" | "error">(
-        copilot.error ? "error" : copilot.inputBusy ? "connecting" : "online"
+        copilot.error || copilot.connectRequired ? "error" : copilot.inputBusy ? "connecting" : "online"
     );
 
     const handleSuggestion = (text: string) => {
@@ -82,7 +84,30 @@
         <CopilotMessageList messages={copilot.messages} isStreaming={copilot.inputBusy} />
     {/if}
 
-    {#if copilot.error}
+    {#if copilot.connectRequired}
+        <div class="border-chat-border-subtle border-t border-solid px-4 py-3" role="alert">
+            <div class="border-chat-border bg-chat-surface flex items-start gap-3 rounded-xl border p-3">
+                <span
+                    class="border-chat-border bg-chat-bg flex size-7 shrink-0 items-center justify-center rounded-lg border"
+                >
+                    <Cloud class="text-chat-icon-muted size-3.5" aria-hidden="true" />
+                </span>
+                <div class="flex min-w-0 flex-col gap-2">
+                    <p class="text-chat-text-primary text-xs leading-relaxed text-pretty">
+                        Connect your Cloudflare account to use the Copilot — inference runs on your own account, billed
+                        to you.
+                    </p>
+                    <a
+                        href="/settings"
+                        class="text-chat-accent ease-[var(--ease)] hover:text-chat-text-primary inline-flex w-fit items-center gap-1.5 font-mono text-[11px] tracking-[0.04em] uppercase transition-colors"
+                    >
+                        Connect in Settings
+                        <ArrowRight class="size-3" aria-hidden="true" />
+                    </a>
+                </div>
+            </div>
+        </div>
+    {:else if copilot.error}
         <div class="text-destructive px-4 py-2 text-center text-xs text-pretty" role="alert">{copilot.error}</div>
     {/if}
 
