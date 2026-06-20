@@ -5,6 +5,7 @@
 // conversations-panel, launcher-icon — are imported by relative path, not via this barrel.
 export { default as CopilotSidebar } from "./copilot-sidebar.svelte";
 export { default as CopilotMobileFab } from "./copilot-mobile-fab.svelte";
+export { default as CopilotDesktopLauncher } from "./copilot-desktop-launcher.svelte";
 export { default as CopilotMobileSheet } from "./copilot-mobile-sheet.svelte";
 export { default as CopilotConfirmDialog } from "./copilot-confirm-dialog.svelte";
 export { default as CopilotHeader } from "./copilot-header.svelte";

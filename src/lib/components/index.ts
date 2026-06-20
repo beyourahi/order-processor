@@ -9,6 +9,7 @@ export {
     SteadFastSettings,
     CopilotSidebar,
     CopilotMobileFab,
+    CopilotDesktopLauncher,
     CopilotMobileSheet,
     CopilotConfirmDialog
 } from "./features";

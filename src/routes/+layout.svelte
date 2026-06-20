@@ -1,15 +1,18 @@
 <script lang="ts">
     import "../app.css";
+    import { fly } from "svelte/transition";
     import { page } from "$app/state";
     import { onNavigate } from "$app/navigation";
     import {
         Footer,
         CopilotSidebar,
         CopilotMobileFab,
+        CopilotDesktopLauncher,
         CopilotMobileSheet,
         CopilotConfirmDialog
     } from "$lib/components";
-    import { handleViewTransition } from "$lib/motion";
+    import { handleViewTransition, motionDuration } from "$lib/motion";
+    import { copilot } from "$lib/stores/copilot.svelte";
     import uploadGif from "$lib/assets/upload.gif";
     import steadfastLogo from "$lib/assets/steadfast.png";
 
@@ -28,15 +31,9 @@
     <link rel="preload" href={steadfastLogo} as="image" />
 </svelte:head>
 
-<!-- Reserves rail width + 1.5rem gutter on lg+ via --copilot-rail-width(-xl).
-     CLAUDE.md warning #21: change the tokens, not hard-coded values. -->
-<div
-    class={[
-        "flex min-h-dvh flex-col",
-        showCopilot &&
-            "lg:pr-[calc(var(--copilot-rail-width)+1.5rem)] xl:pr-[calc(var(--copilot-rail-width-xl)+1.5rem)]"
-    ]}
->
+<!-- No rail gutter: the copilot is a toggleable overlay drawer (default closed), so content stays
+     full-width whether open or closed and toggling never reflows the page. -->
+<div class="flex min-h-dvh flex-col">
     <main class="flex grow flex-col">
         {@render children()}
     </main>
@@ -44,15 +41,22 @@
 </div>
 
 {#if showCopilot}
-    <!-- p-2.5 is the inset for the card's rounded corners + shadow; the gutter
-         between main content and rail is the lg:pr-* on the shell above. -->
-    <aside
-        class="fixed top-0 right-0 z-40 hidden h-dvh p-2.5 lg:block lg:w-[var(--copilot-rail-width)] xl:w-[var(--copilot-rail-width-xl)]"
-    >
-        <CopilotSidebar />
-    </aside>
+    {#if copilot.desktopOpen}
+        <!-- p-2.5 is the inset for the card's rounded corners + shadow. Overlay drawer: slides in
+             from the right over content (no gutter reserved). --copilot-rail-width(-xl) tokens set
+             the width — CLAUDE.md warning #21: change the tokens, not hard-coded values. -->
+        <aside
+            class="fixed top-0 right-0 z-40 hidden h-dvh p-2.5 lg:block lg:w-[var(--copilot-rail-width)] xl:w-[var(--copilot-rail-width-xl)]"
+            transition:fly={{ x: 448, duration: motionDuration("base"), opacity: 1 }}
+        >
+            <CopilotSidebar onClose={copilot.closeDesktop} />
+        </aside>
+    {/if}
 
+    <!-- CopilotMobileFab must precede CopilotDesktopLauncher: the mobile sheet restores focus via
+         querySelector('[aria-label="Open AI chat"]'), which returns the first match in DOM order. -->
     <CopilotMobileFab />
+    <CopilotDesktopLauncher />
     <CopilotMobileSheet />
     <CopilotConfirmDialog />
 {/if}

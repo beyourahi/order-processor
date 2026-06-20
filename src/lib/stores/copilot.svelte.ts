@@ -65,6 +65,7 @@ const createCopilotStore = () => {
     let undoStack = $state<AiUndoEntry[]>([]);
     let railOpen = $state(false);
     let mobileOpen = $state(false);
+    let desktopOpen = $state(false);
     let inputFocusNonce = $state(0);
     let pendingImages = $state<string[]>([]);
     const MAX_PENDING_IMAGES = MAX_IMAGES;
@@ -119,6 +120,9 @@ const createCopilotStore = () => {
         get mobileOpen() {
             return mobileOpen;
         },
+        get desktopOpen() {
+            return desktopOpen;
+        },
         get inputFocusNonce() {
             return inputFocusNonce;
         },
@@ -146,6 +150,17 @@ const createCopilotStore = () => {
         },
         setMobileOpen(v: boolean) {
             mobileOpen = v;
+        },
+        // Desktop rail visibility (lg+). Separate from `railOpen` (the in-rail
+        // history sub-panel) and `mobileOpen` (the <lg sheet). Default closed; not persisted.
+        openDesktop() {
+            desktopOpen = true;
+        },
+        closeDesktop() {
+            desktopOpen = false;
+        },
+        toggleDesktop() {
+            desktopOpen = !desktopOpen;
         },
         requestInputFocus() {
             inputFocusNonce++;
