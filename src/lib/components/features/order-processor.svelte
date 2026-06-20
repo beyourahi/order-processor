@@ -22,7 +22,7 @@
     import type { CsvMapping, IngestionController } from "$lib/ai/types";
 
     interface Props {
-        currentUser: CurrentUser;
+        currentUser: CurrentUser | null;
         selectedCourier: string;
         editorOpen?: boolean;
     }
@@ -66,7 +66,7 @@
             lastRawData = result.data;
 
             const settings = brandSettings.value;
-            const contactName = settings.contactName ?? currentUser.name;
+            const contactName = settings.contactName ?? currentUser?.name ?? "";
             const contactPhone = settings.contactPhone ?? "";
             const merchantId = settings.merchantId ?? "";
 
@@ -109,7 +109,7 @@
         if (!lastRawData) return;
         const body = lastRawData.slice(mapping.skipFirst, lastRawData.length - mapping.skipLast);
         const settings = brandSettings.value;
-        const contactName = settings.contactName ?? currentUser.name;
+        const contactName = settings.contactName ?? currentUser?.name ?? "";
         const contactPhone = settings.contactPhone ?? "";
         const merchantId = settings.merchantId ?? "";
 

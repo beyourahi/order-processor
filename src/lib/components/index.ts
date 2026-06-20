@@ -5,6 +5,7 @@ export { Footer } from "./ui/footer";
 export {
     CourierPicker,
     User,
+    SignInButton,
     OrderProcessor,
     SteadFastSettings,
     CopilotSidebar,

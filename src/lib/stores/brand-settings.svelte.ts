@@ -13,6 +13,7 @@
  */
 import type { BrandSettingsState, BrandSettingsPatch, SaveState } from "$lib/types";
 import { api, debounceSync } from "$lib/api/client";
+import { readLocal, writeLocal, clearLocal } from "$lib/persistence/local";
 
 const EMPTY: BrandSettingsState = {
     contactName: null,
@@ -20,6 +21,9 @@ const EMPTY: BrandSettingsState = {
     merchantId: null,
     selectedCourier: null
 };
+
+// Versioned localStorage key holding the logged-out user's settings.
+const GUEST_KEY = "order-processor:guest:v1";
 
 type FieldKey = keyof BrandSettingsState;
 
@@ -47,6 +51,9 @@ const persistWithRetry = async (patch: BrandSettingsPatch): Promise<void> => {
 
 const createBrandSettingsStore = () => {
     let value = $state<BrandSettingsState>({ ...EMPTY });
+    // Set once at hydration. Authed → settings PATCH to D1 (cross-device).
+    // Guest → settings persist to localStorage on this device only.
+    let authed = false;
     // Per-field SaveState so each input renders independently — no cross-field bleed.
     let fieldStates = $state<Partial<Record<FieldKey, SaveState>>>({});
     let fieldErrors = $state<Partial<Record<FieldKey, string>>>({});
@@ -76,8 +83,9 @@ const createBrandSettingsStore = () => {
         }
     };
 
-    const hydrate = (initial: BrandSettingsState) => {
+    const hydrate = (initial: BrandSettingsState, opts?: { authed?: boolean }) => {
         value = { ...initial };
+        authed = opts?.authed ?? false;
         fieldStates = {};
         fieldErrors = {};
         for (const key of Object.keys(fieldTimers) as FieldKey[]) {
@@ -87,11 +95,51 @@ const createBrandSettingsStore = () => {
         }
     };
 
+    // Browser-only: re-seed the guest store from localStorage after mount (SSR
+    // can't read it). Called from +page.svelte's onMount when there's no session.
+    // Additive over the empty server state — does not re-run server hydration, so
+    // the single-untrack-site invariant for authed data stays intact.
+    const loadGuest = () => {
+        const guest = readLocal<BrandSettingsState>(GUEST_KEY);
+        if (guest) value = { ...EMPTY, ...guest };
+    };
+
+    // Browser-only: on first authed load, fold any guest settings into the empty
+    // account, then drop the guest key so it never re-imports. Existing account
+    // settings are never clobbered (import targets an empty account only).
+    const migrateGuestToServer = async () => {
+        const guest = readLocal<BrandSettingsState>(GUEST_KEY);
+        if (!guest) return;
+        const accountEmpty =
+            value.contactName === null &&
+            value.contactPhone === null &&
+            value.merchantId === null &&
+            value.selectedCourier === null;
+        if (accountEmpty) {
+            const patch: BrandSettingsPatch = {};
+            if (guest.contactName) patch.contactName = guest.contactName;
+            if (guest.contactPhone) patch.contactPhone = guest.contactPhone;
+            if (guest.merchantId) patch.merchantId = guest.merchantId;
+            if (guest.selectedCourier) patch.selectedCourier = guest.selectedCourier;
+            if (Object.keys(patch).length > 0) {
+                try {
+                    await api.patch<void>("/api/brand-settings", patch);
+                    value = { ...value, ...patch };
+                } catch (err) {
+                    console.error("[migrate] brand-settings", err);
+                    return; // keep guest data so the next load can retry
+                }
+            }
+        }
+        clearLocal(GUEST_KEY);
+    };
+
     const updateField = <K extends FieldKey>(field: K, next: BrandSettingsState[K]) => {
         value = { ...value, [field]: next };
-        debounceSync(`brand:${field}`, TEXT_DEBOUNCE_MS, () => persistWithRetry({ [field]: next }), {
-            onState: onState(field)
-        });
+        // Same debounce + per-field SaveState pipeline either way; only the sink
+        // differs — D1 PATCH when authed, localStorage when guest.
+        const persist = authed ? () => persistWithRetry({ [field]: next }) : async () => writeLocal(GUEST_KEY, value);
+        debounceSync(`brand:${field}`, TEXT_DEBOUNCE_MS, persist, { onState: onState(field) });
     };
 
     const dismissError = (field: FieldKey) => {
@@ -122,6 +170,8 @@ const createBrandSettingsStore = () => {
         fieldState,
         fieldError,
         hydrate,
+        loadGuest,
+        migrateGuestToServer,
         updateField,
         dismissError
     };

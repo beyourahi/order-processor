@@ -20,8 +20,10 @@
 
     onNavigate(handleViewTransition);
 
-    // Copilot rail is scoped to "/" only — never on /login or error pages.
-    const showCopilot = $derived(page.route.id === "/" && !page.error);
+    // Copilot rail is scoped to "/" only — never on /login or error pages — and is
+    // a signed-in perk: hidden for guests (it costs paid AI calls + needs the
+    // server). Its /api/copilot/* routes stay 401-gated regardless.
+    const showCopilot = $derived(page.route.id === "/" && !page.error && !!page.data.user);
 </script>
 
 <svelte:head>
