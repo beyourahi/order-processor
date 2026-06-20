@@ -28,7 +28,7 @@ All commits go directly to `main`. No feature branches. No PRs for solo work. Wo
 
 ## Project Overview
 
-SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. **Auth is optional**: logged-out guests get the full CSV→Excel app (settings persist to `localStorage`); signing in (Google OAuth) adds D1 server storage, cross-device sync, and the AI Copilot — which additionally requires a connected **bring-your-own (BYO) Cloudflare account**. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions, brand settings, BYO-Cloudflare credentials, and Copilot conversation history.
+SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. **Auth is optional**: logged-out guests get the full CSV→Excel app (settings persist to `localStorage`); signing in (Google OAuth / One Tap / passkey biometrics) adds D1 server storage, cross-device sync, and the AI Copilot — which additionally requires a connected **bring-your-own (BYO) Cloudflare account**. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions, brand settings, BYO-Cloudflare credentials, and Copilot conversation history.
 
 **Production URL**: `https://order-processor.dropoutstudio.co` (custom domain; the `*.workers.dev` and preview URLs are disabled — `workers_dev: false`, `preview_urls: false`)
 
@@ -41,7 +41,7 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | Styling         | Tailwind CSS 4.x (`@tailwindcss/vite`) + design tokens from vendored `@dropout/ds`               |
 | Design System   | `@dropout/ds` vendored at `src/lib/ds/`, imported via `$lib/ds` (tokens + primitives)            |
 | UI Components   | shadcn-svelte (new-york, zinc) + CVA in `src/lib/components/ui/` (coexists with the DS)          |
-| Auth            | Better Auth with Google OAuth, Drizzle adapter                                                   |
+| Auth            | Better Auth (Drizzle adapter) — Google OAuth + Google One Tap + passkey/WebAuthn biometrics      |
 | Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                           |
 | CSV Parsing     | PapaParse                                                                                        |
 | Excel Export    | SheetJS (`xlsx`)                                                                                 |
@@ -214,10 +214,14 @@ Auth is **optional** — `hooks.server.ts` always resolves `locals.user`/`sessio
 `localStorage`; signing in unlocks D1 storage, cross-device sync, and the Copilot.
 
 ```
-Google OAuth --> Better Auth --> D1 sessions --> hooks.server.ts
+Google OAuth / One Tap / passkey --> Better Auth --> D1 sessions --> hooks.server.ts
   --> event.locals.user / session / currentUser  (all null for guests; the app still works)
 ```
 
+- Three sign-in methods, all → the same session: Google OAuth (button), Google One Tap (auto-prompt overlay, same Google client — no new provider/table), and passkey/WebAuthn (device biometrics: Face ID / Touch ID / Android fingerprint + roaming security keys)
+- Server plugins in `createAuth()`: `oneTap()` + `passkey({ rpID, rpName, origin, ... })`. Client plugins in `auth-client.ts`: `passkeyClient()` + `oneTapClient({ clientId })`
+- One Tap needs the public `PUBLIC_GOOGLE_CLIENT_ID` (browser-exposed, non-secret, via `$env/dynamic/public`); empty → One Tap silently off, the Google button still works (`/login` guards on `oneTapConfigured`)
+- Passkey `rpID`/`origin` are derived from `BETTER_AUTH_URL` in `auth.ts` (localhost → both dev+preview origins; else the prod origin) — a mismatch breaks registration/login silently. `userVerification: "required"` forces the biometric gesture
 - Auth instance created per-request (Cloudflare Workers provide D1 binding per-request)
 - `createAuth()` factory in `$lib/server/auth.ts` -- not a singleton
 - Session: 7-day expiry, rolling (updated daily), cookie-cached (5 min)
@@ -237,6 +241,7 @@ Tables in `src/lib/server/schema.ts`:
 - `sessions` -- active sessions (indexed on `user_id`)
 - `accounts` -- OAuth provider connections (composite unique on `provider_id` + `account_id`)
 - `verifications` -- OAuth state/email verification tokens
+- `passkeys` -- WebAuthn/passkey credentials (`@better-auth/passkey`), indexed on `user_id`, cascade-deleted with the user; the device-biometric store (Face ID / Touch ID / fingerprint register as platform authenticators). JS keys match Better Auth's field names; SQL columns stay snake_case
 - `brand_settings` -- editable contact info per user (contact_name, contact_phone, merchant_id, selected_courier), linked via `user_id` FK
 - `user_settings` -- per-user BYO Cloudflare account for the Copilot: `cloudflare_token_encrypted` (BLOB, AES-GCM), `cloudflare_account_id`, `cloudflare_model`; PK = `user_id`. Inference runs on the user's own account, not the owner's
 - `rate_limits` -- request counts keyed by IP+path (Better Auth's D1 limiter) AND by `copilot-chat:<userId>` (the Copilot's per-user 20/60s budget) — one table, two key namespaces
@@ -253,9 +258,9 @@ src/
     +layout.svelte / +layout.server.ts   -- root layout, loads user/session (null for guests)
     +page.svelte / +page.server.ts       -- main page; loads brandSettings + conversations only when authed, else empty defaults (guests hydrate from localStorage)
     +error.svelte                         -- error boundary
-    settings/+page.svelte / +page.server.ts -- BYO Cloudflare account form (token + account id + live model picker); 303 /login when signed out
+    settings/+page.svelte / +page.server.ts -- BYO Cloudflare account form (token + account id + live model picker) + passkey management (register/rename/delete biometric devices); 303 /login when signed out
     changelog/+page.svelte               -- public, customer-facing changelog (groups CHANGELOG_ENTRIES by date)
-    login/                               -- login page with Google OAuth
+    login/                               -- login page: Google OAuth button, auto-fired Google One Tap (when PUBLIC_GOOGLE_CLIENT_ID set), and passkey/biometric sign-in (when WebAuthn available)
     api/brand-settings/+server.ts        -- brand settings CRUD (GET + PATCH)
     api/cf/models/+server.ts             -- list the user's function-calling chat models (live, no cache) for the settings picker
     api/copilot/chat/+server.ts          -- AI Copilot chat endpoint (SSE; BYO Workers AI REST; 401/412/429 gates)
@@ -265,7 +270,7 @@ src/
     api/copilot/seed/+server.ts          -- embed + upsert KNOWLEDGE_CORPUS into Vectorize (SEED_SECRET-gated, owner env.AI)
     api/logout/+server.ts                -- logout endpoint
   lib/
-    auth-client.ts                       -- Better Auth client (`authClient`); use authClient.signIn/signOut/useSession directly — no named re-exports
+    auth-client.ts                       -- Better Auth client (`authClient`) with `passkeyClient()` + `oneTapClient()` plugins; re-exports `{ signIn, signOut, useSession }` (passkey sign-in via `authClient.signIn.passkey()`, One Tap via `authClient.oneTap()`)
     assets/                              -- static assets (upload.gif, steadfast.png)
     ds/                                  -- vendored @dropout/ds (import via $lib/ds): index.ts (cn + Cta/Heading/Eyebrow/Input/Tile + style helpers), components/, styles/ (tokens.css + animations.css → imported by app.css), utils.ts (DS cn with extended text-* scale)
     api/
@@ -276,8 +281,8 @@ src/
                                             gateway.ts is dead code (only MODEL_CHAIN/DEFAULT_MODEL constants survive)
     persistence/local.ts                 -- SSR-safe localStorage helpers for logged-out (guest) persistence
     server/
-      auth.ts                            -- createAuth() factory
-      schema.ts                          -- Drizzle ORM schema (9 tables)
+      auth.ts                            -- createAuth() factory (+ oneTap/passkey plugins; rpID/origin derived from BETTER_AUTH_URL)
+      schema.ts                          -- Drizzle ORM schema (10 tables)
       crypto.ts                          -- AES-GCM encrypt/decrypt/mask for the BYO Cloudflare token (WebCrypto, TOKEN_ENCRYPTION_KEY)
       rate-limit.ts                      -- per-user Copilot chat budget (checkChatRateLimit, 20/60s) over the rate_limits table
       ai/                                -- BYO Cloudflare layer: run-rest.ts (Workers AI REST: chat/embedding/model-list), cloudflare-config.ts (load/resolve creds), errors.ts (user-facing CF error help)
@@ -456,6 +461,7 @@ docs:     documentation changes
     - `BETTER_AUTH_SECRET` -- generate with `openssl rand -base64 32`
     - `BETTER_AUTH_URL` -- `http://localhost:5173` for dev
     - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` -- from Google Cloud Console
+    - `PUBLIC_GOOGLE_CLIENT_ID` (optional) -- browser-exposed Google OAuth client id enabling Google One Tap (non-secret; same value as `GOOGLE_CLIENT_ID`). Empty → One Tap off, Google button still works
     - `TOKEN_ENCRYPTION_KEY` -- AES-GCM key (base64, exactly 32 bytes: `openssl rand -base64 32`); encrypts each user's BYO Cloudflare token. The Copilot 412s without it
     - `SEED_SECRET` (optional) -- gates `POST /api/copilot/seed`
 2. Create `.env` for D1 CLI operations (`db:push`, `db:studio`): `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, `CLOUDFLARE_D1_TOKEN`
@@ -473,7 +479,7 @@ Configured in `wrangler.jsonc`:
 - **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
 - **Observability**: enabled
 - **CPU Limit**: 300,000ms
-- **Vars**: `BETTER_AUTH_URL` (`https://order-processor.dropoutstudio.co`), `AI_GATEWAY_SLUG` (`order-processor-ai`, now vestigial — the gateway route is bypassed by BYO)
+- **Vars**: `BETTER_AUTH_URL` (`https://order-processor.dropoutstudio.co`), `AI_GATEWAY_SLUG` (`order-processor-ai`, now vestigial — the gateway route is bypassed by BYO), `PUBLIC_GOOGLE_CLIENT_ID` (browser-exposed Google client id for One Tap — NOT a secret; empty → One Tap off)
 - **Secrets**: `TOKEN_ENCRYPTION_KEY` (AES-GCM base64 32-byte key encrypting BYO tokens; Copilot 412s without it), `SEED_SECRET` (optional, gates `/api/copilot/seed`)
 
 Access in SvelteKit via `event.platform.env.DB`, typed in `app.d.ts` under `App.Platform`.
@@ -494,7 +500,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 1. **SvelteKit docs** -- routing, hooks, adapters, `event.platform` for Cloudflare
 2. **Svelte 5 docs** -- runes (`$state`, `$derived`, `$props`, `$effect`), snippets
-3. **Better Auth docs** -- `svelteKitHandler`, Drizzle adapter config, `usePlural`, cookie settings
+3. **Better Auth docs** -- `svelteKitHandler`, Drizzle adapter config, `usePlural`, cookie settings, `oneTap` + `@better-auth/passkey` plugins
 4. **Drizzle ORM docs** -- D1 driver, schema definition, migration workflow
 5. **Cloudflare Workers docs** -- D1 bindings, `wrangler.jsonc` config, `nodejs_compat`
 6. **shadcn-svelte docs** -- component installation, `components.json` config, new-york style
@@ -517,7 +523,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 8. **drizzle-kit version sensitivity** -- Previously pinned to 0.30.0 due to a hang bug in early 0.31.x. Current version is `0.31.10` (stable). If migration commands hang, check for upstream regressions before upgrading.
 
-9. **Security headers are applied to all responses** -- `hooks.server.ts` sets a Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. `X-XSS-Protection` was removed (deprecated). The CSP requires `'unsafe-inline'` for SvelteKit hydration scripts and Tailwind styles — do not tighten it without testing. Immutable responses (redirects) are cloned before header application.
+9. **Security headers are applied to all responses** -- `hooks.server.ts` sets a Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, and Permissions-Policy. `X-XSS-Protection` was removed (deprecated). The CSP requires `'unsafe-inline'` for SvelteKit hydration scripts and Tailwind styles. It is also widened for Google One Tap: `script-src`/`style-src`/`connect-src`/`frame-src` allow `accounts.google.com/gsi/*` (GSI script + FedCM iframe), and `Permissions-Policy` grants `identity-credentials-get=(self "https://accounts.google.com")` for the FedCM prompt. Passkey/WebAuthn needs no CSP change. Do not tighten without testing One Tap. Immutable responses (redirects) are cloned before header application.
 
 10. **Never commit `.env` or `.dev.vars`** -- These contain auth secrets and API tokens. No example file is tracked. Use `wrangler secret put <NAME>` for production secrets.
 
@@ -558,6 +564,10 @@ When encountering unfamiliar patterns, check these sources in order:
 28. **Per-user Copilot rate limit reuses the `rate_limits` table** -- `checkChatRateLimit` (`$lib/server/rate-limit.ts`) enforces 20 chat turns / 60s per user under a `copilot-chat:<userId>` key, separate from Better Auth's own per-route keys in the same table. Fixed window (the window start is NOT bumped per request, so a steady stream can't slide it open). It is a cost guard against BYO model spend; the read-modify-write is intentionally non-atomic and fails open when D1 is unbound.
 
 29. **Served only at the custom domain** -- `wrangler.jsonc` sets `workers_dev: false` + `preview_urls: false`, so the app runs only at `order-processor.dropoutstudio.co`. OAuth redirect URIs, `BETTER_AUTH_URL`, and the CSRF/`trustedOrigins` lists (`svelte.config.js` + `$lib/server/auth.ts`) all assume this single host. Re-enabling `*.workers.dev` or preview URLs means adding those origins everywhere, or auth/CSRF breaks.
+
+30. **Passkey `rpID`/`origin` are derived from `BETTER_AUTH_URL`** -- `auth.ts` computes the WebAuthn `rpID` (hostname) and allowed `origin` from `BETTER_AUTH_URL` (localhost → both `:5173`+`:8787` dev origins; else the prod origin). WebAuthn binds credentials to the exact rpID + origin, so a stale/mismatched `BETTER_AUTH_URL` makes passkey register/login fail **silently** with no useful error. Keep `BETTER_AUTH_URL` correct per environment. Passkeys are platform-bound — a device registers its own; clearing the `passkeys` table forces re-registration.
+
+31. **Google One Tap depends on `PUBLIC_GOOGLE_CLIENT_ID`** -- the browser-public client id is read via `$env/dynamic/public` in `auth-client.ts`; `/login` only fires the One Tap prompt when it's set (`oneTapConfigured`). It is NOT a secret (it appears in every OAuth redirect) — set it as a plain `var` in `wrangler.jsonc`/`.dev.vars`, never via `wrangler secret`. Empty → One Tap is simply off; the Google OAuth button and passkeys still work.
 
 ---
 

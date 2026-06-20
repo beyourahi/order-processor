@@ -1,23 +1,38 @@
 <script lang="ts">
     import { authClient } from "$lib/auth-client";
+    import { browser } from "$app/environment";
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
+    import { env as publicEnv } from "$env/dynamic/public";
+    import { Fingerprint } from "@lucide/svelte";
     import { Heading } from "$lib/components";
     import { Cta, cn } from "$lib/ds";
 
     let isLoading = $state(false);
     let error = $state<string | null>(null);
+    // Passkeys need WebAuthn; hide the option where the browser can't do it.
+    let webauthnAvailable = $state(browser && typeof window !== "undefined" && !!window.PublicKeyCredential);
 
     // Preserve the originally requested route from ?redirect= so post-login lands the user there.
     const redirectUrl = $derived(page.url.searchParams.get("redirect") ?? "/");
+    // One Tap only fires when a public Google client id is configured (see auth-client.ts).
+    const oneTapConfigured = browser && !!publicEnv.PUBLIC_GOOGLE_CLIENT_ID;
 
     // Client-side fallback redirect: signIn.social() does a full OAuth round-trip,
     // but if a live session already exists (e.g. back-nav to /login) this bounces
     // out without waiting for the server load guard.
     const session = authClient.useSession();
+    let oneTapTried = false;
     $effect(() => {
+        if (!browser) return;
         if ($session.data?.user) {
             goto(redirectUrl);
+            return;
+        }
+        // Auto-prompt Google One Tap once; on success the session effect redirects.
+        if (oneTapConfigured && !oneTapTried) {
+            oneTapTried = true;
+            authClient.oneTap({ fetchOptions: { onSuccess: () => goto(redirectUrl) } }).catch(() => {});
         }
     });
 
@@ -32,6 +47,24 @@
             });
         } catch (e) {
             error = "Failed to sign in with Google. Please try again.";
+            console.error(e);
+        } finally {
+            isLoading = false;
+        }
+    };
+
+    const handlePasskeyLogin = async () => {
+        isLoading = true;
+        error = null;
+        try {
+            const res = await authClient.signIn.passkey();
+            if (res?.error) {
+                error = "Passkey sign-in failed or was cancelled.";
+            } else {
+                goto(redirectUrl);
+            }
+        } catch (e) {
+            error = "Passkey sign-in failed. Please try again.";
             console.error(e);
         } finally {
             isLoading = false;
@@ -93,6 +126,21 @@
             </span>
         </Cta>
 
+        {#if webauthnAvailable}
+            <Cta
+                variant="secondary"
+                arrow={false}
+                onclick={handlePasskeyLogin}
+                disabled={isLoading}
+                class={cn("min-w-[260px] justify-center py-[15px]", isLoading && "cursor-wait")}
+            >
+                <span class="inline-flex items-center gap-2.5">
+                    <Fingerprint class="size-4" aria-hidden="true" />
+                    <span>Sign in with a passkey</span>
+                </span>
+            </Cta>
+        {/if}
+
         <Cta variant="secondary" href="/" arrow={false} class="min-w-[260px] justify-center py-[15px]">
             <span class="inline-flex items-center gap-2.5">
                 <svg
@@ -113,6 +161,8 @@
     </div>
 
     <p class="text-ink-muted max-w-sm text-center text-sm text-pretty">
-        Sign in with your Google account to get started
+        {webauthnAvailable
+            ? "Sign in with Google — or use a passkey (Face ID, Touch ID, fingerprint) once you've added one in Settings."
+            : "Sign in with your Google account to get started"}
     </p>
 </div>

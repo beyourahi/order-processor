@@ -9,13 +9,17 @@ import { getCurrentUser } from "$lib/hooks";
 // 'unsafe-inline' is REQUIRED for SvelteKit hydration scripts and Tailwind
 // scoped styles — do not tighten without testing. lh3.googleusercontent.com
 // serves Google OAuth avatars; fonts.* serves Google Fonts loaded in app.html.
+// Google One Tap loads the GSI script + renders a FedCM iframe from
+// accounts.google.com, so script-src/style-src/frame-src must allow it.
+// Passkey/WebAuthn needs no CSP change.
 const CSP = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style",
     "font-src https://fonts.gstatic.com",
     "img-src 'self' data: https://lh3.googleusercontent.com",
-    "connect-src 'self'",
+    "connect-src 'self' https://accounts.google.com/gsi/",
+    "frame-src https://accounts.google.com/gsi/",
     "frame-ancestors 'none'"
 ].join("; ");
 
@@ -24,7 +28,9 @@ const SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY", // legacy fallback for browsers without CSP frame-ancestors
     "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    // `identity-credentials-get` is required for the modern FedCM-based Google One Tap prompt.
+    "Permissions-Policy":
+        'camera=(), microphone=(), geolocation=(), identity-credentials-get=(self "https://accounts.google.com")'
 } as const;
 
 // SvelteKit redirect responses have immutable headers; catch and clone.

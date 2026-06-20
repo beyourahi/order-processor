@@ -43,6 +43,13 @@
             "when": 1781946451378,
             "tag": "0009_bouncy_bloodaxe",
             "breakpoints": true
+        },
+        {
+            "idx": 10,
+            "version": "6",
+            "when": 1781996974544,
+            "tag": "0010_marvelous_shadowcat",
+            "breakpoints": true
         }
     ]
 }
