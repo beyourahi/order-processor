@@ -186,7 +186,7 @@
         </div>
 
         <span
-            class="text-chat-text-muted/60 absolute bottom-2.5 left-4 font-mono text-[10px] tracking-[0.1em] uppercase"
+            class="text-chat-text-muted/60 text-micro absolute bottom-2.5 left-4 font-mono tracking-[0.1em] uppercase"
         >
             {#if disabled}
                 generating…

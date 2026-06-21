@@ -138,7 +138,7 @@
         {/if}
 
         {#if (message.content || (message.images && message.images.length > 0)) && timeLabel}
-            <span class="text-chat-text-muted px-1 text-[10px] tabular-nums">{timeLabel}</span>
+            <span class="text-chat-text-muted text-micro px-1 tabular-nums">{timeLabel}</span>
         {/if}
     </div>
 </div>

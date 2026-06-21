@@ -134,16 +134,16 @@
     <Table.Root class="w-full text-base">
         <Table.Header class="bg-ink-2 sticky top-0 z-20 backdrop-blur">
             <Table.Row class="border-hair">
-                <Table.Head class="bg-ink-2 sticky left-0 z-30 w-14 text-center text-[10px]" aria-label="Select"
+                <Table.Head class="bg-ink-2 text-micro sticky left-0 z-30 w-14 text-center" aria-label="Select"
                 ></Table.Head>
                 <Table.Head
-                    class="text-ink-muted w-10 text-right font-mono text-[10px] tracking-[0.1em]"
+                    class="text-ink-muted text-micro w-10 text-right font-mono tracking-[0.1em]"
                     aria-label="Row number">#</Table.Head
                 >
                 {#each visibleColumns as column (column.key)}
                     <Table.Head
                         class={cn(
-                            "border-hair min-w-[10rem] border-l border-solid font-mono text-[11px] tracking-[0.18em] uppercase",
+                            "border-hair text-caption min-w-[10rem] border-l border-solid font-mono tracking-[0.18em] uppercase",
                             column.kind === "batch-constant" ? "text-foreground" : "text-ink-muted"
                         )}
                     >
@@ -188,7 +188,7 @@
     <button
         type="button"
         onclick={onAddRow}
-        class="border-hair text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-t border-dashed font-mono text-[11px] tracking-[0.18em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2 sm:min-h-11 ease-[var(--ease)]"
+        class="border-hair text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring text-caption ease-[var(--ease)] flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 border-t border-dashed font-mono tracking-[0.18em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2"
         aria-label="Add row"
     >
         <svg

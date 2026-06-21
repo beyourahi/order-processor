@@ -66,7 +66,7 @@
         <div class="flex items-center justify-center gap-1">
             <label
                 class={cn(
-                    "sleek flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10",
+                    "sleek flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10",
                     controlBase,
                     "focus-within:ring-ring hover:border-signal/50 hover:bg-ink-2 focus-within:ring-2"
                 )}
@@ -110,12 +110,12 @@
     {/each}
 
     <Table.Cell class="border-hair sticky right-0 z-10 w-20 border-l border-solid bg-inherit p-0 align-middle">
-        <div class="flex min-h-[44px] items-center justify-center gap-0.5 sm:min-h-10">
+        <div class="flex min-h-11 items-center justify-center gap-0.5 sm:min-h-10">
             <button
                 type="button"
                 onclick={onDuplicate}
                 class={cn(
-                    "sleek text-ink-muted flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek text-ink-muted flex h-auto min-h-11 w-auto min-w-11 cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     controlBase,
                     "hover:border-signal/50 hover:bg-ink-2 hover:text-foreground active:bg-ink-2",
                     "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
@@ -139,7 +139,7 @@
                 type="button"
                 onclick={onDelete}
                 class={cn(
-                    "sleek text-ink-muted flex h-auto min-h-[44px] w-auto min-w-[44px] cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek text-ink-muted flex h-auto min-h-11 w-auto min-w-11 cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     controlBase,
                     "hover:bg-destructive/15 hover:border-destructive/30 hover:text-destructive active:bg-destructive/25",
                     "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"

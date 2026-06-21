@@ -14,12 +14,12 @@ export { default as Input } from "./components/Input.svelte";
 export { default as Tile } from "./components/Tile.svelte";
 
 export {
-    inputBase,
-    labelBase,
-    tileBase,
-    tileSelected,
-    tileUnselected,
-    pillBase,
-    pillSelected,
-    pillUnselected
+	inputBase,
+	labelBase,
+	tileBase,
+	tileSelected,
+	tileUnselected,
+	pillBase,
+	pillSelected,
+	pillUnselected
 } from "./components/styles";

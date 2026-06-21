@@ -215,7 +215,7 @@
     onkeydown={handleCellKeydown}
     onclick={handleCellClick}
     class={cn(
-        "ring-offset-background focus-visible:ring-ring group relative min-h-[44px] min-w-[10rem] cursor-text px-3 text-base focus:outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-10",
+        "ring-offset-background focus-visible:ring-ring group relative min-h-11 min-w-[10rem] cursor-text px-3 text-base focus:outline-none focus-visible:z-10 focus-visible:ring-2 sm:min-h-10",
         "flex items-center transition-colors",
         isSelected && "bg-ink-2/50",
         warning && "ring-1 ring-destructive/60 ring-inset",

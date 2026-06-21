@@ -172,10 +172,10 @@
                 saving = false;
             };
         }}
-        class="border-hair bg-card flex flex-col gap-6 rounded-[18px] border p-5 sm:p-7"
+        class="border-hair bg-card flex flex-col gap-6 rounded-xl border p-5 sm:p-7"
     >
         <div class="flex items-center gap-3">
-            <span class="border-hair bg-ink-2 flex size-8 items-center justify-center rounded-[10px] border">
+            <span class="border-hair bg-ink-2 flex size-8 items-center justify-center rounded-sm border">
                 <Cloud class="text-ink-muted size-4" aria-hidden="true" />
             </span>
             <div class="flex flex-col gap-1">
@@ -284,9 +284,9 @@
         </div>
     </form>
 
-    <section class="border-hair bg-card flex flex-col gap-6 rounded-[18px] border p-5 sm:p-7">
+    <section class="border-hair bg-card flex flex-col gap-6 rounded-xl border p-5 sm:p-7">
         <div class="flex items-center gap-3">
-            <span class="border-hair bg-ink-2 flex size-8 items-center justify-center rounded-[10px] border">
+            <span class="border-hair bg-ink-2 flex size-8 items-center justify-center rounded-sm border">
                 <Fingerprint class="text-ink-muted size-4" aria-hidden="true" />
             </span>
             <div class="flex flex-col gap-1">
@@ -313,7 +313,7 @@
                 <ul class="flex flex-col gap-2">
                     {#each passkeys as pk (pk.id)}
                         <li
-                            class="border-hair bg-ink-2/40 flex items-center justify-between gap-3 rounded-[10px] border px-3 py-2.5"
+                            class="border-hair bg-ink-2/40 flex items-center justify-between gap-3 rounded-sm border px-3 py-2.5"
                         >
                             <div class="flex min-w-0 items-center gap-2.5">
                                 <Fingerprint class="text-signal size-4 shrink-0" aria-hidden="true" />

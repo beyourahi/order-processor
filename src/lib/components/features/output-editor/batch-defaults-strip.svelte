@@ -17,10 +17,10 @@
 <section aria-label="Batch defaults" class="border-hair bg-card rounded-xl border border-solid p-3 sm:p-4">
     <div class="mb-3 flex items-center justify-between gap-3">
         <Eyebrow as="h2">Batch defaults</Eyebrow>
-        <p class="text-ink-muted text-[11px] text-pretty">Applies to every row · not saved to your brand settings</p>
+        <p class="text-ink-muted text-caption text-pretty">Applies to every row · not saved to your brand settings</p>
     </div>
 
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {#each BATCH_CONSTANT_COLUMNS as column (column.key)}
             {@const fieldKey = column.key as keyof BatchDefaults}
             {@const overrides = overrideCountByColumn[fieldKey] ?? 0}
@@ -28,7 +28,7 @@
                 <div class="mb-1.5 flex items-center gap-1.5">
                     <label
                         for="strip-{column.key}"
-                        class="text-ink-muted font-mono text-[10px] tracking-[0.12em] uppercase"
+                        class="text-ink-muted text-micro font-mono tracking-[0.12em] uppercase"
                     >
                         {column.key}
                     </label>
@@ -52,7 +52,7 @@
                         type="button"
                         onclick={() => onResetOverrides(fieldKey)}
                         class={cn(
-                            "text-ink-muted hover:text-foreground mt-1 cursor-pointer self-start py-2 font-mono text-[10px] tracking-[0.1em] whitespace-nowrap uppercase underline-offset-2 hover:underline sm:py-1",
+                            "text-ink-muted hover:text-foreground text-micro mt-1 cursor-pointer self-start py-2 font-mono tracking-[0.1em] whitespace-nowrap uppercase underline-offset-2 hover:underline sm:py-1",
                             "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
                         )}
                     >

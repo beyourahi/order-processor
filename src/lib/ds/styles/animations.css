@@ -6,27 +6,97 @@
  */
 
 @keyframes ctaPulse {
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.45);
-        opacity: 0.85;
-    }
-    50% {
-        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
-        opacity: 1;
-    }
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.45);
+		opacity: 0.85;
+	}
+	50% {
+		box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes ctaSheen {
-    to {
-        transform: translateX(220%) skewX(-18deg);
-    }
+	to {
+		transform: translateX(220%) skewX(-18deg);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-    [data-cta-dot],
-    [data-cta-sheen]::before,
-    [data-cta-sheen]::after {
-        animation: none !important;
-    }
+	[data-cta-dot],
+	[data-cta-sheen]::before,
+	[data-cta-sheen]::after {
+		animation: none !important;
+	}
+}
+
+/* =============================================================================
+   SHARED UTILITIES
+   Promoted from the sibling tools (day-zero, order-processor, invoice-generator,
+   username-extractor) so all four stay byte-identical. Tool-specific keyframes
+   (copilot, launcher, scan, shimmer) stay in their own app.css. Keyframe names are
+   ds-prefixed to avoid collision while apps drop their local copies.
+   ============================================================================= */
+
+/* GPU-smoothed all-purpose transition (was each app's local .sleek). */
+.sleek {
+	transform: translateZ(0);
+	transition: all 200ms ease-in-out;
+}
+
+/* Color/opacity transition for status-driven surfaces. */
+.status-transition {
+	transition:
+		color 200ms ease,
+		background-color 200ms ease,
+		border-color 200ms ease,
+		opacity 200ms ease;
+}
+
+@keyframes ds-status-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+.status-dot-pulse {
+	animation: ds-status-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes ds-slide-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.slide-in {
+	animation: ds-slide-in 280ms var(--ease) both;
+}
+
+@keyframes ds-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+.fade-in {
+	animation: ds-fade-in 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.status-dot-pulse,
+	.slide-in,
+	.fade-in {
+		animation: none;
+	}
 }

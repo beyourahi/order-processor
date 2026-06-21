@@ -99,7 +99,7 @@
                     </p>
                     <a
                         href="/settings"
-                        class="text-chat-accent ease-[var(--ease)] hover:text-chat-text-primary inline-flex w-fit items-center gap-1.5 font-mono text-[11px] tracking-[0.04em] uppercase transition-colors"
+                        class="text-chat-accent ease-[var(--ease)] hover:text-chat-text-primary text-caption inline-flex w-fit items-center gap-1.5 font-mono tracking-[0.04em] uppercase transition-colors"
                     >
                         Connect in Settings
                         <ArrowRight class="size-3" aria-hidden="true" />

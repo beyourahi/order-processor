@@ -67,7 +67,7 @@
                     >
                         {#each pending.diff as row, i (i)}
                             <div class="space-y-1">
-                                <div class="text-chat-text-muted font-mono text-[10px] tracking-[0.12em] uppercase">
+                                <div class="text-chat-text-muted text-micro font-mono tracking-[0.12em] uppercase">
                                     {row.label}
                                 </div>
                                 <div class="flex items-start gap-2 text-xs">
@@ -91,7 +91,7 @@
                     <CopilotAnomalyWarning anomalies={pending.anomalies} />
                 {/if}
 
-                <p class="text-chat-text-muted flex items-start gap-1.5 text-[11px] text-pretty">
+                <p class="text-chat-text-muted text-caption flex items-start gap-1.5 text-pretty">
                     <Undo2 class="mt-px size-3 shrink-0" aria-hidden="true" />
                     <span>{pending.inverseSummary}</span>
                 </p>
@@ -102,14 +102,14 @@
                     type="button"
                     onclick={onReject}
                     use:focusOnMount
-                    class="border-hair bg-chat-surface text-chat-text-primary hover:border-signal hover:bg-ink-2 focus-visible:ring-signal ease-[var(--ease)] inline-flex h-9 cursor-pointer items-center rounded-full border px-5 font-mono text-[12px] tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
+                    class="border-hair bg-chat-surface text-chat-text-primary hover:border-signal hover:bg-ink-2 focus-visible:ring-signal ease-[var(--ease)] text-caption inline-flex h-9 cursor-pointer items-center rounded-full border px-5 font-mono tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
                 >
                     Reject
                 </button>
                 <button
                     type="button"
                     onclick={onConfirm}
-                    class="bg-signal text-background hover:bg-signal/90 focus-visible:ring-signal ease-[var(--ease)] inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono text-[12px] font-medium tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
+                    class="bg-signal text-background hover:bg-signal/90 focus-visible:ring-signal ease-[var(--ease)] text-caption inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono font-medium tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
                 >
                     Confirm
                 </button>

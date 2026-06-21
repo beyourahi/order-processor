@@ -94,7 +94,7 @@
             arrow={false}
             onclick={handleGoogleLogin}
             disabled={isLoading}
-            class={cn("min-w-[260px] justify-center py-[15px]", isLoading && "cursor-wait")}
+            class={cn("min-w-[260px] justify-center py-4", isLoading && "cursor-wait")}
         >
             <span class="inline-flex items-center gap-2.5">
                 {#if isLoading}
@@ -132,7 +132,7 @@
                 arrow={false}
                 onclick={handlePasskeyLogin}
                 disabled={isLoading}
-                class={cn("min-w-[260px] justify-center py-[15px]", isLoading && "cursor-wait")}
+                class={cn("min-w-[260px] justify-center py-4", isLoading && "cursor-wait")}
             >
                 <span class="inline-flex items-center gap-2.5">
                     <Fingerprint class="size-4" aria-hidden="true" />
@@ -141,7 +141,7 @@
             </Cta>
         {/if}
 
-        <Cta variant="secondary" href="/" arrow={false} class="min-w-[260px] justify-center py-[15px]">
+        <Cta variant="secondary" href="/" arrow={false} class="min-w-[260px] justify-center py-4">
             <span class="inline-flex items-center gap-2.5">
                 <svg
                     class="size-4 transition-transform duration-300 ease-[var(--ease)] group-hover:-translate-x-0.5"
