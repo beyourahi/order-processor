@@ -34,22 +34,22 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 
 ## Tech Stack
 
-| Layer           | Technology                                                                                       |
-| --------------- | ------------------------------------------------------------------------------------------------ |
-| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                              |
-| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`)           |
-| Styling         | Tailwind CSS 4.x (`@tailwindcss/vite`) + design tokens from vendored `@dropout/ds`               |
-| Design System   | `@dropout/ds` vendored at `src/lib/ds/`, imported via `$lib/ds` (tokens + primitives)            |
-| UI Components   | shadcn-svelte (new-york, zinc) + CVA in `src/lib/components/ui/` (coexists with the DS)          |
-| Auth            | Better Auth (Drizzle adapter) — Google OAuth + Google One Tap + passkey/WebAuthn biometrics      |
-| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                           |
-| CSV Parsing     | PapaParse                                                                                        |
-| Excel Export    | SheetJS (`xlsx`)                                                                                 |
-| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                          |
-| AI Copilot      | Bring-your-own Workers AI — inference runs on each user's OWN Cloudflare account via the REST API (single user-picked model), Zod tool schemas |
+| Layer           | Technology                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                                                                             |
+| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`)                                                          |
+| Styling         | Tailwind CSS 4.x (`@tailwindcss/vite`) + design tokens from vendored `@dropout/ds`                                                              |
+| Design System   | `@dropout/ds` vendored at `src/lib/ds/`, imported via `$lib/ds` (tokens + primitives)                                                           |
+| UI Components   | shadcn-svelte (new-york, zinc) + CVA in `src/lib/components/ui/` (coexists with the DS)                                                         |
+| Auth            | Better Auth (Drizzle adapter) — Google OAuth + Google One Tap + passkey/WebAuthn biometrics                                                     |
+| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                                                                          |
+| CSV Parsing     | PapaParse                                                                                                                                       |
+| Excel Export    | SheetJS (`xlsx`)                                                                                                                                |
+| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                                                                         |
+| AI Copilot      | Bring-your-own Workers AI — inference runs on each user's OWN Cloudflare account via the REST API (single user-picked model), Zod tool schemas  |
 | AI RAG          | Cloudflare Vectorize (`order-processor-kb`, owner's index) + qwen3 query embeddings (`@cf/qwen/qwen3-embedding-0.6b`) run on the user's account |
-| Package Manager | Bun                                                                                              |
-| Linting         | ESLint 10 flat config + Prettier                                                                 |
+| Package Manager | Bun                                                                                                                                             |
+| Linting         | ESLint 10 flat config + Prettier                                                                                                                |
 
 ## Core Architecture
 
@@ -128,7 +128,8 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
   user's single chosen model on the user's account via `POST /accounts/{id}/ai/run/{model}` (buffered,
   not streamed; `client.ts` still emits the same `text`/`tool_call` Frame contract). There is NO runtime
   fallback chain — `$lib/ai/gateway.ts`/`openGatewayChat` is now **dead code**, kept only for the
-  `MODEL_CHAIN`/`DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.6`) constants. The per-user token is AES-GCM
+  `MODEL_CHAIN` constant. `DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.6`) lives in the live BYO layer
+  `$lib/server/ai/run-rest.ts`, not in `gateway.ts`. The per-user token is AES-GCM
   encrypted in `user_settings` and decrypted per request with `TOKEN_ENCRYPTION_KEY`; connecting an
   account + picking a model happens at `/settings`. Images ride as native multimodal `image_url` content
   parts on the SAME model — no separate vision model; `buildUserContent` emits a plain string when there
@@ -549,7 +550,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 21. **Copilot rail width is tokenized** -- `--copilot-rail-width` / `--copilot-rail-width-xl` in `app.css` define the right rail's size; the main column reserves space via `lg:pr-[calc(var(--copilot-rail-width)+1.5rem)]` in `+layout.svelte`. Change the tokens, not the hard-coded values.
 
-22. **Copilot inference is bring-your-own (BYO) over the Workers AI REST API** -- chat + RAG embedding run on the END USER's own Cloudflare account (`$lib/server/ai/run-rest.ts`, billed to them) with the user's single chosen model — NO runtime fallback chain. `$lib/ai/gateway.ts`/`openGatewayChat` is DEAD code, retained only for the `MODEL_CHAIN`/`DEFAULT_MODEL` constants; do not wire it back in. Connecting an account + picking a model happens at `/settings`; the endpoint returns 412 (with `connect: "/settings"`) until a token + account id are saved.
+22. **Copilot inference is bring-your-own (BYO) over the Workers AI REST API** -- chat + RAG embedding run on the END USER's own Cloudflare account (`$lib/server/ai/run-rest.ts`, billed to them) with the user's single chosen model — NO runtime fallback chain. `$lib/ai/gateway.ts`/`openGatewayChat` is DEAD code, retained only for the `MODEL_CHAIN` constant (`DEFAULT_MODEL` lives in `run-rest.ts`); do not wire it back in. Connecting an account + picking a model happens at `/settings`; the endpoint returns 412 (with `connect: "/settings"`) until a token + account id are saved.
 
 23. **Copilot chat is model-stateless but D1-persisted** -- the model never sees stored history; the client re-ships the full conversation + rendered CURRENT STATE every turn. Separately, `chat/+server.ts` writes each turn to `ai_conversations` / `ai_messages` so chats resume after reload. Persistence is best-effort and wrapped in try/catch — it must NEVER abort or block the live SSE stream. (This supersedes the old "in-memory only, no D1 tables" design.)
 
