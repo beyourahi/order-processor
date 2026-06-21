@@ -1,5 +1,7 @@
 # Order Processor
 
+> Turns store order files into clean, ready-to-send delivery sheets.
+
 Converts Shopify order export CSVs into courier-ready Excel files for the [SteadFast](https://steadfast.com.bd) delivery service in Bangladesh. Sign in with Google, upload a CSV, review and edit the parsed orders in-app, then download a `.xlsx` file — no manual reformatting. An AI copilot can edit the batch for you through natural-language commands.
 
 **Live**: https://order-processor.beyourahi.workers.dev
