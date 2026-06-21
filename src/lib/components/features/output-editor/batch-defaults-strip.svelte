@@ -52,7 +52,7 @@
                         type="button"
                         onclick={() => onResetOverrides(fieldKey)}
                         class={cn(
-                            "text-ink-muted hover:text-foreground text-micro mt-1 cursor-pointer self-start py-2 font-mono tracking-[0.1em] whitespace-nowrap uppercase underline-offset-2 hover:underline sm:py-1",
+                            "text-ink-muted hover:text-foreground text-micro mt-1 touch-manipulation cursor-pointer self-start py-2 font-mono tracking-[0.1em] whitespace-nowrap uppercase underline-offset-2 hover:underline sm:py-1",
                             "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
                         )}
                     >

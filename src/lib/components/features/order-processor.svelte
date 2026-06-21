@@ -224,7 +224,7 @@
             role="button"
             tabindex={isDisabled ? -1 : 0}
             class={cn(
-                "flex w-full flex-col items-center justify-center rounded-xl border border-dashed transition-all duration-200 ease-[var(--ease)]",
+                "flex w-full touch-manipulation flex-col items-center justify-center rounded-xl border border-dashed transition-all duration-200 ease-[var(--ease)]",
                 "h-56 sm:h-64 md:h-72 lg:h-80",
                 "ring-offset-background focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 isDisabled
@@ -256,7 +256,7 @@
                             e.stopPropagation();
                             error = null;
                         }}
-                        class="sleek text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring border-hair cursor-pointer rounded-full border border-solid px-5 py-2 font-mono text-xs tracking-[0.12em] uppercase focus:outline-none focus-visible:ring-2 active:scale-95"
+                        class="sleek text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring border-hair touch-manipulation cursor-pointer rounded-full border border-solid px-5 py-2 font-mono text-xs tracking-[0.12em] uppercase focus:outline-none focus-visible:ring-2 active:scale-95"
                     >
                         Try again
                     </button>

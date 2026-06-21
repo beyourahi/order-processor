@@ -146,7 +146,7 @@
     <header class="flex flex-col gap-5">
         <a
             href="/"
-            class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-2 font-mono text-micro tracking-[0.22em] uppercase transition-colors"
+            class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-2 font-mono text-micro tracking-[0.22em] whitespace-nowrap uppercase transition-colors touch-manipulation"
         >
             <ArrowLeft class="size-3.5" aria-hidden="true" />
             Back to app
@@ -203,7 +203,8 @@
                 />
                 <p class="text-ink-muted mt-2 text-caption text-pretty">
                     {#if connected}
-                        Stored: <span class="text-foreground font-mono">{data.maskedToken}</span> — leave blank to keep.
+                        Stored: <span class="text-foreground font-mono wrap-break-word">{data.maskedToken}</span> — leave
+                        blank to keep.
                     {:else}
                         An API token with the <span class="text-foreground">Account · Workers AI · Read</span>
                         permission. Stored securely. You won't see it again after saving.
@@ -234,7 +235,7 @@
                         disabled={refreshing || !connected}
                         title="Refresh model list"
                         aria-label="Refresh models"
-                        class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex items-center gap-1.5 font-mono text-micro tracking-[0.18em] uppercase transition-colors disabled:opacity-40"
+                        class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex items-center gap-1.5 font-mono text-micro tracking-[0.18em] whitespace-nowrap uppercase transition-colors touch-manipulation disabled:opacity-40"
                     >
                         <RefreshCw class={cn("size-3", refreshing && "animate-spin")} aria-hidden="true" />
                         Refresh
@@ -271,7 +272,7 @@
                     href="https://dash.cloudflare.com/profile/api-tokens"
                     target="_blank"
                     rel="noreferrer"
-                    class="text-foreground underline decoration-hair underline-offset-2"
+                    class="text-foreground underline decoration-hair underline-offset-2 wrap-break-word"
                 >
                     dash.cloudflare.com/profile/api-tokens
                 </a>
@@ -322,7 +323,9 @@
                                         {pk.name || "Face ID / Touch ID"}
                                     </p>
                                     {#if pk.createdAt && formatDate(pk.createdAt)}
-                                        <p class="text-ink-muted text-micro">Added {formatDate(pk.createdAt)}</p>
+                                        <p class="text-ink-muted text-micro tabular-nums">
+                                            Added {formatDate(pk.createdAt)}
+                                        </p>
                                     {/if}
                                 </div>
                             </div>
@@ -331,7 +334,7 @@
                                 onclick={() => removePasskey(pk.id)}
                                 disabled={passkeyBusy}
                                 aria-label="Remove Face ID / Touch ID"
-                                class="text-ink-muted ease-[var(--ease)] hover:text-destructive shrink-0 transition-colors disabled:opacity-40"
+                                class="text-ink-muted ease-[var(--ease)] hover:text-destructive shrink-0 transition-colors touch-manipulation disabled:opacity-40"
                             >
                                 <Trash2 class="size-4" aria-hidden="true" />
                             </button>

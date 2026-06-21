@@ -255,7 +255,7 @@
             />
         {/if}
     {:else}
-        <span class={cn("block w-full truncate", value ? "text-foreground/90" : "text-ink-muted italic")}>
+        <span class={cn("block w-full truncate tabular-nums", value ? "text-foreground/90" : "text-ink-muted italic")}>
             {value || "—"}
         </span>
         {#if warning}

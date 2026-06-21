@@ -86,7 +86,7 @@
                 onclick={onUndo}
                 disabled={undoing}
                 class={cn(
-                    "border-chat-border bg-chat-surface text-chat-text-secondary hover:text-chat-text-primary hover:bg-chat-surface-hover ml-auto inline-flex items-center gap-1 rounded-md border border-solid px-2 py-1 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                    "border-chat-border bg-chat-surface text-chat-text-secondary hover:text-chat-text-primary hover:bg-chat-surface-hover ml-auto inline-flex touch-manipulation items-center gap-1 rounded-md border border-solid px-2 py-1 font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                     undoing && "cursor-wait"
                 )}
             >

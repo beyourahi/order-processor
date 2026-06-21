@@ -102,14 +102,14 @@
                     type="button"
                     onclick={onReject}
                     use:focusOnMount
-                    class="border-hair bg-chat-surface text-chat-text-primary hover:border-signal hover:bg-ink-2 focus-visible:ring-signal ease-[var(--ease)] text-caption inline-flex h-9 cursor-pointer items-center rounded-full border px-5 font-mono tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
+                    class="border-hair bg-chat-surface text-chat-text-primary hover:border-signal hover:bg-ink-2 focus-visible:ring-signal ease-[var(--ease)] text-caption inline-flex h-9 cursor-pointer items-center rounded-full border px-5 font-mono tracking-[0.12em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2 touch-manipulation"
                 >
                     Reject
                 </button>
                 <button
                     type="button"
                     onclick={onConfirm}
-                    class="bg-signal text-background hover:bg-signal/90 focus-visible:ring-signal ease-[var(--ease)] text-caption inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono font-medium tracking-[0.12em] uppercase transition-colors focus:outline-none focus-visible:ring-2"
+                    class="bg-signal text-background hover:bg-signal/90 focus-visible:ring-signal ease-[var(--ease)] text-caption inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono font-medium tracking-[0.12em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2 touch-manipulation"
                 >
                     Confirm
                 </button>

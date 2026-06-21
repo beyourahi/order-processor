@@ -67,7 +67,7 @@
                     </span>
                     {#if groupIndex === 0}
                         <span
-                            class="border-hair text-ink-muted rounded-full border px-2 py-0.5 font-mono text-micro tracking-[0.18em] uppercase"
+                            class="border-hair text-ink-muted rounded-full border px-2 py-0.5 font-mono text-micro tracking-[0.18em] whitespace-nowrap uppercase"
                         >
                             Latest
                         </span>

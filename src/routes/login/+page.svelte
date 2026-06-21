@@ -96,7 +96,7 @@
             disabled={isLoading}
             class={cn("min-w-[260px] justify-center py-4", isLoading && "cursor-wait")}
         >
-            <span class="inline-flex items-center gap-2.5">
+            <span class="inline-flex items-center gap-2.5 whitespace-nowrap">
                 {#if isLoading}
                     <span
                         class="border-background/40 size-4 animate-spin rounded-full border-2 border-t-transparent"
@@ -134,7 +134,7 @@
                 disabled={isLoading}
                 class={cn("min-w-[260px] justify-center py-4", isLoading && "cursor-wait")}
             >
-                <span class="inline-flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-2.5 whitespace-nowrap">
                     <Fingerprint class="size-4" aria-hidden="true" />
                     <span>Sign in with Face ID / Touch ID</span>
                 </span>
@@ -142,7 +142,7 @@
         {/if}
 
         <Cta variant="secondary" href="/" arrow={false} class="min-w-[260px] justify-center py-4">
-            <span class="inline-flex items-center gap-2.5">
+            <span class="inline-flex items-center gap-2.5 whitespace-nowrap">
                 <svg
                     class="size-4 transition-transform duration-300 ease-[var(--ease)] group-hover:-translate-x-0.5"
                     viewBox="0 0 24 24"

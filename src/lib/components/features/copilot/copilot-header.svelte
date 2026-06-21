@@ -48,7 +48,7 @@
             onclick={onToggleHistory}
             aria-expanded={historyOpen}
             aria-label="Chat history"
-            class="hover:bg-chat-surface-hover relative rounded-xl p-2.5 transition-colors md:p-2"
+            class="hover:bg-chat-surface-hover relative touch-manipulation rounded-xl p-2.5 transition-colors md:p-2"
         >
             <Clock class="text-chat-icon-muted h-5 w-5 md:h-4 md:w-4" aria-hidden="true" />
             {#if historyCount > 0}
@@ -64,7 +64,7 @@
                 type="button"
                 onclick={onNewConversation}
                 aria-label="New conversation"
-                class="hover:bg-chat-surface-hover rounded-xl p-2.5 transition-colors md:p-2"
+                class="hover:bg-chat-surface-hover touch-manipulation rounded-xl p-2.5 transition-colors md:p-2"
             >
                 <Plus class="text-chat-icon-muted h-5 w-5 md:h-4 md:w-4" aria-hidden="true" />
             </button>
@@ -74,7 +74,7 @@
                 type="button"
                 onclick={onClose}
                 aria-label="Close chat"
-                class="hover:bg-chat-surface-hover rounded-xl p-2.5 transition-colors md:p-2"
+                class="hover:bg-chat-surface-hover touch-manipulation rounded-xl p-2.5 transition-colors md:p-2"
             >
                 <X class="text-chat-icon-muted h-5 w-5 md:h-4 md:w-4" aria-hidden="true" />
             </button>

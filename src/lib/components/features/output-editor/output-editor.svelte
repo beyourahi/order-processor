@@ -493,14 +493,14 @@
                     type="button"
                     onclick={cancelDiscard}
                     use:focusOnMount
-                    class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 focus-visible:ring-ring inline-flex h-9 cursor-pointer items-center rounded-full border border-solid px-5 font-mono text-xs tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
+                    class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 focus-visible:ring-ring inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full border border-solid px-5 font-mono text-xs tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
                     onclick={confirmDiscard}
-                    class="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/30 inline-flex h-9 cursor-pointer items-center rounded-full px-5 font-mono text-xs font-medium tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
+                    class="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/30 inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full px-5 font-mono text-xs font-medium tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
                 >
                     Discard
                 </button>

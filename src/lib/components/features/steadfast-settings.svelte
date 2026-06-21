@@ -71,7 +71,7 @@
             <button
                 type="button"
                 onclick={() => brandSettings.dismissError(field)}
-                class="text-ink-muted hover:text-foreground focus-visible:outline-signal ease-[var(--ease)] cursor-pointer rounded underline transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
+                class="text-ink-muted hover:text-foreground focus-visible:outline-signal ease-[var(--ease)] touch-manipulation cursor-pointer rounded underline transition-colors focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2"
             >
                 Dismiss
             </button>
@@ -116,7 +116,7 @@
                             type="tel"
                             value={contactPhone}
                             placeholder="e.g., 1XXXXXXXXX"
-                            class="pr-9"
+                            class="pr-9 tabular-nums"
                             oninput={onContactPhone}
                         />
                         {@render indicator("contactPhone")}
@@ -134,7 +134,7 @@
                             value={merchantId}
                             placeholder="e.g., 123456"
                             error={merchantIdInvalid}
-                            class="pr-9"
+                            class="pr-9 tabular-nums"
                             oninput={onMerchantId}
                         />
                         {@render indicator("merchantId")}

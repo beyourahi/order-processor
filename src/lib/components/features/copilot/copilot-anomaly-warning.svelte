@@ -18,7 +18,7 @@
         </div>
         <ul class="space-y-1 pl-5 [list-style:disc]">
             {#each anomalies as anomaly, i (i)}
-                <li class="text-pretty opacity-90">Row {anomaly.rowIndex + 1}: {anomaly.reason}</li>
+                <li class="text-pretty wrap-break-word opacity-90">Row {anomaly.rowIndex + 1}: {anomaly.reason}</li>
             {/each}
         </ul>
     </div>

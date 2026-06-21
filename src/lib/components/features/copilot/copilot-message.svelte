@@ -83,7 +83,7 @@
             <div
                 class="border-chat-border-subtle bg-chat-bot-bubble text-chat-text-secondary rounded-2xl rounded-bl-md border border-solid px-4 py-2.5 text-sm"
             >
-                <div class="space-y-2.5 leading-relaxed">
+                <div class="space-y-2.5 leading-relaxed wrap-break-word">
                     {#each blocks as block, bi (bi)}
                         {#if block.type === "paragraph"}
                             <p class="text-pretty">
