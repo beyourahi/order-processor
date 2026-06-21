@@ -19,7 +19,7 @@
                 onclick={() => onSelect(option.value)}
                 class={cn(
                     "sleek group relative flex w-full touch-manipulation cursor-pointer flex-col items-center gap-3 rounded-2xl p-4 sm:gap-4 sm:p-6",
-                    "border border-solid transition-all duration-200",
+                    "ease-[var(--ease)] border border-solid transition-all duration-200",
                     "ring-offset-background focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                     isSelected
                         ? "border-courier-accent/60 bg-courier-accent/10 shadow-courier-accent/10 shadow-lg"

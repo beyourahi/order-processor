@@ -5,7 +5,8 @@
     import { browser } from "$app/environment";
     import { authClient } from "$lib/auth-client";
     import { ArrowLeft, Cloud, RefreshCw, Check, Trash2, Fingerprint } from "@lucide/svelte";
-    import { Heading, Eyebrow, Input, Cta, cn, inputBase, labelBase } from "$lib/ds";
+    import { Heading, Eyebrow, Input, Cta, cn, labelBase } from "$lib/ds";
+    import { Select, type SelectOption } from "$lib/components/ui";
     import type { PageData, ActionData } from "./$types";
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -127,6 +128,13 @@
         return opts;
     });
 
+    // Map the picker options to the Select's {value,label} contract. The id
+    // becomes the option value (and the hidden input value), preserving the
+    // `cloudflareModel` form field exactly as the native <select> submitted it.
+    const selectModelOptions = $derived<SelectOption[]>(
+        modelOptions.map((opt) => ({ value: opt.id, label: opt.label }))
+    );
+
     const refreshModels = async () => {
         refreshing = true;
         try {
@@ -228,7 +236,7 @@
 
             <div>
                 <div class="mb-2.5 flex items-center justify-between gap-3">
-                    <label for="cf-model" class={cn(labelBase, "mb-0")}>Copilot model</label>
+                    <span id="cf-model-label" class={cn(labelBase, "mb-0")}>Copilot model</span>
                     <button
                         type="button"
                         onclick={refreshModels}
@@ -241,16 +249,14 @@
                         Refresh
                     </button>
                 </div>
-                <select
+                <Select
                     id="cf-model"
                     name="cloudflareModel"
                     bind:value={model}
-                    class={cn(inputBase, "appearance-none")}
-                >
-                    {#each modelOptions as opt (opt.id)}
-                        <option value={opt.id}>{opt.label}</option>
-                    {/each}
-                </select>
+                    options={selectModelOptions}
+                    aria-labelledby="cf-model-label"
+                    placeholder="Select a model"
+                />
                 <p class="text-ink-muted mt-2 text-caption text-pretty">
                     Kimi K2.6 is recommended. Others are experimental and may be less reliable.
                 </p>

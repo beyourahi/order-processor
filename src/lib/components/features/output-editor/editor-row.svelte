@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
+    import Check from "@lucide/svelte/icons/check";
     import type { SteadFastOrder } from "$lib/types";
     import { Table } from "$lib/components/ui";
     import { cn } from "$lib/utils";
@@ -64,14 +65,13 @@
 >
     <Table.Cell class="sticky left-0 z-10 w-14 bg-inherit p-0 align-middle">
         <div class="flex items-center justify-center gap-1">
+            <!-- Generous min-11 hit area wraps a ~17px custom DS checkbox box.
+                 The native input is appearance-none + peer; the visible box and
+                 its check mark are siblings driven by peer-checked / peer-focus-visible. -->
             <label
-                class={cn(
-                    "sleek flex min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10",
-                    controlBase,
-                    "focus-within:ring-ring hover:border-signal/50 hover:bg-ink-2 focus-within:ring-2"
-                )}
-                aria-label="Select row {rowIndex + 1}"
+                class="flex min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10"
             >
+                <span class="sr-only">Select row {rowIndex + 1}</span>
                 <input
                     type="checkbox"
                     checked={isSelected}
@@ -82,8 +82,25 @@
                             onToggleSelect(e as unknown as MouseEvent);
                         }
                     }}
-                    class="accent-signal h-4 w-4 cursor-pointer focus:outline-none"
+                    class="peer sr-only"
                 />
+                <span
+                    aria-hidden="true"
+                    class={cn(
+                        "border-hair bg-ink-2 ease-[var(--ease)] relative flex size-[17px] shrink-0 items-center justify-center rounded-[5px] border border-solid transition-[background-color,border-color] duration-150",
+                        "peer-hover:border-signal/60",
+                        "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1",
+                        isSelected && "border-signal bg-signal"
+                    )}
+                >
+                    <Check
+                        class={cn(
+                            "text-background size-3 transition-[opacity,transform] duration-150 ease-[var(--ease)]",
+                            isSelected ? "scale-100 opacity-100" : "scale-50 opacity-0"
+                        )}
+                        aria-hidden="true"
+                    />
+                </span>
             </label>
         </div>
     </Table.Cell>

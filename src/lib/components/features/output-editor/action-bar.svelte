@@ -69,7 +69,7 @@
                 "focus-visible:ring-ring transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]",
                 showBatchColumns
                     ? "border-signal bg-ink-2 text-foreground"
-                    : "border-hair text-ink-muted hover:text-foreground"
+                    : "border-hair text-ink-muted hover:border-white/30 hover:text-foreground"
             )}
         >
             {showBatchColumns ? "Hide batch columns" : "Show batch columns"}
