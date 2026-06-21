@@ -10,7 +10,7 @@
 
     let isLoading = $state(false);
     let error = $state<string | null>(null);
-    // Passkeys need WebAuthn; hide the option where the browser can't do it.
+    // Face ID / Touch ID need WebAuthn; hide the option where the browser can't do it.
     let webauthnAvailable = $state(browser && typeof window !== "undefined" && !!window.PublicKeyCredential);
 
     // Preserve the originally requested route from ?redirect= so post-login lands the user there.
@@ -59,12 +59,12 @@
         try {
             const res = await authClient.signIn.passkey();
             if (res?.error) {
-                error = "Passkey sign-in failed or was cancelled.";
+                error = "Face ID / Touch ID sign-in failed or was cancelled.";
             } else {
                 goto(redirectUrl);
             }
         } catch (e) {
-            error = "Passkey sign-in failed. Please try again.";
+            error = "Face ID / Touch ID sign-in failed. Please try again.";
             console.error(e);
         } finally {
             isLoading = false;
@@ -136,7 +136,7 @@
             >
                 <span class="inline-flex items-center gap-2.5">
                     <Fingerprint class="size-4" aria-hidden="true" />
-                    <span>Sign in with a passkey</span>
+                    <span>Sign in with Face ID / Touch ID</span>
                 </span>
             </Cta>
         {/if}
@@ -162,7 +162,7 @@
 
     <p class="text-ink-muted max-w-sm text-center text-sm text-pretty">
         {webauthnAvailable
-            ? "Sign in with Google — or use a passkey (Face ID, Touch ID, fingerprint) once you've added one in Settings."
+            ? "Sign in with Google — or use Face ID / Touch ID once you've set it up in Settings."
             : "Sign in with your Google account to get started"}
     </p>
 </div>

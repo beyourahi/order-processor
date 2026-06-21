@@ -94,8 +94,7 @@
                 </span>
                 <div class="flex min-w-0 flex-col gap-2">
                     <p class="text-chat-text-primary text-xs leading-relaxed text-pretty">
-                        Connect your Cloudflare account to use the Copilot — inference runs on your own account, billed
-                        to you.
+                        Connect your Cloudflare account to use the Copilot — it runs on your own Cloudflare account.
                     </p>
                     <a
                         href="/settings"

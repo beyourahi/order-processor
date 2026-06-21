@@ -219,10 +219,10 @@ Google OAuth / One Tap / passkey --> Better Auth --> D1 sessions --> hooks.serve
   --> event.locals.user / session / currentUser  (all null for guests; the app still works)
 ```
 
-- Three sign-in methods, all → the same session: Google OAuth (button), Google One Tap (auto-prompt overlay, same Google client — no new provider/table), and passkey/WebAuthn (device biometrics: Face ID / Touch ID / Android fingerprint + roaming security keys)
+- Three sign-in methods, all → the same session: Google OAuth (button), Google One Tap (auto-prompt overlay, same Google client — no new provider/table), and passkey/WebAuthn (platform device biometrics only: Face ID / Touch ID / Windows Hello / Android fingerprint — no roaming security keys)
 - Server plugins in `createAuth()`: `oneTap()` + `passkey({ rpID, rpName, origin, ... })`. Client plugins in `auth-client.ts`: `passkeyClient()` + `oneTapClient({ clientId })`
 - One Tap needs the public `PUBLIC_GOOGLE_CLIENT_ID` (browser-exposed, non-secret, via `$env/dynamic/public`); empty → One Tap silently off, the Google button still works (`/login` guards on `oneTapConfigured`)
-- Passkey `rpID`/`origin` are derived from `BETTER_AUTH_URL` in `auth.ts` (localhost → both dev+preview origins; else the prod origin) — a mismatch breaks registration/login silently. `userVerification: "required"` forces the biometric gesture
+- Passkey `rpID`/`origin` are derived from `BETTER_AUTH_URL` in `auth.ts` (localhost → both dev+preview origins; else the prod origin) — a mismatch breaks registration/login silently. `authenticatorSelection: { authenticatorAttachment: "platform", residentKey: "required", userVerification: "required" }` restricts registration to platform biometrics (Face ID / Touch ID — no roaming security keys) and forces the biometric gesture (registration-time only; existing credentials keep working)
 - Auth instance created per-request (Cloudflare Workers provide D1 binding per-request)
 - `createAuth()` factory in `$lib/server/auth.ts` -- not a singleton
 - Session: 7-day expiry, rolling (updated daily), cookie-cached (5 min)

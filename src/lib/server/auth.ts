@@ -63,14 +63,20 @@ export function createAuth(d1: D1Database, env: AuthEnv) {
             // client (auth-client.ts) supplies the public client id.
             oneTap(),
             // Passkey / WebAuthn = device biometrics (Face ID / Touch ID / fingerprint).
-            // `userVerification: "required"` forces the biometric/PIN gesture. Attachment is
-            // left unset so platform biometrics AND roaming security keys can both register;
-            // the biometric (platform) path is chosen per-registration in /settings.
+            // `userVerification: "required"` forces the biometric/PIN gesture.
+            // `authenticatorAttachment: "platform"` gates registration to the device's built-in
+            // biometric authenticator (Face ID / Touch ID; also Windows Hello / Android
+            // fingerprint) — roaming security keys cannot register. Registration-time only, so
+            // existing passkeys keep working.
             passkey({
                 rpID,
                 rpName: "Order Processor",
                 origin: passkeyOrigin,
-                authenticatorSelection: { residentKey: "preferred", userVerification: "required" }
+                authenticatorSelection: {
+                    authenticatorAttachment: "platform",
+                    residentKey: "required",
+                    userVerification: "required"
+                }
             })
         ],
 

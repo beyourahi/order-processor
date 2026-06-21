@@ -4,7 +4,7 @@
     import { invalidateAll } from "$app/navigation";
     import { browser } from "$app/environment";
     import { authClient } from "$lib/auth-client";
-    import { ArrowLeft, Cloud, RefreshCw, Check, Trash2, Fingerprint, KeyRound } from "@lucide/svelte";
+    import { ArrowLeft, Cloud, RefreshCw, Check, Trash2, Fingerprint } from "@lucide/svelte";
     import { Heading, Eyebrow, Input, Cta, cn, inputBase, labelBase } from "$lib/ds";
     import type { PageData, ActionData } from "./$types";
 
@@ -20,7 +20,7 @@
 
     const connected = $derived(data.connected);
 
-    // ── Passkeys (WebAuthn = device biometrics: Face ID / Touch ID / fingerprint) ──────────
+    // ── Face ID / Touch ID (WebAuthn platform biometrics) ──────────
     type PasskeyRow = { id: string; name?: string | null; createdAt?: string | Date | null };
     let passkeys = $state<PasskeyRow[]>([]);
     let passkeysLoading = $state(true);
@@ -63,35 +63,35 @@
         else passkeysLoading = false;
     });
 
-    // attachment "platform" → device biometric (Face ID / Touch ID / fingerprint);
-    // omitted → browser default (allows roaming security keys too).
-    const addPasskey = async (attachment?: "platform") => {
+    // Always registers a platform biometric (Face ID / Touch ID; also Windows Hello /
+    // Android fingerprint) — roaming security keys are not offered.
+    const addPasskey = async () => {
         passkeyBusy = true;
         passkeyError = null;
         try {
             const res = await authClient.passkey.addPasskey({
                 name: deviceLabel(),
-                ...(attachment ? { authenticatorAttachment: attachment } : {})
+                authenticatorAttachment: "platform"
             });
-            if (res?.error) passkeyError = res.error.message || "Couldn't add passkey.";
+            if (res?.error) passkeyError = res.error.message || "Couldn't set up Face ID / Touch ID.";
             else await loadPasskeys();
         } catch {
-            passkeyError = "Passkey registration was cancelled.";
+            passkeyError = "Setup was cancelled.";
         } finally {
             passkeyBusy = false;
         }
     };
 
     const removePasskey = async (id: string) => {
-        if (!confirm("Remove this passkey? You won't be able to sign in with it anymore.")) return;
+        if (!confirm("Remove Face ID / Touch ID? You won't be able to sign in with it anymore.")) return;
         passkeyBusy = true;
         passkeyError = null;
         try {
             const res = await authClient.passkey.deletePasskey({ id });
-            if (res?.error) passkeyError = res.error.message || "Couldn't remove passkey.";
+            if (res?.error) passkeyError = res.error.message || "Couldn't remove Face ID / Touch ID.";
             else await loadPasskeys();
         } catch {
-            passkeyError = "Couldn't remove passkey.";
+            passkeyError = "Couldn't remove Face ID / Touch ID.";
         } finally {
             passkeyBusy = false;
         }
@@ -153,10 +153,10 @@
         </a>
         <div class="flex flex-col gap-3">
             <Eyebrow>Settings</Eyebrow>
-            <Heading as="h1" size="title-lg">Copilot account</Heading>
+            <Heading as="h1" size="title-lg">Cloudflare account</Heading>
             <p class="text-ink-muted max-w-prose text-body text-pretty">
-                The Copilot runs inference on <span class="text-foreground">your own</span> Cloudflare account, billed
-                to you. Connecting an account is <span class="text-foreground">required</span> to use the assistant.
+                The Copilot runs on <span class="text-foreground">your own</span> Cloudflare account. Connecting an
+                account is <span class="text-foreground">required</span> to use it.
             </p>
         </div>
     </header>
@@ -205,8 +205,8 @@
                     {#if connected}
                         Stored: <span class="text-foreground font-mono">{data.maskedToken}</span> — leave blank to keep.
                     {:else}
-                        Scoped token with the <span class="text-foreground">Account · Workers AI · Read</span>
-                        permission. Encrypted at rest.
+                        An API token with the <span class="text-foreground">Account · Workers AI · Read</span>
+                        permission. Stored securely. You won't see it again after saving.
                     {/if}
                 </p>
             </div>
@@ -251,7 +251,7 @@
                     {/each}
                 </select>
                 <p class="text-ink-muted mt-2 text-caption text-pretty">
-                    Kimi K2.6 is the recommended default. Others are experimental — quality and tool-calling vary.
+                    Kimi K2.6 is recommended. Others are experimental and may be less reliable.
                 </p>
             </div>
         </div>
@@ -290,24 +290,24 @@
                 <Fingerprint class="text-ink-muted size-4" aria-hidden="true" />
             </span>
             <div class="flex flex-col gap-1">
-                <Heading as="h2" size="title-sm">Passkeys</Heading>
+                <Heading as="h2" size="title-sm">Face ID / Touch ID</Heading>
                 <span class="text-ink-muted font-mono text-micro tracking-[0.22em] uppercase">
-                    Sign in with Face ID, Touch ID, or a fingerprint
+                    Sign in with your device biometrics
                 </span>
             </div>
         </div>
 
         {#if !webauthnAvailable}
             <p class="text-ink-muted text-caption text-pretty">
-                This browser can't use passkeys. Open the app in Safari, Chrome, or Edge on a device with Face ID, Touch
-                ID, or a fingerprint sensor.
+                This browser can't use Face ID / Touch ID. Open the app in Safari, Chrome, or Edge on a device with a
+                biometric sensor.
             </p>
         {:else}
             {#if passkeysLoading}
-                <p class="text-ink-muted text-caption">Loading passkeys…</p>
+                <p class="text-ink-muted text-caption">Loading…</p>
             {:else if passkeys.length === 0}
                 <p class="text-ink-muted text-caption text-pretty">
-                    No passkeys yet. Add one to sign in with Face ID, Touch ID, or your fingerprint instead of Google.
+                    Nothing set up yet. Add Face ID / Touch ID to sign in with your device instead of Google.
                 </p>
             {:else}
                 <ul class="flex flex-col gap-2">
@@ -318,7 +318,9 @@
                             <div class="flex min-w-0 items-center gap-2.5">
                                 <Fingerprint class="text-signal size-4 shrink-0" aria-hidden="true" />
                                 <div class="min-w-0">
-                                    <p class="text-foreground truncate text-sm font-medium">{pk.name || "Passkey"}</p>
+                                    <p class="text-foreground truncate text-sm font-medium">
+                                        {pk.name || "Face ID / Touch ID"}
+                                    </p>
                                     {#if pk.createdAt && formatDate(pk.createdAt)}
                                         <p class="text-ink-muted text-micro">Added {formatDate(pk.createdAt)}</p>
                                     {/if}
@@ -328,7 +330,7 @@
                                 type="button"
                                 onclick={() => removePasskey(pk.id)}
                                 disabled={passkeyBusy}
-                                aria-label="Remove passkey"
+                                aria-label="Remove Face ID / Touch ID"
                                 class="text-ink-muted ease-[var(--ease)] hover:text-destructive shrink-0 transition-colors disabled:opacity-40"
                             >
                                 <Trash2 class="size-4" aria-hidden="true" />
@@ -343,23 +345,8 @@
             {/if}
 
             <div class="border-hair flex flex-wrap items-center gap-3 border-t pt-5">
-                <Cta
-                    type="button"
-                    variant="primary"
-                    arrow={false}
-                    disabled={passkeyBusy}
-                    onclick={() => addPasskey("platform")}
-                >
+                <Cta type="button" variant="primary" arrow={false} disabled={passkeyBusy} onclick={() => addPasskey()}>
                     <Fingerprint class="size-3.5" aria-hidden="true" /> Set up Face ID / Touch ID
-                </Cta>
-                <Cta
-                    type="button"
-                    variant="secondary"
-                    arrow={false}
-                    disabled={passkeyBusy}
-                    onclick={() => addPasskey()}
-                >
-                    <KeyRound class="size-3.5" aria-hidden="true" /> Use a security key
                 </Cta>
             </div>
         {/if}
@@ -387,7 +374,7 @@
             class="flex flex-wrap items-center justify-between gap-3"
         >
             <p class="text-ink-muted max-w-prose text-caption text-pretty">
-                Disconnecting wipes your encrypted token + selected model. Your chat history is unaffected.
+                Disconnecting removes your saved token and selected model. Your chat history is unaffected.
             </p>
             <Cta type="submit" variant="secondary" arrow={false}>
                 <Trash2 class="size-3.5" aria-hidden="true" /> Disconnect

@@ -9,7 +9,7 @@ import { CfInferenceError } from "./run-rest";
 /** Step-by-step the user can follow to mint the right token. Shown on auth failures. */
 export const CF_TOKEN_HELP =
     "Create an API token at dash.cloudflare.com/profile/api-tokens → Create Custom Token, " +
-    'with the permission "Account → Workers AI → Read", scoped to your account. ' +
+    'with the permission "Account → Workers AI → Read". ' +
     "Then paste it here along with your Account ID (right sidebar of any account page).";
 
 /** Maps a thrown error to a short, user-readable settings-form message. */
