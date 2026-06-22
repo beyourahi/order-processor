@@ -158,13 +158,14 @@
             <Tooltip.Root>
                 <Tooltip.Trigger>
                     {#snippet child({ props })}
+                        <!-- {...props} first so our onclick/disabled win (Bits tooltip injects its own onclick) -->
                         <IconButton
                             tone="destructive"
-                            onclick={handleLogout}
-                            disabled={isLoggingOut}
                             aria-label="Sign out"
                             class={isLoggingOut ? "cursor-wait" : ""}
                             {...props}
+                            onclick={handleLogout}
+                            disabled={isLoggingOut}
                         >
                             {#if isLoggingOut}
                                 <div
