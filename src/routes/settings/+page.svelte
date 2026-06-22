@@ -2,7 +2,6 @@
     import { onMount } from "svelte";
     import { enhance } from "$app/forms";
     import { invalidateAll } from "$app/navigation";
-    import { browser } from "$app/environment";
     import { authClient } from "$lib/auth-client";
     import { ArrowLeft, Cloud, RefreshCw, Check, Trash2, Fingerprint } from "@lucide/svelte";
     import {
@@ -16,7 +15,10 @@
         metaBase,
         SettingsSection,
         SettingsRow,
-        SettingsActions
+        SettingsActions,
+        isPlatformAuthenticatorAvailable,
+        detectPlatform,
+        biometricLabel
     } from "$lib/ds";
     import { Select, type SelectOption } from "$lib/components/ui";
     import type { PageData, ActionData } from "./$types";
@@ -33,23 +35,16 @@
 
     const connected = $derived(data.connected);
 
-    // ── Face ID / Touch ID (WebAuthn platform biometrics) ──────────
+    // ── Platform biometrics (WebAuthn) ─────────────────────────────
+    // Device-accurate label from the SSR platform hint (no flash of the wrong name).
+    const biometricName = $derived(biometricLabel(detectPlatform(data.platformHint)));
+
     type PasskeyRow = { id: string; name?: string | null; createdAt?: string | Date | null };
     let passkeys = $state<PasskeyRow[]>([]);
     let passkeysLoading = $state(true);
     let passkeyBusy = $state(false);
-    let webauthnAvailable = $state(false);
+    let bioSupported = $state(false);
     let passkeyError = $state<string | null>(null);
-
-    // Friendly default name from the UA — stored as the passkey label.
-    const deviceLabel = () => {
-        const ua = browser ? navigator.userAgent : "";
-        if (/iPhone|iPad|iPod/.test(ua)) return "iPhone (Face ID / Touch ID)";
-        if (/Macintosh/.test(ua)) return "Mac (Touch ID)";
-        if (/Android/.test(ua)) return "Android (fingerprint / face)";
-        if (/Windows/.test(ua)) return "Windows Hello";
-        return "This device";
-    };
 
     const formatDate = (d: string | Date) => {
         const date = typeof d === "string" ? new Date(d) : d;
@@ -70,9 +65,9 @@
         }
     };
 
-    onMount(() => {
-        webauthnAvailable = typeof window !== "undefined" && !!window.PublicKeyCredential;
-        if (webauthnAvailable) loadPasskeys();
+    onMount(async () => {
+        bioSupported = await isPlatformAuthenticatorAvailable();
+        if (bioSupported) loadPasskeys();
         else passkeysLoading = false;
     });
 
@@ -83,10 +78,10 @@
         passkeyError = null;
         try {
             const res = await authClient.passkey.addPasskey({
-                name: deviceLabel(),
+                name: biometricName,
                 authenticatorAttachment: "platform"
             });
-            if (res?.error) passkeyError = res.error.message || "Couldn't set up Face ID / Touch ID.";
+            if (res?.error) passkeyError = res.error.message || `Couldn't set up ${biometricName}.`;
             else await loadPasskeys();
         } catch {
             passkeyError = "Setup was cancelled.";
@@ -96,15 +91,15 @@
     };
 
     const removePasskey = async (id: string) => {
-        if (!confirm("Remove Face ID / Touch ID? You won't be able to sign in with it anymore.")) return;
+        if (!confirm(`Remove ${biometricName}? You won't be able to sign in with it anymore.`)) return;
         passkeyBusy = true;
         passkeyError = null;
         try {
             const res = await authClient.passkey.deletePasskey({ id });
-            if (res?.error) passkeyError = res.error.message || "Couldn't remove Face ID / Touch ID.";
+            if (res?.error) passkeyError = res.error.message || `Couldn't remove ${biometricName}.`;
             else await loadPasskeys();
         } catch {
-            passkeyError = "Couldn't remove Face ID / Touch ID.";
+            passkeyError = `Couldn't remove ${biometricName}.`;
         } finally {
             passkeyBusy = false;
         }
@@ -165,51 +160,61 @@
 <div
     class="mx-auto flex w-full max-w-[var(--settings-max)] grow flex-col gap-10 px-[var(--content-x)] py-10 outline-none sm:py-14"
 >
-    <Cta href="/" variant="secondary" arrow={false} class="bg-card w-fit px-5 py-2.5 text-caption">
-        <span class="inline-flex items-center gap-2">
-            <ArrowLeft class="size-4" aria-hidden="true" />
-            Back to app
-        </span>
-    </Cta>
+    <div class="flex justify-end">
+        <Cta href="/" variant="secondary" size="sm" arrow={false} class="bg-card">
+            <span class="inline-flex items-center gap-2">
+                <ArrowLeft class="size-4" aria-hidden="true" /> Back to app
+            </span>
+        </Cta>
+    </div>
 
-    <header class="flex flex-col gap-3">
+    <header class="flex flex-col gap-2.5">
         <Eyebrow>Settings</Eyebrow>
-        <Heading as="h1" size="title-lg" weight={600}>Cloudflare account</Heading>
+        <Heading as="h1" size="title-lg" weight={600} class="whitespace-nowrap lg:text-title">
+            Settings
+        </Heading>
         <p class={cn(bodyBase, "max-w-prose")}>
             The Copilot runs on <span class="text-foreground">your own</span> Cloudflare account. Connecting an account
             is <span class="text-foreground">required</span> to use it.
         </p>
     </header>
 
-    <form
-        method="POST"
-        action="?/save"
-        use:enhance={() => {
-            saving = true;
-            return async ({ update }) => {
-                await update({ reset: false });
-                token = "";
-                saving = false;
-            };
-        }}
+    <SettingsSection
+        title="Cloudflare account"
+        subtitle="Bring your own Cloudflare account to power the AI features."
+        icon={Cloud}
     >
-        <SettingsSection title="Cloudflare account" subtitle="Connect your account to power the Copilot" icon={Cloud}>
-            {#snippet header()}
-                <span class="text-ink-muted font-mono text-micro tracking-[0.22em] uppercase whitespace-nowrap">
-                    {#if connected}
-                        <span class="text-signal">●</span> Connected
-                    {:else}
-                        <span class="text-ink-muted">○</span> Not connected
-                    {/if}
-                </span>
-            {/snippet}
+        {#snippet header()}
+            <span
+                class={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-micro tracking-[0.14em] whitespace-nowrap uppercase",
+                    connected ? "border-signal/40 text-foreground" : "border-hair text-ink-muted"
+                )}
+            >
+                <span class={cn("size-1.5 rounded-full", connected ? "bg-signal" : "bg-ink-muted")}></span>
+                {connected ? "Connected" : "Not connected"}
+            </span>
+        {/snippet}
 
+        <form
+            method="POST"
+            action="?/save"
+            use:enhance={() => {
+                saving = true;
+                return async ({ update }) => {
+                    await update({ reset: false });
+                    token = "";
+                    saving = false;
+                };
+            }}
+            class="flex flex-col gap-6"
+        >
             <SettingsRow
                 label="API token"
                 htmlFor="cf-token"
                 stacked
                 hint={connected
-                    ? `Stored: ${data.maskedToken} — leave blank to keep.`
+                    ? `Stored: ${data.maskedToken} — leave blank to keep it.`
                     : "An API token with the Account · Workers AI · Read permission. Stored securely. You won't see it again after saving."}
             >
                 <Input
@@ -227,7 +232,7 @@
                 label="Account ID"
                 htmlFor="cf-account"
                 stacked
-                hint="Right sidebar of any account page in the Cloudflare dashboard."
+                hint="Found in the right sidebar of any account page in the Cloudflare dashboard."
             >
                 <Input
                     id="cf-account"
@@ -240,11 +245,22 @@
             </SettingsRow>
 
             <SettingsRow
-                label="Copilot model"
+                label="Model"
                 htmlFor="cf-model"
                 hint="Kimi K2.6 is recommended. Others are experimental and may be less reliable."
             >
-                <div class="flex flex-col gap-2.5">
+                <div class="flex items-center gap-2.5">
+                    <button
+                        type="button"
+                        onclick={refreshModels}
+                        disabled={refreshing || !connected}
+                        title="Refresh model list"
+                        aria-label="Refresh models"
+                        class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex shrink-0 items-center gap-1.5 font-mono text-micro tracking-[0.18em] whitespace-nowrap uppercase transition-colors touch-manipulation disabled:opacity-40"
+                    >
+                        <RefreshCw class={cn("size-3", refreshing && "animate-spin")} aria-hidden="true" />
+                        Refresh
+                    </button>
                     <Select
                         id="cf-model"
                         name="cloudflareModel"
@@ -252,17 +268,6 @@
                         options={selectModelOptions}
                         placeholder="Select a model"
                     />
-                    <button
-                        type="button"
-                        onclick={refreshModels}
-                        disabled={refreshing || !connected}
-                        title="Refresh model list"
-                        aria-label="Refresh models"
-                        class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-1.5 font-mono text-micro tracking-[0.18em] whitespace-nowrap uppercase transition-colors touch-manipulation disabled:opacity-40"
-                    >
-                        <RefreshCw class={cn("size-3", refreshing && "animate-spin")} aria-hidden="true" />
-                        Refresh
-                    </button>
                 </div>
             </SettingsRow>
 
@@ -282,45 +287,89 @@
                             href="https://dash.cloudflare.com/profile/api-tokens"
                             target="_blank"
                             rel="noreferrer"
-                            class="text-foreground underline decoration-hair underline-offset-2 wrap-break-word"
+                            class="text-foreground underline underline-offset-2 wrap-break-word"
                         >
                             dash.cloudflare.com/profile/api-tokens
                         </a>
-                        → Create Custom Token → permission
+                        -> Create Custom Token -> permission
                         <span class="text-foreground font-mono">Account · Workers AI · Read</span>.
                     </p>
                 {/snippet}
-                <Cta type="submit" variant="primary" arrow={false} disabled={saving}>
+                <Cta type="submit" size="sm" variant="primary" arrow={false} disabled={saving}>
                     {saving ? "Saving…" : "Save"}
                 </Cta>
             </SettingsActions>
-        </SettingsSection>
-    </form>
+        </form>
 
-    <SettingsSection title="Face ID / Touch ID" subtitle="Sign in with your device biometrics" icon={Fingerprint}>
-        {#if !webauthnAvailable}
-            <p class={cn(helperBase, "max-w-prose")}>
-                This browser can't use Face ID / Touch ID. Open the app in Safari, Chrome, or Edge on a device with a
-                biometric sensor.
-            </p>
-        {:else}
+        {#if connected}
+            <div class="border-hair flex flex-col gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <div class="min-w-0">
+                    <p class={cn(bodyBase, "font-medium")}>Disconnect</p>
+                    <p class={cn(helperBase, "mt-1 max-w-prose")}>
+                        Removes your saved token and account ID. The AI features stay off until you reconnect.
+                    </p>
+                </div>
+                <form
+                    method="POST"
+                    action="?/reset"
+                    class="shrink-0"
+                    use:enhance={() => {
+                        return async ({ update }) => {
+                            await update({ reset: false });
+                            token = "";
+                            accountId = "";
+                            model = DEFAULT_MODEL;
+                        };
+                    }}
+                    onsubmit={(e) => {
+                        if (
+                            !confirm(
+                                "Disconnect your Cloudflare account? The AI features will stop working until you reconnect."
+                            )
+                        ) {
+                            e.preventDefault();
+                        }
+                    }}
+                >
+                    <Cta
+                        type="submit"
+                        size="sm"
+                        variant="secondary"
+                        arrow={false}
+                        class="text-destructive hover:border-destructive"
+                    >
+                        <span class="inline-flex items-center gap-2">
+                            <Trash2 class="size-3.5" aria-hidden="true" /> Disconnect
+                        </span>
+                    </Cta>
+                </form>
+            </div>
+        {/if}
+    </SettingsSection>
+
+    {#if bioSupported}
+        <SettingsSection
+            title={biometricName}
+            subtitle={`Sign in with ${biometricName} instead of Google.`}
+            icon={Fingerprint}
+        >
             {#if passkeysLoading}
                 <p class={helperBase}>Loading…</p>
             {:else if passkeys.length === 0}
                 <p class={cn(helperBase, "max-w-prose")}>
-                    Nothing set up yet. Add Face ID / Touch ID to sign in with your device instead of Google.
+                    Nothing set up yet. Add {biometricName} to sign in with your device instead of Google.
                 </p>
             {:else}
                 <ul class="flex flex-col gap-2">
                     {#each passkeys as pk (pk.id)}
                         <li
-                            class="border-hair bg-ink-2/40 flex items-center justify-between gap-3 rounded-sm border px-3 py-2.5"
+                            class="border-hair bg-ink-2/40 flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
                         >
                             <div class="flex min-w-0 items-center gap-2.5">
                                 <Fingerprint class="text-signal size-4 shrink-0" aria-hidden="true" />
                                 <div class="min-w-0">
                                     <p class="text-foreground truncate text-sm font-medium">
-                                        {pk.name || "Face ID / Touch ID"}
+                                        {pk.name || biometricName}
                                     </p>
                                     {#if pk.createdAt && formatDate(pk.createdAt)}
                                         <p class={cn(metaBase, "text-micro")}>
@@ -333,7 +382,7 @@
                                 type="button"
                                 onclick={() => removePasskey(pk.id)}
                                 disabled={passkeyBusy}
-                                aria-label="Remove Face ID / Touch ID"
+                                aria-label={`Remove ${biometricName}`}
                                 class="text-ink-muted ease-[var(--ease)] hover:text-destructive shrink-0 transition-colors touch-manipulation disabled:opacity-40"
                             >
                                 <Trash2 class="size-4" aria-hidden="true" />
@@ -348,43 +397,17 @@
             {/if}
 
             <SettingsActions>
-                <Cta type="button" variant="primary" arrow={false} disabled={passkeyBusy} onclick={() => addPasskey()}>
-                    <Fingerprint class="size-3.5" aria-hidden="true" /> Set up Face ID / Touch ID
+                <Cta
+                    type="button"
+                    size="sm"
+                    variant="primary"
+                    arrow={false}
+                    disabled={passkeyBusy}
+                    onclick={() => addPasskey()}
+                >
+                    <Fingerprint class="size-3.5" aria-hidden="true" /> Set up {biometricName}
                 </Cta>
             </SettingsActions>
-        {/if}
-    </SettingsSection>
-
-    {#if connected}
-        <form
-            method="POST"
-            action="?/reset"
-            use:enhance={() => {
-                return async ({ update }) => {
-                    await update({ reset: false });
-                    token = "";
-                    accountId = "";
-                    model = DEFAULT_MODEL;
-                };
-            }}
-            onsubmit={(e) => {
-                if (
-                    !confirm("Disconnect your Cloudflare account? The Copilot will stop working until you reconnect.")
-                ) {
-                    e.preventDefault();
-                }
-            }}
-        >
-            <SettingsSection title="Disconnect" subtitle="Remove your Cloudflare connection" icon={Trash2}>
-                <p class={cn(helperBase, "max-w-prose")}>
-                    Disconnecting removes your saved token and selected model. Your chat history is unaffected.
-                </p>
-                <SettingsActions>
-                    <Cta type="submit" variant="secondary" arrow={false}>
-                        <Trash2 class="size-3.5" aria-hidden="true" /> Disconnect
-                    </Cta>
-                </SettingsActions>
-            </SettingsSection>
-        </form>
+        </SettingsSection>
     {/if}
 </div>

@@ -22,17 +22,20 @@ import type { Actions, PageServerLoad } from "./$types";
  * INVARIANT: this module is the only place that decrypts the token on a load —
  * and only to mask it. The raw secret never leaves the server.
  */
-export const load: PageServerLoad = async ({ locals, platform }) => {
+export const load: PageServerLoad = async ({ locals, platform, request }) => {
     if (!locals.user) {
         redirect(303, "/login");
     }
+    const platformHint =
+        request.headers.get("sec-ch-ua-platform")?.replace(/^"|"$/g, "") || request.headers.get("user-agent") || "";
     if (!platform?.env?.DB) {
         return {
             connected: false,
             accountId: "",
             maskedToken: "",
             model: DEFAULT_MODEL,
-            models: [] as CfModel[]
+            models: [] as CfModel[],
+            platformHint
         };
     }
 
@@ -67,7 +70,8 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
         accountId: cfg.accountId ?? "",
         maskedToken,
         model: cfg.model ?? DEFAULT_MODEL,
-        models
+        models,
+        platformHint
     };
 };
 
