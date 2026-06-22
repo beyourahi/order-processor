@@ -5,7 +5,18 @@
     import { browser } from "$app/environment";
     import { authClient } from "$lib/auth-client";
     import { ArrowLeft, Cloud, RefreshCw, Check, Trash2, Fingerprint } from "@lucide/svelte";
-    import { Heading, Eyebrow, Input, Cta, cn, labelBase } from "$lib/ds";
+    import {
+        Heading,
+        Eyebrow,
+        Input,
+        Cta,
+        cn,
+        bodyBase,
+        helperBase,
+        metaBase,
+        SettingsSection,
+        SettingsRow
+    } from "$lib/ds";
     import { Select, type SelectOption } from "$lib/components/ui";
     import type { PageData, ActionData } from "./$types";
 
@@ -150,19 +161,21 @@
     <title>Settings · Order Processor</title>
 </svelte:head>
 
-<div class="mx-auto flex w-full max-w-2xl grow flex-col gap-10 px-[var(--content-x)] py-10 sm:py-14">
+<div
+    class="mx-auto flex w-full max-w-[var(--settings-max)] grow flex-col gap-10 px-[var(--content-x)] py-10 outline-none sm:py-14"
+>
     <header class="flex flex-col gap-5">
         <a
             href="/"
-            class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-2 font-mono text-micro tracking-[0.22em] whitespace-nowrap uppercase transition-colors touch-manipulation"
+            class={cn(helperBase, "ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-2 font-mono text-micro tracking-[0.22em] whitespace-nowrap uppercase transition-colors touch-manipulation")}
         >
             <ArrowLeft class="size-3.5" aria-hidden="true" />
             Back to app
         </a>
         <div class="flex flex-col gap-3">
             <Eyebrow>Settings</Eyebrow>
-            <Heading as="h1" size="title-lg">Cloudflare account</Heading>
-            <p class="text-ink-muted max-w-prose text-body text-pretty">
+            <Heading as="h1" size="title-lg" weight={600}>Cloudflare account</Heading>
+            <p class={cn(bodyBase, "max-w-prose")}>
                 The Copilot runs on <span class="text-foreground">your own</span> Cloudflare account. Connecting an
                 account is <span class="text-foreground">required</span> to use it.
             </p>
@@ -180,27 +193,30 @@
                 saving = false;
             };
         }}
-        class="border-hair bg-card flex flex-col gap-6 rounded-xl border p-5 sm:p-7"
     >
-        <div class="flex items-center gap-3">
-            <span class="border-hair bg-ink-2 flex size-8 items-center justify-center rounded-sm border">
-                <Cloud class="text-ink-muted size-4" aria-hidden="true" />
-            </span>
-            <div class="flex flex-col gap-1">
-                <Heading as="h2" size="title-sm">Cloudflare account</Heading>
-                <span class="text-ink-muted font-mono text-micro tracking-[0.22em] uppercase">
+        <SettingsSection
+            title="Cloudflare account"
+            subtitle="Connect your account to power the Copilot"
+            icon={Cloud}
+        >
+            {#snippet header()}
+                <span class="text-ink-muted font-mono text-micro tracking-[0.22em] uppercase whitespace-nowrap">
                     {#if connected}
                         <span class="text-signal">●</span> Connected
                     {:else}
                         <span class="text-ink-muted">○</span> Not connected
                     {/if}
                 </span>
-            </div>
-        </div>
+            {/snippet}
 
-        <div class="flex flex-col gap-5">
-            <div>
-                <label for="cf-token" class={labelBase}>API token</label>
+            <SettingsRow
+                label="API token"
+                htmlFor="cf-token"
+                stacked
+                hint={connected
+                    ? `Stored: ${data.maskedToken} — leave blank to keep.`
+                    : "An API token with the Account · Workers AI · Read permission. Stored securely. You won't see it again after saving."}
+            >
                 <Input
                     id="cf-token"
                     name="cloudflareToken"
@@ -208,112 +224,97 @@
                     bind:value={token}
                     placeholder={data.maskedToken || "v1.0-…"}
                     autocomplete="off"
+                    class="w-full"
                 />
-                <p class="text-ink-muted mt-2 text-caption text-pretty">
-                    {#if connected}
-                        Stored: <span class="text-foreground font-mono wrap-break-word">{data.maskedToken}</span> — leave
-                        blank to keep.
-                    {:else}
-                        An API token with the <span class="text-foreground">Account · Workers AI · Read</span>
-                        permission. Stored securely. You won't see it again after saving.
-                    {/if}
-                </p>
-            </div>
+            </SettingsRow>
 
-            <div>
-                <label for="cf-account" class={labelBase}>Account ID</label>
+            <SettingsRow
+                label="Account ID"
+                htmlFor="cf-account"
+                stacked
+                hint="Right sidebar of any account page in the Cloudflare dashboard."
+            >
                 <Input
                     id="cf-account"
                     name="cloudflareAccountId"
                     bind:value={accountId}
                     placeholder="0123456789abcdef…"
                     autocomplete="off"
+                    class="w-full"
                 />
-                <p class="text-ink-muted mt-2 text-caption text-pretty">
-                    Right sidebar of any account page in the Cloudflare dashboard.
-                </p>
-            </div>
+            </SettingsRow>
 
-            <div>
-                <div class="mb-2.5 flex items-center justify-between gap-3">
-                    <span id="cf-model-label" class={cn(labelBase, "mb-0")}>Copilot model</span>
+            <SettingsRow
+                label="Copilot model"
+                htmlFor="cf-model"
+                hint="Kimi K2.6 is recommended. Others are experimental and may be less reliable."
+            >
+                <div class="flex flex-col gap-2.5">
+                    <Select
+                        id="cf-model"
+                        name="cloudflareModel"
+                        bind:value={model}
+                        options={selectModelOptions}
+                        placeholder="Select a model"
+                    />
                     <button
                         type="button"
                         onclick={refreshModels}
                         disabled={refreshing || !connected}
                         title="Refresh model list"
                         aria-label="Refresh models"
-                        class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex items-center gap-1.5 font-mono text-micro tracking-[0.18em] whitespace-nowrap uppercase transition-colors touch-manipulation disabled:opacity-40"
+                        class="text-ink-muted ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-1.5 font-mono text-micro tracking-[0.18em] whitespace-nowrap uppercase transition-colors touch-manipulation disabled:opacity-40"
                     >
                         <RefreshCw class={cn("size-3", refreshing && "animate-spin")} aria-hidden="true" />
                         Refresh
                     </button>
                 </div>
-                <Select
-                    id="cf-model"
-                    name="cloudflareModel"
-                    bind:value={model}
-                    options={selectModelOptions}
-                    aria-labelledby="cf-model-label"
-                    placeholder="Select a model"
-                />
-                <p class="text-ink-muted mt-2 text-caption text-pretty">
-                    Kimi K2.6 is recommended. Others are experimental and may be less reliable.
+            </SettingsRow>
+
+            {#if form?.error}
+                <p class="text-destructive text-caption text-pretty" role="alert">{form.error}</p>
+            {:else if form?.success && !form?.reset}
+                <p class="text-signal inline-flex items-center gap-1.5 text-caption" role="status">
+                    <Check class="size-3.5" aria-hidden="true" /> Saved.
                 </p>
+            {/if}
+
+            <div class="border-hair flex flex-wrap items-center justify-between gap-3 border-t pt-5">
+                <p class={cn(helperBase, "max-w-prose")}>
+                    Create a token at
+                    <a
+                        href="https://dash.cloudflare.com/profile/api-tokens"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="text-foreground underline decoration-hair underline-offset-2 wrap-break-word"
+                    >
+                        dash.cloudflare.com/profile/api-tokens
+                    </a>
+                    → Create Custom Token → permission
+                    <span class="text-foreground font-mono">Account · Workers AI · Read</span>.
+                </p>
+                <Cta type="submit" variant="primary" arrow={false} disabled={saving}>
+                    {saving ? "Saving…" : "Save"}
+                </Cta>
             </div>
-        </div>
-
-        {#if form?.error}
-            <p class="text-destructive text-caption text-pretty" role="alert">{form.error}</p>
-        {:else if form?.success && !form?.reset}
-            <p class="text-signal inline-flex items-center gap-1.5 text-caption" role="status">
-                <Check class="size-3.5" aria-hidden="true" /> Saved.
-            </p>
-        {/if}
-
-        <div class="border-hair flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-            <p class="text-ink-muted max-w-prose text-caption text-pretty">
-                Create a token at
-                <a
-                    href="https://dash.cloudflare.com/profile/api-tokens"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="text-foreground underline decoration-hair underline-offset-2 wrap-break-word"
-                >
-                    dash.cloudflare.com/profile/api-tokens
-                </a>
-                → Create Custom Token → permission
-                <span class="text-foreground font-mono">Account · Workers AI · Read</span>.
-            </p>
-            <Cta type="submit" variant="primary" arrow={false} disabled={saving}>
-                {saving ? "Saving…" : "Save"}
-            </Cta>
-        </div>
+        </SettingsSection>
     </form>
 
-    <section class="border-hair bg-card flex flex-col gap-6 rounded-xl border p-5 sm:p-7">
-        <div class="flex items-center gap-3">
-            <span class="border-hair bg-ink-2 flex size-8 items-center justify-center rounded-sm border">
-                <Fingerprint class="text-ink-muted size-4" aria-hidden="true" />
-            </span>
-            <div class="flex flex-col gap-1">
-                <Heading as="h2" size="title-sm">Face ID / Touch ID</Heading>
-                <span class="text-ink-muted font-mono text-micro tracking-[0.22em] uppercase">
-                    Sign in with your device biometrics
-                </span>
-            </div>
-        </div>
-
+    <SettingsSection
+        title="Face ID / Touch ID"
+        subtitle="Sign in with your device biometrics"
+        icon={Fingerprint}
+    >
         {#if !webauthnAvailable}
-            <p class="text-ink-muted text-caption text-pretty">
+            <p class={cn(helperBase, "max-w-prose")}>
                 This browser can't use Face ID / Touch ID. Open the app in Safari, Chrome, or Edge on a device with a
                 biometric sensor.
             </p>
         {:else}
             {#if passkeysLoading}
-                <p class="text-ink-muted text-caption">Loading…</p>
+                <p class={helperBase}>Loading…</p>
             {:else if passkeys.length === 0}
-                <p class="text-ink-muted text-caption text-pretty">
+                <p class={cn(helperBase, "max-w-prose")}>
                     Nothing set up yet. Add Face ID / Touch ID to sign in with your device instead of Google.
                 </p>
             {:else}
@@ -329,7 +330,7 @@
                                         {pk.name || "Face ID / Touch ID"}
                                     </p>
                                     {#if pk.createdAt && formatDate(pk.createdAt)}
-                                        <p class="text-ink-muted text-micro tabular-nums">
+                                        <p class={cn(metaBase, "text-micro")}>
                                             Added {formatDate(pk.createdAt)}
                                         </p>
                                     {/if}
@@ -353,13 +354,13 @@
                 <p class="text-destructive text-caption text-pretty" role="alert">{passkeyError}</p>
             {/if}
 
-            <div class="border-hair flex flex-wrap items-center gap-3 border-t pt-5">
+            <div class="border-hair flex items-center justify-end gap-3 border-t pt-5">
                 <Cta type="button" variant="primary" arrow={false} disabled={passkeyBusy} onclick={() => addPasskey()}>
                     <Fingerprint class="size-3.5" aria-hidden="true" /> Set up Face ID / Touch ID
                 </Cta>
             </div>
         {/if}
-    </section>
+    </SettingsSection>
 
     {#if connected}
         <form
@@ -380,14 +381,17 @@
                     e.preventDefault();
                 }
             }}
-            class="flex flex-wrap items-center justify-between gap-3"
         >
-            <p class="text-ink-muted max-w-prose text-caption text-pretty">
-                Disconnecting removes your saved token and selected model. Your chat history is unaffected.
-            </p>
-            <Cta type="submit" variant="secondary" arrow={false}>
-                <Trash2 class="size-3.5" aria-hidden="true" /> Disconnect
-            </Cta>
+            <SettingsSection title="Disconnect" subtitle="Remove your Cloudflare connection" icon={Trash2}>
+                <p class={cn(helperBase, "max-w-prose")}>
+                    Disconnecting removes your saved token and selected model. Your chat history is unaffected.
+                </p>
+                <div class="border-hair flex items-center justify-end gap-3 border-t pt-5">
+                    <Cta type="submit" variant="secondary" arrow={false}>
+                        <Trash2 class="size-3.5" aria-hidden="true" /> Disconnect
+                    </Cta>
+                </div>
+            </SettingsSection>
         </form>
     {/if}
 </div>
