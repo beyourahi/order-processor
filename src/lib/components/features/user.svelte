@@ -5,7 +5,7 @@
     import { copilot } from "$lib/stores/copilot.svelte";
     import * as Dialog from "$lib/components/ui/dialog";
     import * as Tooltip from "$lib/components/ui/tooltip";
-    import { Eyebrow } from "$lib/ds";
+    import { Eyebrow, IconButton } from "$lib/ds";
     import { LogOut, Settings } from "@lucide/svelte";
     import type { CurrentUser } from "$lib/types";
 
@@ -165,21 +165,12 @@
             <Tooltip.Root>
                 <Tooltip.Trigger>
                     {#snippet child({ props })}
-                        <a
-                            href="/settings"
-                            aria-label="Settings"
-                            {...props}
-                            class={cn(
-                                "sleek group border-hair bg-card flex h-10 w-10 touch-manipulation items-center justify-center rounded-full border backdrop-blur-sm",
-                                "focus-visible:outline-signal focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2",
-                                "pointer-fine:hover:border-signal/50 pointer-fine:hover:bg-ink-2 active:scale-95"
-                            )}
-                        >
+                        <IconButton href="/settings" aria-label="Settings" {...props}>
                             <Settings
-                                class="text-ink-muted pointer-fine:group-hover:text-foreground h-[1.125rem] w-[1.125rem] transition-colors"
+                                class="text-ink-muted pointer-fine:group-hover:text-foreground size-[1.125rem] transition-colors"
                                 aria-hidden="true"
                             />
-                        </a>
+                        </IconButton>
                     {/snippet}
                 </Tooltip.Trigger>
                 <Tooltip.Content side="bottom">Settings</Tooltip.Content>
@@ -188,38 +179,29 @@
 
         <Tooltip.Provider delayDuration={150}>
             <Tooltip.Root>
-                <Tooltip.Trigger
-                    onclick={handleLogout}
-                    disabled={isLoggingOut}
-                    aria-label="Sign out"
-                    class={cn(
-                        "sleek group flex h-10 w-10 touch-manipulation cursor-pointer items-center justify-center rounded-full border backdrop-blur-sm",
-                        "focus-visible:outline-signal focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2",
-                        isLoggingOut
-                            ? "border-hair bg-card cursor-wait"
-                            : "border-hair bg-card pointer-fine:hover:border-destructive/50 pointer-fine:hover:bg-destructive/10 active:scale-95"
-                    )}
-                >
-                    {#if isLoggingOut}
-                        <div
-                            class="border-ink-muted h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
-                            aria-hidden="true"
-                        ></div>
-                    {:else}
-                        <svg
-                            class="text-ink-muted pointer-fine:group-hover:text-destructive h-[1.125rem] w-[1.125rem] transition-colors"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
+                <Tooltip.Trigger>
+                    {#snippet child({ props })}
+                        <IconButton
+                            tone="destructive"
+                            onclick={handleLogout}
+                            disabled={isLoggingOut}
+                            aria-label="Sign out"
+                            class={isLoggingOut ? "cursor-wait" : ""}
+                            {...props}
                         >
-                            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-                            <line x1="12" y1="2" x2="12" y2="12" />
-                        </svg>
-                    {/if}
+                            {#if isLoggingOut}
+                                <div
+                                    class="border-ink-muted h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
+                                    aria-hidden="true"
+                                ></div>
+                            {:else}
+                                <LogOut
+                                    class="text-ink-muted pointer-fine:group-hover:text-destructive size-[1.125rem] transition-colors"
+                                    aria-hidden="true"
+                                />
+                            {/if}
+                        </IconButton>
+                    {/snippet}
                 </Tooltip.Trigger>
                 {#if !isLoggingOut}
                     <Tooltip.Content side="bottom">Sign out</Tooltip.Content>

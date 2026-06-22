@@ -15,7 +15,8 @@
         helperBase,
         metaBase,
         SettingsSection,
-        SettingsRow
+        SettingsRow,
+        SettingsActions
     } from "$lib/ds";
     import { Select, type SelectOption } from "$lib/components/ui";
     import type { PageData, ActionData } from "./$types";
@@ -279,24 +280,26 @@
                 </p>
             {/if}
 
-            <div class="border-hair flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-                <p class={cn(helperBase, "max-w-prose")}>
-                    Create a token at
-                    <a
-                        href="https://dash.cloudflare.com/profile/api-tokens"
-                        target="_blank"
-                        rel="noreferrer"
-                        class="text-foreground underline decoration-hair underline-offset-2 wrap-break-word"
-                    >
-                        dash.cloudflare.com/profile/api-tokens
-                    </a>
-                    → Create Custom Token → permission
-                    <span class="text-foreground font-mono">Account · Workers AI · Read</span>.
-                </p>
+            <SettingsActions>
+                {#snippet status()}
+                    <p class={cn(helperBase, "max-w-prose")}>
+                        Create a token at
+                        <a
+                            href="https://dash.cloudflare.com/profile/api-tokens"
+                            target="_blank"
+                            rel="noreferrer"
+                            class="text-foreground underline decoration-hair underline-offset-2 wrap-break-word"
+                        >
+                            dash.cloudflare.com/profile/api-tokens
+                        </a>
+                        → Create Custom Token → permission
+                        <span class="text-foreground font-mono">Account · Workers AI · Read</span>.
+                    </p>
+                {/snippet}
                 <Cta type="submit" variant="primary" arrow={false} disabled={saving}>
                     {saving ? "Saving…" : "Save"}
                 </Cta>
-            </div>
+            </SettingsActions>
         </SettingsSection>
     </form>
 
@@ -354,11 +357,11 @@
                 <p class="text-destructive text-caption text-pretty" role="alert">{passkeyError}</p>
             {/if}
 
-            <div class="border-hair flex items-center justify-end gap-3 border-t pt-5">
+            <SettingsActions>
                 <Cta type="button" variant="primary" arrow={false} disabled={passkeyBusy} onclick={() => addPasskey()}>
                     <Fingerprint class="size-3.5" aria-hidden="true" /> Set up Face ID / Touch ID
                 </Cta>
-            </div>
+            </SettingsActions>
         {/if}
     </SettingsSection>
 
@@ -386,11 +389,11 @@
                 <p class={cn(helperBase, "max-w-prose")}>
                     Disconnecting removes your saved token and selected model. Your chat history is unaffected.
                 </p>
-                <div class="border-hair flex items-center justify-end gap-3 border-t pt-5">
+                <SettingsActions>
                     <Cta type="submit" variant="secondary" arrow={false}>
                         <Trash2 class="size-3.5" aria-hidden="true" /> Disconnect
                     </Cta>
-                </div>
+                </SettingsActions>
             </SettingsSection>
         </form>
     {/if}
