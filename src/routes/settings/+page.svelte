@@ -165,22 +165,20 @@
 <div
     class="mx-auto flex w-full max-w-[var(--settings-max)] grow flex-col gap-10 px-[var(--content-x)] py-10 outline-none sm:py-14"
 >
-    <header class="flex flex-col gap-5">
-        <a
-            href="/"
-            class={cn(helperBase, "ease-[var(--ease)] hover:text-foreground inline-flex w-fit items-center gap-2 font-mono text-micro tracking-[0.22em] whitespace-nowrap uppercase transition-colors touch-manipulation")}
-        >
-            <ArrowLeft class="size-3.5" aria-hidden="true" />
+    <Cta href="/" variant="secondary" arrow={false} class="bg-card w-fit px-5 py-2.5 text-caption">
+        <span class="inline-flex items-center gap-2">
+            <ArrowLeft class="size-4" aria-hidden="true" />
             Back to app
-        </a>
-        <div class="flex flex-col gap-3">
-            <Eyebrow>Settings</Eyebrow>
-            <Heading as="h1" size="title-lg" weight={600}>Cloudflare account</Heading>
-            <p class={cn(bodyBase, "max-w-prose")}>
-                The Copilot runs on <span class="text-foreground">your own</span> Cloudflare account. Connecting an
-                account is <span class="text-foreground">required</span> to use it.
-            </p>
-        </div>
+        </span>
+    </Cta>
+
+    <header class="flex flex-col gap-3">
+        <Eyebrow>Settings</Eyebrow>
+        <Heading as="h1" size="title-lg" weight={600}>Cloudflare account</Heading>
+        <p class={cn(bodyBase, "max-w-prose")}>
+            The Copilot runs on <span class="text-foreground">your own</span> Cloudflare account. Connecting an account
+            is <span class="text-foreground">required</span> to use it.
+        </p>
     </header>
 
     <form
@@ -195,11 +193,7 @@
             };
         }}
     >
-        <SettingsSection
-            title="Cloudflare account"
-            subtitle="Connect your account to power the Copilot"
-            icon={Cloud}
-        >
+        <SettingsSection title="Cloudflare account" subtitle="Connect your account to power the Copilot" icon={Cloud}>
             {#snippet header()}
                 <span class="text-ink-muted font-mono text-micro tracking-[0.22em] uppercase whitespace-nowrap">
                     {#if connected}
@@ -303,11 +297,7 @@
         </SettingsSection>
     </form>
 
-    <SettingsSection
-        title="Face ID / Touch ID"
-        subtitle="Sign in with your device biometrics"
-        icon={Fingerprint}
-    >
+    <SettingsSection title="Face ID / Touch ID" subtitle="Sign in with your device biometrics" icon={Fingerprint}>
         {#if !webauthnAvailable}
             <p class={cn(helperBase, "max-w-prose")}>
                 This browser can't use Face ID / Touch ID. Open the app in Safari, Chrome, or Edge on a device with a
