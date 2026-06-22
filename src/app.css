@@ -73,6 +73,21 @@
     --chat-user-bubble: oklch(1 0 0 / 0.1);
     --chat-bot-bubble: var(--card);
     --chat-shadow: 0 8px 32px oklch(0 0 0 / 0.4), 0 2px 8px oklch(0 0 0 / 0.2);
+
+    /* FUNCTIONAL status colors (mirrors the username-extractor status/tier OKLCH
+       layer) — they ENCODE meaning (copilot connection: online/connecting/error;
+       tool-call outcome: applied/failed/pending) on the monochrome DS base, so each
+       is preserved as a semantic token, not flattened. Re-expressed in OKLCH off the
+       same green/amber/red hues the markup used, repointed for this tool. */
+    --status-ok: oklch(0.745 0.111 158);
+    --status-warn: oklch(0.8 0.142 79);
+    --status-warn-foreground: oklch(0.875 0.114 84);
+    --status-warn-bg: oklch(0.8 0.142 79 / 0.1);
+    --status-warn-border: oklch(0.8 0.142 79 / 0.3);
+    --status-error: oklch(0.655 0.105 29);
+    --status-error-foreground: oklch(0.79 0.09 29);
+    --status-error-bg: oklch(0.655 0.105 29 / 0.1);
+    --status-error-border: oklch(0.655 0.105 29 / 0.4);
 }
 
 /* Ultra-wide containment: keep the editor column readable next to the fixed
@@ -114,6 +129,16 @@
     --color-chat-icon-muted: var(--chat-icon-muted);
     --color-chat-user-bubble: var(--chat-user-bubble);
     --color-chat-bot-bubble: var(--chat-bot-bubble);
+
+    --color-status-ok: var(--status-ok);
+    --color-status-warn: var(--status-warn);
+    --color-status-warn-fg: var(--status-warn-foreground);
+    --color-status-warn-bg: var(--status-warn-bg);
+    --color-status-warn-border: var(--status-warn-border);
+    --color-status-error: var(--status-error);
+    --color-status-error-fg: var(--status-error-foreground);
+    --color-status-error-bg: var(--status-error-bg);
+    --color-status-error-border: var(--status-error-border);
 
     --tracking-tight-custom: -0.025em;
     --tracking-caption-custom: 0.1em;

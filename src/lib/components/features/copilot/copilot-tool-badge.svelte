@@ -41,9 +41,9 @@
             case "rejected":
                 return "border-chat-border-subtle bg-chat-surface text-chat-text-muted";
             case "failed":
-                return "border-red-400/40 bg-red-400/10 text-red-300";
+                return "border-status-error-border bg-status-error-bg text-status-error-fg";
             case "pending_confirmation":
-                return "border-amber-400/30 bg-amber-400/10 text-amber-300";
+                return "border-status-warn-border bg-status-warn-bg text-status-warn-fg";
             default:
                 return "border-chat-border-subtle bg-chat-surface text-chat-text-secondary";
         }

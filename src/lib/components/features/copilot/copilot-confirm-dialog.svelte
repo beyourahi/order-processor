@@ -45,7 +45,7 @@
         aria-modal="true"
         aria-labelledby="copilot-confirm-title"
         transition:fade={{ duration: motionDuration("fast") }}
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+        class="bg-scrim fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-[var(--glass-blur-soft)]"
     >
         <div
             transition:fly={{ duration: motionDuration("base"), y: DISTANCE.md }}
