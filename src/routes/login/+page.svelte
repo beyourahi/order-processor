@@ -140,22 +140,16 @@
                 </span>
             </Cta>
         {/if}
-
-        <Cta variant="secondary" href="/" arrow={false} class="min-w-[260px] justify-center py-4">
-            <span class="inline-flex items-center gap-2.5 whitespace-nowrap">
-                <ArrowLeft
-                    class="size-4 transition-transform duration-300 ease-[var(--ease)] group-hover:-translate-x-0.5"
-                    strokeWidth={2.25}
-                    aria-hidden="true"
-                />
-                <span>Back to homepage</span>
-            </span>
-        </Cta>
     </div>
 
-    <p class="text-ink-muted max-w-sm text-center text-sm text-pretty">
-        {webauthnAvailable
-            ? "Sign in with Google — or use Face ID / Touch ID once you've set it up in Settings."
-            : "Sign in with your Google account to get started"}
-    </p>
+    <Cta variant="secondary" href="/" arrow={false} class="mt-4 min-w-[260px] justify-center py-4 sm:mt-6">
+        <span class="inline-flex items-center gap-2.5 whitespace-nowrap">
+            <ArrowLeft
+                class="size-4 transition-transform duration-300 ease-[var(--ease)] group-hover:-translate-x-0.5"
+                strokeWidth={2.25}
+                aria-hidden="true"
+            />
+            <span>Back to homepage</span>
+        </span>
+    </Cta>
 </div>
