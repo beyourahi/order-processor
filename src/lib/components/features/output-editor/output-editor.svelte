@@ -9,13 +9,14 @@
     only in download() at export, never on commit (CLAUDE.md #4 / NFR-14).
 -->
 <script lang="ts">
-    import { untrack, tick } from "svelte";
+    import { untrack } from "svelte";
     import { SvelteSet, SvelteMap } from "svelte/reactivity";
     import type { SteadFastOrder } from "$lib/types";
     import { buildWorkbook, writeWorkbook, normalizePhoneNumber, validateRow, type CellWarning } from "$lib/utils";
     import BatchDefaultsStrip from "./batch-defaults-strip.svelte";
     import EditorGrid from "./editor-grid.svelte";
     import ActionBar from "./action-bar.svelte";
+    import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import { BATCH_CONSTANT_COLUMNS, type BatchDefaults, type CellColumn } from "./columns";
     import { copilotBridge } from "$lib/stores/copilot-bridge.svelte";
     import type { CellEdit, EditorController, EditorSnapshot } from "$lib/ai/types";
@@ -385,11 +386,6 @@
         liveAnnounce(`Downloaded ${normalized.length} row${normalized.length === 1 ? "" : "s"}`);
     };
 
-    // Svelte action: focus after tick() so the modal is laid out before focus moves.
-    const focusOnMount = (node: HTMLElement) => {
-        tick().then(() => node.focus());
-    };
-
     let liveMessage = $state("");
     let liveTimer: ReturnType<typeof setTimeout> | null = null;
     const liveAnnounce = (msg: string) => {
@@ -474,37 +470,29 @@
 
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">{liveMessage}</div>
 
-{#if showDiscardConfirm}
-    <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="discard-title"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-    >
-        <div
-            class="border-hair bg-popover w-[min(420px,calc(100vw-2rem))] rounded-2xl border border-solid p-6 shadow-2xl"
-        >
-            <h2 id="discard-title" class="text-foreground text-base font-medium text-balance">Discard your edits?</h2>
-            <p class="text-ink-muted mt-2 text-sm text-pretty">
+<AlertDialog.Root bind:open={showDiscardConfirm}>
+    <AlertDialog.Content class="border-hair gap-0 rounded-2xl border border-solid p-6 shadow-2xl ring-0">
+        <AlertDialog.Header class="gap-0 text-left">
+            <AlertDialog.Title class="text-foreground text-base font-medium text-balance">
+                Discard your edits?
+            </AlertDialog.Title>
+            <AlertDialog.Description class="text-ink-muted mt-2 text-sm text-pretty">
                 This can't be undone. Your edits will be lost and you'll return to the upload zone.
-            </p>
-            <div class="mt-6 flex items-center justify-end gap-2">
-                <button
-                    type="button"
-                    onclick={cancelDiscard}
-                    use:focusOnMount
-                    class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 focus-visible:ring-ring inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full border border-solid px-5 font-mono text-xs tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    onclick={confirmDiscard}
-                    class="bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:ring-destructive/30 inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full px-5 font-mono text-xs font-medium tracking-[0.06em] uppercase transition-colors focus:outline-none focus-visible:ring-2 ease-[var(--ease)]"
-                >
-                    Discard
-                </button>
-            </div>
-        </div>
-    </div>
-{/if}
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer class="mt-6 flex flex-row items-center justify-end gap-2">
+            <AlertDialog.Cancel
+                onclick={cancelDiscard}
+                class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 hover:text-foreground inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full border border-solid px-5 font-mono text-xs font-normal tracking-[0.06em] uppercase transition-colors ease-[var(--ease)]"
+            >
+                Cancel
+            </AlertDialog.Cancel>
+            <AlertDialog.Action
+                onclick={confirmDiscard}
+                class="bg-destructive/10 text-destructive hover:bg-destructive/20 inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full px-5 font-mono text-xs font-medium tracking-[0.06em] uppercase transition-colors ease-[var(--ease)]"
+            >
+                Discard
+            </AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>
