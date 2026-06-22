@@ -4,7 +4,7 @@
     import { page } from "$app/state";
     import { goto } from "$app/navigation";
     import { env as publicEnv } from "$env/dynamic/public";
-    import { Fingerprint } from "@lucide/svelte";
+    import { ArrowLeft, Fingerprint } from "@lucide/svelte";
     import { Heading } from "$lib/components";
     import { Cta, cn } from "$lib/ds";
 
@@ -143,18 +143,11 @@
 
         <Cta variant="secondary" href="/" arrow={false} class="min-w-[260px] justify-center py-4">
             <span class="inline-flex items-center gap-2.5 whitespace-nowrap">
-                <svg
+                <ArrowLeft
                     class="size-4 transition-transform duration-300 ease-[var(--ease)] group-hover:-translate-x-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.25"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth={2.25}
                     aria-hidden="true"
-                >
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
+                />
                 <span>Back to homepage</span>
             </span>
         </Cta>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button";
     import { cn } from "$lib/utils";
+    import { Undo2, Download } from "@lucide/svelte";
 
     interface Props {
         rowCount: number;
@@ -93,16 +94,7 @@
                 class="text-ink-muted border-hair hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring text-caption ease-[var(--ease)] inline-flex min-h-11 touch-manipulation cursor-pointer items-center gap-2 rounded-full border border-solid px-3.5 font-mono tracking-[0.1em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2 sm:min-h-9"
                 aria-label="Undo {undoLabel}"
             >
-                <svg
-                    viewBox="0 0 16 16"
-                    class="h-3 w-3"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    aria-hidden="true"
-                >
-                    <path d="M4 8a4 4 0 014-4h4M4 8l-2-2m2 2l2-2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                <Undo2 class="h-3 w-3" strokeWidth={1.5} aria-hidden="true" />
                 Undo
                 <span class="text-foreground/70 normal-case">{undoLabel}</span>
             </button>
@@ -130,16 +122,7 @@
                 "transition-[background,color] duration-[450ms] ease-[var(--ease)] disabled:cursor-not-allowed disabled:opacity-50"
             )}
         >
-            <svg
-                viewBox="0 0 16 16"
-                class="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-            >
-                <path d="M8 2v9m0 0l-3-3m3 3l3-3M3 13h10" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <Download class="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
             Download .xlsx
         </button>
     </div>

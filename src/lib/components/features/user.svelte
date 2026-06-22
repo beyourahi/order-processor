@@ -6,7 +6,7 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import * as Tooltip from "$lib/components/ui/tooltip";
     import { Eyebrow, IconButton } from "$lib/ds";
-    import { LogOut, Settings } from "@lucide/svelte";
+    import { Power, Settings, User } from "@lucide/svelte";
     import type { CurrentUser } from "$lib/types";
 
     interface Props {
@@ -52,19 +52,7 @@
         {#if user.image}
             <img src={user.image} alt={user.name} class="h-full w-full object-cover" referrerpolicy="no-referrer" />
         {:else}
-            <svg
-                class={iconClass}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-            </svg>
+            <User class={iconClass} aria-hidden="true" />
         {/if}
     </div>
 {/snippet}
@@ -125,7 +113,7 @@
                                 aria-hidden="true"
                             ></div>
                         {:else}
-                            <LogOut size={16} aria-hidden="true" />
+                            <Power size={16} aria-hidden="true" />
                         {/if}
                         <span class="text-sm font-medium whitespace-nowrap">Sign out</span>
                     </button>
@@ -195,7 +183,7 @@
                                     aria-hidden="true"
                                 ></div>
                             {:else}
-                                <LogOut
+                                <Power
                                     class="text-ink-muted pointer-fine:group-hover:text-destructive size-[1.125rem] transition-colors"
                                     aria-hidden="true"
                                 />

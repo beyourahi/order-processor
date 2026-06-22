@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { Plus } from "@lucide/svelte";
     import type { SteadFastOrder } from "$lib/types";
     import { Table } from "$lib/components/ui";
     import { cn } from "$lib/utils";
@@ -191,16 +192,7 @@
         class="border-hair text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring text-caption ease-[var(--ease)] flex min-h-11 w-full touch-manipulation cursor-pointer items-center justify-center gap-2 border-t border-dashed font-mono tracking-[0.18em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2"
         aria-label="Add row"
     >
-        <svg
-            viewBox="0 0 16 16"
-            class="h-3.5 w-3.5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            aria-hidden="true"
-        >
-            <path d="M8 3v10M3 8h10" stroke-linecap="round" />
-        </svg>
+        <Plus class="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />
         Add row
     </button>
 </div>

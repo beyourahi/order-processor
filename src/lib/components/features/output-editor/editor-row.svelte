@@ -2,6 +2,7 @@
     import { fade } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
     import Check from "@lucide/svelte/icons/check";
+    import { Copy, Trash2 } from "@lucide/svelte";
     import type { SteadFastOrder } from "$lib/types";
     import { Table } from "$lib/components/ui";
     import { cn } from "$lib/utils";
@@ -140,17 +141,7 @@
                 title="Duplicate row"
                 aria-label="Duplicate row {rowIndex + 1}"
             >
-                <svg
-                    viewBox="0 0 16 16"
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    aria-hidden="true"
-                >
-                    <rect x="3" y="3" width="8" height="8" rx="1" />
-                    <rect x="6" y="6" width="8" height="8" rx="1" />
-                </svg>
+                <Copy class="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             </button>
             <button
                 type="button"
@@ -164,16 +155,7 @@
                 title="Delete row"
                 aria-label="Delete row {rowIndex + 1}"
             >
-                <svg
-                    viewBox="0 0 16 16"
-                    class="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    aria-hidden="true"
-                >
-                    <path d="M3 4h10M6 4V2.5h4V4M5 4l.5 9h5l.5-9" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                <Trash2 class="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
             </button>
         </div>
     </Table.Cell>
