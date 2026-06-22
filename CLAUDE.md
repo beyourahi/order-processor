@@ -168,6 +168,8 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
 
 ### Design System
 
+**Follow the Dropout DS guidelines.** This project vendors `@dropout/ds` at `src/lib/ds/`. The followable law for all UI — tokens, typography, layout shells, the shadcn-svelte primitive layer (pinned `components.json` preset + blessed kit), overlay/glass tokens, motion, a11y — is **`~/Desktop/projects/dropout-design-system/GUIDELINES.md`**. Theme via tokens; never recolor a component; components before custom markup.
+
 The frontend runs on the **vendored Dropout design system** (`@dropout/ds`). It is copied into
 `src/lib/ds/` (NOT an npm/`file:` dependency — that breaks Cloudflare auto-deploy) and refreshed
 via the global `dropout-ds-sync` tool. Consume it through the `$lib/ds` alias; the `@dropout/ds`
