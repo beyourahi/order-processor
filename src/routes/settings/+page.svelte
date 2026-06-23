@@ -417,7 +417,9 @@
                     onclick={() => addPasskey()}
                     class="w-full justify-center whitespace-nowrap sm:w-auto"
                 >
-                    <Fingerprint class="size-3.5" aria-hidden="true" /> Set up {biometricName}
+                    <span class="inline-flex items-center gap-2">
+                        <Fingerprint class="size-3.5" aria-hidden="true" /> Set up {biometricName}
+                    </span>
                 </Cta>
             </SettingsActions>
         </SettingsSection>
