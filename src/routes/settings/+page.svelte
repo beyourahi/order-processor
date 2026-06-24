@@ -253,7 +253,7 @@
                 htmlFor="cf-model"
                 hint="Kimi K2.6 is recommended. Others are experimental and may be less reliable."
             >
-                <div class="flex items-center gap-2.5">
+                <div class="flex min-w-0 items-center gap-2.5">
                     <button
                         type="button"
                         onclick={refreshModels}
@@ -271,6 +271,7 @@
                         bind:value={model}
                         options={selectModelOptions}
                         placeholder="Select a model"
+                        triggerClass="min-w-0"
                     />
                 </div>
             </SettingsRow>
