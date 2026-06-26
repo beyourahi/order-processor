@@ -205,7 +205,7 @@
 <div
     class={cn(
         "w-full transition-[max-width] duration-150 ease-out",
-        isEditorOpen ? "max-w-2xl lg:max-w-full" : "lg:max-w-md xl:max-w-lg"
+        isEditorOpen ? "max-w-2xl md:max-w-full" : "lg:max-w-md xl:max-w-lg"
     )}
 >
     {#if isEditorOpen && editorRows && editorDefaults}

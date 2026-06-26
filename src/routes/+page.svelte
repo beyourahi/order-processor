@@ -50,7 +50,7 @@
         <div
             class={[
                 "flex w-full max-w-md items-center justify-center gap-8 sm:max-w-xl sm:gap-10",
-                editorOpen ? "flex-col lg:max-w-none" : "flex-col-reverse lg:max-w-none lg:flex-row lg:gap-12"
+                editorOpen ? "flex-col md:max-w-none" : "flex-col-reverse lg:max-w-none lg:flex-row lg:gap-12"
             ]}
         >
             <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center lg:block">

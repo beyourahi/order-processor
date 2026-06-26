@@ -101,7 +101,7 @@
         {/if}
     </div>
 
-    <div class="flex w-full items-center gap-2 sm:w-auto">
+    <div class="flex w-full items-center gap-2 max-lg:pe-16 sm:w-auto">
         <button
             type="button"
             onclick={onDiscard}
