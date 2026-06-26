@@ -174,9 +174,12 @@ The frontend runs on the **vendored Dropout design system** (`@dropout/ds`). It 
 via the global `dropout-ds-sync` tool. Consume it through the `$lib/ds` alias; the `@dropout/ds`
 specifier survives only in vendored doc-comments.
 
-- **Exports** (`src/lib/ds/index.ts`): `cn` + components `Cta`/`Heading`/`Eyebrow`/`Input`/`Tile`
-    - style-string helpers (`inputBase`, `labelBase`, `tileBase`/`tileSelected`/`tileUnselected`,
-      `pillBase`/`pillSelected`/`pillUnselected`).
+- **Exports** (`src/lib/ds/index.ts`): `cn` + components `Cta`/`IconButton`/`Heading`/`Eyebrow`/`Input`/`Tile`
+  plus the `Settings*` set (`SettingsSection`/`SettingsRow`/`SettingsActions`/`SettingsSaveBar`)
+    - style-string helpers (`inputBase`, `labelBase`, `bodyBase`, `helperBase`, `metaBase`,
+      `tileBase`/`tileSelected`/`tileUnselected`, `pillBase`/`pillSelected`/`pillUnselected`)
+    - platform/biometric helpers (`isPlatformAuthenticatorAvailable`, `detectPlatform`,
+      `biometricLabel`/`biometricLabelFor`, type `Platform`) — back the device-aware Face ID / Touch ID labels.
 - **Tokens**: color/type/space/motion-ease CSS vars live in `src/lib/ds/styles/tokens.css`
   (+ optional `animations.css`), `@import`ed once at the top of `app.css`. Use the custom
   `text-{micro,caption,label,body,…,display}` size scale and semantic colors like `text-ink-muted`.
@@ -274,7 +277,7 @@ src/
   lib/
     auth-client.ts                       -- Better Auth client (`authClient`) with `passkeyClient()` + `oneTapClient()` plugins; re-exports `{ signIn, signOut, useSession }` (passkey sign-in via `authClient.signIn.passkey()`, One Tap via `authClient.oneTap()`)
     assets/                              -- static assets (upload.gif, steadfast.png)
-    ds/                                  -- vendored @dropout/ds (import via $lib/ds): index.ts (cn + Cta/Heading/Eyebrow/Input/Tile + style helpers), components/, styles/ (tokens.css + animations.css → imported by app.css), utils.ts (DS cn with extended text-* scale)
+    ds/                                  -- vendored @dropout/ds (import via $lib/ds): index.ts (cn + Cta/IconButton/Heading/Eyebrow/Input/Tile + Settings* + style/biometric helpers), components/, styles/ (tokens.css + animations.css → imported by app.css), utils.ts (DS cn with extended text-* scale)
     api/
       client.ts                          -- typed api object (get/patch/delete) + debounceSync
     ai/                                  -- AI Copilot (client): types, schemas (Zod), tools-catalog, prompts, context,
@@ -289,10 +292,10 @@ src/
       ai/                                -- BYO Cloudflare layer: run-rest.ts (Workers AI REST: chat/embedding/model-list), cloudflare-config.ts (load/resolve creds), errors.ts (user-facing CF error help)
       repositories/                      -- ai-conversations.ts, ai-messages.ts (Copilot history D1 access)
     components/
-      features/                          -- order-processor, upload, user, sign-in-button, steadfast-settings
+      features/                          -- order-processor, upload, user, navbar, sign-in-button, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-{grid,row,cell}.svelte, columns.ts
       features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + chat shell (header, welcome, message-list, message, composer, typing-indicator, image-upload) + tool-badge, anomaly-warning, conversations-panel, confirm-dialog, desktop-launcher, mobile-fab, mobile-sheet, launcher-icon
-      ui/                                -- button, dialog, footer, heading, input, loading-spinner, table, tooltip (shadcn-svelte)
+      ui/                                -- alert-dialog, button, dialog, footer, heading, input, loading-spinner, select, table, tooltip (shadcn-svelte)
     config/
       app.ts                             -- app metadata
     data/
