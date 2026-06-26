@@ -2,17 +2,8 @@
     import { untrack, onMount } from "svelte";
     import { courierService, brandSettings } from "$lib/stores";
     import { copilot } from "$lib/stores/copilot.svelte";
-    import {
-        Heading,
-        OrderProcessor,
-        CourierPicker,
-        Navbar,
-        User,
-        SignInButton,
-        SteadFastSettings
-    } from "$lib/components";
+    import { Heading, OrderProcessor, Navbar, User, SignInButton, SteadFastSettings } from "$lib/components";
     import { reveal } from "$lib/motion";
-    import { Courier } from "$lib/types";
     import type { PageData } from "./$types";
 
     let { data }: { data: PageData } = $props();
@@ -34,15 +25,9 @@
         else brandSettings.loadGuest();
     });
 
-    const showSteadFastSettings = $derived(courierService.value === Courier.SteadFast);
-
     // bind:editorOpen — true while output-editor replaces the dropzone.
-    // Drives the outer layout: editor gets full width; picker + settings stack on top.
+    // Drives the outer layout: editor gets full width; settings stack on top.
     let editorOpen = $state(false);
-
-    const handleCourierSelect = (courier: string) => {
-        courierService.setSelected(courier);
-    };
 </script>
 
 <!-- Invisible navbar: profile/settings/logout (or guest sign-in) in normal flow, content below. -->
@@ -78,14 +63,9 @@
                     editorOpen && "lg:flex-row lg:items-start lg:justify-center lg:gap-8"
                 ]}
             >
-                <div use:reveal={{ distance: "sm", delay: 0.15, onScroll: true }} class="flex w-full justify-center">
-                    <CourierPicker selectedCourier={courierService.value} onSelect={handleCourierSelect} />
+                <div use:reveal={{ distance: "sm", delay: 0.2, onScroll: true }} class="flex w-full justify-center">
+                    <SteadFastSettings visible />
                 </div>
-                {#if showSteadFastSettings}
-                    <div use:reveal={{ distance: "sm", delay: 0.2, onScroll: true }} class="flex w-full justify-center">
-                        <SteadFastSettings visible />
-                    </div>
-                {/if}
             </div>
         </div>
     </div>

@@ -1,5 +1,5 @@
 export { Courier } from "./courier";
-export type { SteadFastOrder, OrderType, CourierProcessor, CourierOption } from "./courier";
+export type { SteadFastOrder } from "./courier";
 
 export type { CurrentUser, UserInfo } from "./user";
 

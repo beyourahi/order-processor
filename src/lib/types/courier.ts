@@ -1,5 +1,3 @@
-import type { UserInfo } from "./user";
-
 export enum Courier {
     SteadFast = "SteadFast"
 }
@@ -18,18 +16,4 @@ export interface SteadFastOrder {
     "Delivery Type": string;
     "Contact Name": string;
     "Contact Phone": string;
-}
-
-export type OrderType = SteadFastOrder;
-
-// Extension seam: each courier implements this to map raw CSV rows to its own
-// order shape. Register new implementations in courier-service.ts.
-export interface CourierProcessor<T> {
-    processOrders(data: string[][], user: UserInfo): T[];
-}
-
-export interface CourierOption {
-    value: Courier;
-    label: string;
-    logo: string;
 }

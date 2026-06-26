@@ -7,5 +7,5 @@ export * from "./types";
 export { sendMessage, createNewConversation, respondToConfirmation, undoAction } from "./chat-client";
 export { detectAnomalies } from "./safety";
 export { projectBatchState } from "./context";
-export { parseMarkdown, parseInlineMarkdown, cleanUrl } from "./markdown";
-export type { MdBlock, MdInline, Segment } from "./markdown";
+export { parseMarkdown } from "./markdown";
+export type { MdBlock, MdInline } from "./markdown";

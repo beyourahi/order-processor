@@ -1,10 +1,8 @@
 /**
  * Thin facades over brandSettings for the rest of the app.
  *
- * courierService reads/writes selectedCourier on the brand-settings store,
- * resolving to the SteadFast default when nothing has been persisted. All
- * mutations route through brandSettings.updateField so they share the same
- * debounce + retry + onState pipeline used by the contact fields.
+ * courierService reads selectedCourier on the brand-settings store, resolving
+ * to the SteadFast default when nothing has been persisted.
  */
 
 import { Courier } from "$lib/types";
@@ -15,9 +13,6 @@ const DEFAULT_COURIER: string = Courier.SteadFast;
 export const courierService = {
     get value(): string {
         return brandSettings.value.selectedCourier ?? DEFAULT_COURIER;
-    },
-    setSelected(courier: string) {
-        brandSettings.updateField("selectedCourier", courier);
     }
 };
 

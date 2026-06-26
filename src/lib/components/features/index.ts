@@ -1,4 +1,3 @@
-export { default as CourierPicker } from "./courier-picker.svelte";
 export { default as Navbar } from "./navbar.svelte";
 export { default as User } from "./user.svelte";
 export { default as SignInButton } from "./sign-in-button.svelte";

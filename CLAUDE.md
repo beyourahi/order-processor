@@ -57,29 +57,29 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 
 ```
 CSV Upload --> PapaParse --> Auto-detect Shopify format --> Extract/deduplicate columns
-  --> Normalize phone numbers (BD +880 format) --> CourierProcessor --> in-app output editor --> xlsx export
+  --> Normalize phone numbers (BD +880 format) --> processOrders() --> in-app output editor --> xlsx export
 ```
 
 1. **Upload**: User uploads CSV, parsed client-side via PapaParse
-2. **Detection**: `CourierService.isShopifyExport()` checks header columns
+2. **Detection**: `isShopifyExport()` (data-processing.ts) checks header columns
 3. **Preparation**: Data cleaned, deduplicated, and columns extracted
     - `prepareSteadFastOrderData()` -- standard CSV with known column indexes
     - `prepareShopifySteadFastOrderData()` -- Shopify export with address concatenation (cols 36+37+39)
-4. **Processing**: `SteadFastProcessor.processOrders()` maps to courier schema
+4. **Processing**: `processOrders()` maps prepared rows to the SteadFast schema
 5. **Review** (optional): User edits the mapped batch in the in-app output editor grid before download
 6. **Export**: SheetJS generates `.xlsx` file for download
 
 ### Service Layer
 
 ```
-CourierService (orchestrator)
-  --> isShopifyExport() -- format detection
-  --> processors Map<Courier, CourierProcessor<T>>
-      --> SteadFastProcessor -- implements CourierProcessor<SteadFastOrder>
-  --> data-processing.ts -- prepareSteadFastOrderData() / prepareShopifySteadFastOrderData() -- dedup + column extraction
+processOrders(rawData, user)  ($lib/services/courier-service.ts)
+  --> isShopifyExport(header) ? prepareShopifySteadFastOrderData : prepareSteadFastOrderData  (data-processing.ts)
+  --> map prepared [Name, Address, Phone, Amount, Note] rows --> SteadFastOrder[]
 ```
 
-The `CourierProcessor<T>` interface is generic -- new couriers implement `processOrders(data, user): T[]`.
+One courier (SteadFast), one mapping function -- no interface/registry abstraction. The `Courier` enum
+survives only because it backs the `selected_courier` D1 column and its server-side validation; add a
+second courier by branching inside `processOrders` (or splitting it) when one actually exists.
 
 ### Client State & API Layer
 
@@ -95,7 +95,7 @@ $lib/stores/brand-settings.svelte.ts        -- closure-based runes store (NOT wr
   --> brandSettings.fieldState(key) / fieldError(key) / dismissError(key) -- per-field SaveState (each field has its own retry budget; aggregate `saveState` getter rolls them up for beforeunload)
 
 $lib/stores/app.svelte.ts                   -- thin facades over brandSettings
-  --> courierService.value / .setSelected() -- reads/writes selectedCourier via brandSettings
+  --> courierService.value                  -- reads selectedCourier via brandSettings (resolves to SteadFast default)
   --> hasMerchantId()                       -- function (not a derived store)
 ```
 
@@ -127,9 +127,8 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
 - **Model routing — BYO REST** (`$lib/ai/client.ts` → `$lib/server/ai/run-rest.ts`): chat runs the
   user's single chosen model on the user's account via `POST /accounts/{id}/ai/run/{model}` (buffered,
   not streamed; `client.ts` still emits the same `text`/`tool_call` Frame contract). There is NO runtime
-  fallback chain — `$lib/ai/gateway.ts`/`openGatewayChat` is now **dead code**, kept only for the
-  `MODEL_CHAIN` constant. `DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.6`) lives in the live BYO layer
-  `$lib/server/ai/run-rest.ts`, not in `gateway.ts`. The per-user token is AES-GCM
+  fallback chain and no AI Gateway route — `DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.6`) lives in the
+  live BYO layer `$lib/server/ai/run-rest.ts`. The per-user token is AES-GCM
   encrypted in `user_settings` and decrypted per request with `TOKEN_ENCRYPTION_KEY`; connecting an
   account + picking a model happens at `/settings`. Images ride as native multimodal `image_url` content
   parts on the SAME model — no separate vision model; `buildUserContent` emits a plain string when there
@@ -277,11 +276,10 @@ src/
     assets/                              -- static assets (upload.gif, steadfast.png)
     ds/                                  -- vendored @dropout/ds (import via $lib/ds): index.ts (cn + Cta/Heading/Eyebrow/Input/Tile + style helpers), components/, styles/ (tokens.css + animations.css → imported by app.css), utils.ts (DS cn with extended text-* scale)
     api/
-      client.ts                          -- typed api object (get/post/patch/put/delete) + debounceSync
+      client.ts                          -- typed api object (get/patch/delete) + debounceSync
     ai/                                  -- AI Copilot (client): types, schemas (Zod), tools-catalog, prompts, context,
                                             client (BYO Workers AI REST bridge), streaming, chat-client, executor,
-                                            safety, markdown, image-limits, embeddings + rag + knowledge (Vectorize RAG).
-                                            gateway.ts is dead code (only MODEL_CHAIN/DEFAULT_MODEL constants survive)
+                                            safety, markdown, image-limits, embeddings + rag + knowledge (Vectorize RAG)
     persistence/local.ts                 -- SSR-safe localStorage helpers for logged-out (guest) persistence
     server/
       auth.ts                            -- createAuth() factory (+ oneTap/passkey plugins; rpID/origin derived from BETTER_AUTH_URL)
@@ -291,22 +289,20 @@ src/
       ai/                                -- BYO Cloudflare layer: run-rest.ts (Workers AI REST: chat/embedding/model-list), cloudflare-config.ts (load/resolve creds), errors.ts (user-facing CF error help)
       repositories/                      -- ai-conversations.ts, ai-messages.ts (Copilot history D1 access)
     components/
-      features/                          -- order-processor, upload, courier-picker, user, sign-in-button, steadfast-settings
+      features/                          -- order-processor, upload, user, sign-in-button, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-{grid,row,cell}.svelte, columns.ts
       features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + chat shell (header, welcome, message-list, message, composer, typing-indicator, image-upload) + tool-badge, anomaly-warning, conversations-panel, confirm-dialog, desktop-launcher, mobile-fab, mobile-sheet, launcher-icon
       ui/                                -- button, dialog, footer, heading, input, loading-spinner, table, tooltip (shadcn-svelte)
     config/
       app.ts                             -- app metadata
-      couriers.ts                        -- courier options with logos
     data/
       changelog.ts                       -- hand-curated customer-facing changelog entries (newest-first, ISO dates)
     constants/
       files.ts                           -- file-related constants (generateFileName). CSV column indexes are now inline in services/data-processing.ts
     motion/                              -- GSAP motion system (SSR-safe); tokens, gsap loader, reveal action, helpers, view-transition
     services/
-      courier-service.ts                 -- main orchestrator
+      courier-service.ts                 -- processOrders(): detect format -> prepare rows -> map to SteadFast schema
       data-processing.ts                 -- CSV prep utilities
-      processors/steadfast.ts            -- SteadFast processor
     styles/
       chat-animations.css                -- Copilot chat keyframes (ported from canonical reference); @imported by app.css
     stores/
@@ -426,7 +422,7 @@ No test framework is currently configured. When adding tests:
 - Use Vitest (already compatible with the Vite setup)
 - Add `vitest` to devDependencies and a `test` script to `package.json`
 - Place test files alongside source: `*.test.ts` or `*.spec.ts`
-- Priority test targets: `data-processing.ts` (CSV parsing), `SteadFastProcessor` (phone normalization, field mapping), `courier-service.ts` (format detection)
+- Priority test targets: `data-processing.ts` (CSV parsing), `courier-service.ts` `processOrders()` (format detection, phone normalization, field mapping)
 
 ## Repository Etiquette
 
@@ -482,7 +478,7 @@ Configured in `wrangler.jsonc`:
 - **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
 - **Observability**: enabled
 - **CPU Limit**: 300,000ms
-- **Vars**: `BETTER_AUTH_URL` (`https://order-processor.dropoutstudio.co`), `AI_GATEWAY_SLUG` (`order-processor-ai`, now vestigial — the gateway route is bypassed by BYO), `PUBLIC_GOOGLE_CLIENT_ID` (browser-exposed Google client id for One Tap — NOT a secret; empty → One Tap off)
+- **Vars**: `BETTER_AUTH_URL` (`https://order-processor.dropoutstudio.co`), `PUBLIC_GOOGLE_CLIENT_ID` (browser-exposed Google client id for One Tap — NOT a secret; empty → One Tap off)
 - **Secrets**: `TOKEN_ENCRYPTION_KEY` (AES-GCM base64 32-byte key encrypting BYO tokens; Copilot 412s without it), `SEED_SECRET` (optional, gates `/api/copilot/seed`)
 
 Access in SvelteKit via `event.platform.env.DB`, typed in `app.d.ts` under `App.Platform`.
@@ -516,7 +512,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 3. **Better Auth column names must be snake_case** -- The Drizzle adapter with `usePlural: true` expects `snake_case` column names in the schema. Deviation causes silent auth failures.
 
-4. **Phone number normalization is Bangladesh-specific** -- `normalizePhoneNumber()` in `$lib/utils/phone.ts` strips `+880`, removes leading zeros, and ensures numbers start with `1`. This is correct only for Bangladesh mobile numbers. `SteadFastProcessor` and the output editor's download path both call it.
+4. **Phone number normalization is Bangladesh-specific** -- `normalizePhoneNumber()` in `$lib/utils/phone.ts` strips `+880`, removes leading zeros, and ensures numbers start with `1`. This is correct only for Bangladesh mobile numbers. `processOrders()` and the output editor's download path both call it.
 
 5. **Shopify CSV column indexes are hardcoded** -- Column positions (34 for Shipping Name, 36/37/39 for address parts, 43 for phone, 44 for notes, 11 for total) are based on Shopify's current export format. If Shopify changes their export schema, these break silently.
 
@@ -540,7 +536,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 15. **Copilot grid tools require a mounted editor** -- `editCells`, `addRows`, `deleteRows`, etc. operate through `copilotBridge.editor`, which is null until `output-editor.svelte` mounts. The executor throws a friendly "upload a CSV first" error when nothing is registered. Never assume the bridge is populated.
 
-16. **The `AI` binding is still checked, but inference is BYO** -- `/api/copilot/chat` returns 503 if `env.AI` is absent, yet chat inference and the RAG query embedding run on the USER's own Cloudflare account (REST), not `env.AI`. `env.AI` is genuinely used only by the owner seed endpoint. The `VECTORIZE` binding (`order-processor-kb`) is still needed for RAG (skipped silently without it). `AI_GATEWAY_SLUG` is now vestigial — the gateway route is dead code. After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
+16. **The `AI` binding is still checked, but inference is BYO** -- `/api/copilot/chat` returns 503 if `env.AI` is absent, yet chat inference and the RAG query embedding run on the USER's own Cloudflare account (REST), not `env.AI`. `env.AI` is genuinely used only by the owner seed endpoint. The `VECTORIZE` binding (`order-processor-kb`) is still needed for RAG (skipped silently without it). After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
 
 17. **Copilot tool execution is client-side** -- the chat endpoint only _decides_ tool calls; `executor.ts` _runs_ them in the browser against editor `$state`. The server is stateless — it never sees grid data except the rendered CURRENT STATE text the client ships each turn. Do not move mutation logic server-side.
 
@@ -552,7 +548,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 21. **Copilot rail width is tokenized** -- `--copilot-rail-width` / `--copilot-rail-width-xl` in `app.css` define the right rail's size; the main column reserves space via `lg:pr-[calc(var(--copilot-rail-width)+1.5rem)]` in `+layout.svelte`. Change the tokens, not the hard-coded values.
 
-22. **Copilot inference is bring-your-own (BYO) over the Workers AI REST API** -- chat + RAG embedding run on the END USER's own Cloudflare account (`$lib/server/ai/run-rest.ts`, billed to them) with the user's single chosen model — NO runtime fallback chain. `$lib/ai/gateway.ts`/`openGatewayChat` is DEAD code, retained only for the `MODEL_CHAIN` constant (`DEFAULT_MODEL` lives in `run-rest.ts`); do not wire it back in. Connecting an account + picking a model happens at `/settings`; the endpoint returns 412 (with `connect: "/settings"`) until a token + account id are saved.
+22. **Copilot inference is bring-your-own (BYO) over the Workers AI REST API** -- chat + RAG embedding run on the END USER's own Cloudflare account (`$lib/server/ai/run-rest.ts`, billed to them) with the user's single chosen model — NO runtime fallback chain and no AI Gateway route (`DEFAULT_MODEL` lives in `run-rest.ts`). Connecting an account + picking a model happens at `/settings`; the endpoint returns 412 (with `connect: "/settings"`) until a token + account id are saved.
 
 23. **Copilot chat is model-stateless but D1-persisted** -- the model never sees stored history; the client re-ships the full conversation + rendered CURRENT STATE every turn. Separately, `chat/+server.ts` writes each turn to `ai_conversations` / `ai_messages` so chats resume after reload. Persistence is best-effort and wrapped in try/catch — it must NEVER abort or block the live SSE stream. (This supersedes the old "in-memory only, no D1 tables" design.)
 

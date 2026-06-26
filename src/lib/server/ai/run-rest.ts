@@ -17,7 +17,7 @@
 
 const CF_API = "https://api.cloudflare.com/client/v4";
 
-/** Default chat model — head of MODEL_CHAIN in src/lib/ai/gateway.ts. New users start here. */
+/** Default chat model a new user starts on before picking their own at /settings. */
 export const DEFAULT_MODEL = "@cf/moonshotai/kimi-k2.6";
 
 export interface CloudflareCreds {

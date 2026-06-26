@@ -30,9 +30,7 @@ const send = async <T>(method: Method, path: string, body?: unknown): Promise<T>
 
 export const api = {
     get: <T>(path: string) => send<T>("GET", path),
-    post: <T>(path: string, body?: unknown) => send<T>("POST", path, body),
     patch: <T>(path: string, body?: unknown) => send<T>("PATCH", path, body),
-    put: <T>(path: string, body?: unknown) => send<T>("PUT", path, body),
     delete: <T>(path: string) => send<T>("DELETE", path)
 };
 

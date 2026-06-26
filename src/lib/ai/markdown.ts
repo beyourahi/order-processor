@@ -23,7 +23,7 @@ const LINK_PATTERN =
 const TRAILING_PUNCT = /[.,;:!?)]+$/;
 
 /** Strip trailing `.,;:!?)` so they don't get pulled into the clickable href. */
-export const cleanUrl = (raw: string): string => raw.replace(TRAILING_PUNCT, "");
+const cleanUrl = (raw: string): string => raw.replace(TRAILING_PUNCT, "");
 
 const parseInlineLinks = (text: string): Segment[] => {
     const result: Segment[] = [];
@@ -61,7 +61,7 @@ const parseInlineLinks = (text: string): Segment[] => {
  *   links/emails → on the remaining text fragments
  * Bullets (`- `) and per-line breaks are detected line-by-line.
  */
-export const parseInlineMarkdown = (text: string): Segment[] => {
+const parseInlineMarkdown = (text: string): Segment[] => {
     const segments: Segment[] = [];
     const lines = text.split("\n");
     for (let li = 0; li < lines.length; li++) {

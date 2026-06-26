@@ -12,7 +12,3 @@ export const buildWorkbook = <T extends object>(data: T[], sheetName: string = "
 export const writeWorkbook = (workbook: XLSX.WorkBook, fileName: string): void => {
     XLSX.writeFile(workbook, fileName);
 };
-
-export const generateExcel = <T extends object>(data: T[], fileName: string, sheetName: string = "Sheet1"): void => {
-    writeWorkbook(buildWorkbook(data, sheetName), fileName);
-};

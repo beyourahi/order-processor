@@ -1,6 +1,6 @@
 <!--
     Ingestion orchestrator: owns the dropzone ↔ editor swap. Parses the dropped
-    CSV via CourierService, then mounts OutputEditor in place of the dropzone
+    CSV via processOrders, then mounts OutputEditor in place of the dropzone
     (editorRows !== null is the switch). Retains the raw CSV so the Copilot's
     proposeCsvColumnMapping can re-project it through applyMapping, which re-mounts
     the editor with a corrected batch. Registers an IngestionController with
@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
     import type { SteadFastOrder } from "$lib/types";
-    import { CourierService } from "$lib/services";
+    import { processOrders } from "$lib/services";
     import { generateFileName } from "$lib/constants";
     import { brandSettings, hasMerchantId } from "$lib/stores";
     import { Courier } from "$lib/types";
@@ -70,11 +70,11 @@
             const contactPhone = settings.contactPhone ?? "";
             const merchantId = settings.merchantId ?? "";
 
-            const processedOrders = CourierService.processOrders(selectedCourier as Courier, result.data, {
+            const processedOrders = processOrders(result.data, {
                 name: contactName,
                 phone: contactPhone,
                 merchantId
-            }) as SteadFastOrder[];
+            });
 
             // FR-3: zero-row results still mount the editor (empty grid +
             // populated defaults strip) so the user can add rows manually.

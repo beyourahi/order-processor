@@ -52,12 +52,8 @@
     "limits": {
         "cpu_ms": 300000
     },
-    // AI_GATEWAY_SLUG keys the AI Gateway dynamic route `dynamic/copilot-chain`;
-    // openGatewayChat() throws without it. The model cascade lives in the
-    // Cloudflare dashboard route, NOT in code (CLAUDE.md #22).
     "vars": {
         "BETTER_AUTH_URL": "https://order-processor.dropoutstudio.co",
-        "AI_GATEWAY_SLUG": "order-processor-ai",
         // Browser-exposed Google OAuth client id for One Tap (NOT a secret — it appears in
         // every OAuth redirect). Set the real value here. Empty → One Tap stays off; the
         // Google button still works.
