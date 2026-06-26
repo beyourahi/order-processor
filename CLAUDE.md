@@ -174,7 +174,7 @@ The frontend runs on the **vendored Dropout design system** (`@dropout/ds`). It 
 via the global `dropout-ds-sync` tool. Consume it through the `$lib/ds` alias; the `@dropout/ds`
 specifier survives only in vendored doc-comments.
 
-- **Exports** (`src/lib/ds/index.ts`): `cn` + components `Cta`/`IconButton`/`Heading`/`Eyebrow`/`Input`/`Tile`
+- **Exports** (`src/lib/ds/index.ts`): `cn` + components `Cta`/`IconButton`/`Heading`/`Eyebrow`/`Input`/`Tile`/`Select`/`StatusBadge`
   plus the `Settings*` set (`SettingsSection`/`SettingsRow`/`SettingsActions`/`SettingsSaveBar`)
     - style-string helpers (`inputBase`, `labelBase`, `bodyBase`, `helperBase`, `metaBase`,
       `tileBase`/`tileSelected`/`tileUnselected`, `pillBase`/`pillSelected`/`pillUnselected`)
@@ -295,7 +295,7 @@ src/
       features/                          -- order-processor, upload, user, navbar, sign-in-button, steadfast-settings
       features/output-editor/            -- in-app editable courier-batch grid; output-editor.svelte (entry) + action-bar, batch-defaults-strip, editor-{grid,row,cell}.svelte, columns.ts
       features/copilot/                  -- AI Copilot UI; copilot-sidebar.svelte (entry) + chat shell (header, welcome, message-list, message, composer, typing-indicator, image-upload) + tool-badge, anomaly-warning, conversations-panel, confirm-dialog, desktop-launcher, mobile-fab, mobile-sheet, launcher-icon
-      ui/                                -- alert-dialog, button, dialog, footer, heading, input, loading-spinner, select, table, tooltip (shadcn-svelte)
+      ui/                                -- alert-dialog, button, dialog, footer, heading, input, loading-spinner, table, tooltip (shadcn-svelte)
     config/
       app.ts                             -- app metadata
     data/
