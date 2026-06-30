@@ -175,16 +175,20 @@ const runGetRows = (call: ParsedToolCall, ctx: ExecutorContext, args: ArgsOf<"ge
             [e.row.Name, e.row.Address, e.row.Phone, e.row.Note].some((v) => (v ?? "").toLowerCase().includes(q))
         );
     }
-    const preview = entries
-        .slice(0, 6)
-        .map((e) => `#${e.index + 1} ${e.row.Name || "(empty)"}`)
-        .join(", ");
+    const CAP = 15;
+    const detail = entries
+        .slice(0, CAP)
+        .map(
+            (e) =>
+                `#${e.index + 1} ${e.row.Name || "(empty)"} · ${e.row.Phone || "—"} · amt ${e.row.Amount || "—"} · ${e.row.Address || "—"}${e.row.Note ? " · note: " + e.row.Note : ""}`
+        )
+        .join("; ");
     copilot.updateToolCall(ctx.messageId, call.id, {
         status: "applied",
         summary:
             entries.length === 0
                 ? "No matching rows."
-                : `Inspected ${entries.length} row(s): ${preview}${entries.length > 6 ? "…" : ""}.`
+                : `Inspected ${entries.length} row(s): ${detail}${entries.length > CAP ? ` (+${entries.length - CAP} more)` : ""}.`
     });
 };
 

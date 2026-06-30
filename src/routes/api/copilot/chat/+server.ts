@@ -17,6 +17,7 @@ import { buildSystemContext, FEW_SHOTS, titleFromMessage } from "$lib/ai/prompts
 import { TOOLS_CATALOG } from "$lib/ai/tools-catalog";
 import { argSchemas, isKnownToolName } from "$lib/ai/schemas";
 import { retrieveAppKnowledge, formatKnowledge } from "$lib/ai/rag";
+import { salvageTextToolCalls } from "$lib/ai/salvage";
 import { MAX_IMAGE_DATA_URL_CHARS, MAX_IMAGES } from "$lib/ai/image-limits";
 import { loadCloudflareConfig, resolveCloudflareCreds } from "$lib/server/ai/cloudflare-config";
 import { createConversation, getConversation, touchUpdatedAt } from "$lib/server/repositories/ai-conversations";
@@ -66,7 +67,7 @@ const correctiveMessage = (invalid: ValidatedCall[]): string =>
         "Your previous tool call(s) failed schema validation:",
         ...invalid.map((v) => `- "${v.call.name}": ${v.error}`),
         "",
-        "Re-issue the corrected tool call(s) now. Argument names and types must exactly match each tool's schema. If you cannot produce a valid call, reply with a short plain-text explanation instead."
+        "Re-issue ONLY the corrected tool call(s) listed above — do NOT repeat any other action you already performed this turn. Argument names and types must exactly match each tool's schema. If you cannot produce a valid call, reply with a short plain-text explanation instead."
     ].join("\n");
 
 /** Retry prompt for when the model writes a tool call as chat text instead of calling it. */
@@ -85,13 +86,26 @@ const ACTION_RETRY_MESSAGE =
  */
 const IMPERATIVE_RE =
     /\b(set|add|change|update|delete|remove|edit|fix|mark|make|apply|append|insert|rename|clear|replace|assign|move|undo|revert|create|correct|adjust|drop|fill|put)\b/i;
+/** Read-only/interrogative lead words — a message starting with one is a question, not a command. */
+const READONLY_LEAD_RE =
+    /^(how|what|when|where|which|why|who|is|are|do|does|did|can|could|would|show|tell|list|remind|give)\b/i;
 const looksImperative = (text: string): boolean => {
     const t = text.trim();
+    // Read-only questions ("show my rows", "what's the total") must not trigger the
+    // forced action-retry even when they lack a trailing "?".
+    if (READONLY_LEAD_RE.test(t)) return false;
     return t.length > 0 && !t.endsWith("?") && IMPERATIVE_RE.test(t);
 };
 /** A genuine refusal/clarification we must NOT suppress as a false action narration. */
 const REFUSAL_RE =
     /\b(can'?t|cannot|can not|unable|won'?t|not able|out of scope|outside|only help|only assist|don'?t|do not|no batch|no csv|upload a csv)\b/i;
+/**
+ * A completion claim ("Done", "Updated 5 rows", "I've added…"). Only when the model
+ * CLAIMS it acted but ran no tool do we blank the reply — a genuine read-only answer
+ * makes no such claim and must be preserved.
+ */
+const AFFIRMATION_RE =
+    /\b(done|updated?|set|added?|applied|appended|inserted|changed|removed|deleted|cleared|renamed|replaced|fixed|marked|created|adjusted|corrected|archived|restored|reordered|shared|i'?ve|i have|i'?ll|all set|here you go)\b/i;
 
 /**
  * Heuristic: did the model emit tool args as a JSON literal in chat text?
@@ -153,18 +167,12 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     let userMessage = lastMessage.content;
     const history = parsed.messages.slice(0, -1);
 
-    // Per-user spend guard: each turn drives real Workers AI (one model call +
-    // corrective retry + RAG embedding). Reuses the rate_limits table; skipped
-    // when D1 is unavailable. friendlyHttpError() maps the 429 to a banner.
-    if (db && !(await checkChatRateLimit(db, userId))) {
-        error(429, { message: "You're sending messages too quickly. Please wait a moment and try again." });
-    }
-
     // BYO Cloudflare gate. Inference (and the RAG query embedding) run on the
     // USER's own account, billed to them — never the owner's bound `env.AI`. A
     // connected account is REQUIRED: respond 412 with a connect link so the
     // Copilot UI can render a "Connect your Cloudflare account" CTA instead of a
-    // generic error.
+    // generic error. Gated BEFORE the rate limit so an unconnected user never
+    // burns a rate-limit unit (matches day-zero / invoice-generator ordering).
     const encryptionKey = platform?.env?.TOKEN_ENCRYPTION_KEY;
     const resolved =
         db && encryptionKey
@@ -175,6 +183,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             { error: "Connect your Cloudflare account in Settings to use the copilot.", connect: "/settings" },
             { status: 412 }
         );
+    }
+
+    // Per-user spend guard: each turn drives real Workers AI (one model call +
+    // corrective retry + RAG embedding). Reuses the rate_limits table; skipped
+    // when D1 is unavailable. friendlyHttpError() maps the 429 to a banner.
+    if (db && !(await checkChatRateLimit(db, userId))) {
+        error(429, { message: "You're sending messages too quickly. Please wait a moment and try again." });
     }
 
     if (platform?.env?.VECTORIZE) {
@@ -250,20 +265,35 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                 })
             );
 
-            let validated = validateToolCalls(first.toolCalls);
-            let replyText = first.text;
+            // Recover tool calls the model emitted as plain-text JSON instead of a
+            // structured frame (a known chain-model failure) BEFORE validating — else
+            // the call is dropped and the user's request silently no-ops.
+            let firstCalls = first.toolCalls;
+            let firstText = first.text;
+            if (firstCalls.length === 0 && !errored && firstText.trim().length > 0) {
+                const s = salvageTextToolCalls(firstText);
+                if (s.calls.length > 0) {
+                    firstCalls = s.calls;
+                    firstText = s.cleanedText;
+                }
+            }
+
+            let validated = validateToolCalls(firstCalls);
+            let replyText = firstText;
             const invalid = validated.filter((v) => !v.valid);
-            const leakedAsText = first.toolCalls.length === 0 && looksLikeLeakedToolCall(first.text);
+            const leakedAsText = firstCalls.length === 0 && looksLikeLeakedToolCall(firstText);
             const userImperative = looksImperative(lastMessage.content);
             // Model failed to act: an imperative instruction produced no tool call,
             // it wasn't leaked JSON, and the reply isn't a clarifying question.
-            const failedToAct =
-                first.toolCalls.length === 0 && !leakedAsText && userImperative && !first.text.includes("?");
+            const failedToAct = firstCalls.length === 0 && !leakedAsText && userImperative && !firstText.includes("?");
 
             // Exactly one corrective retry: malformed args, a tool call written as
             // chat text, OR an instruction that produced no tool call. No retry on
             // retry — failures fall through to a friendly fallback reply.
             if ((invalid.length > 0 || leakedAsText || failedToAct) && !errored) {
+                // Preserve the turn-1 calls that already validated so a mixed
+                // valid+invalid turn doesn't silently drop the user's good action.
+                const firstValid = validated.filter((v) => v.valid);
                 const retryMessage =
                     invalid.length > 0
                         ? correctiveMessage(invalid)
@@ -286,9 +316,23 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
                         tools: TOOLS_CATALOG
                     })
                 );
-                validated = validateToolCalls(retry.toolCalls);
-                const retryLeaked = retry.toolCalls.length === 0 && looksLikeLeakedToolCall(retry.text);
-                replyText = retryLeaked ? "" : retry.text;
+                // Salvage on the retry path too, and strip the consumed JSON region
+                // from the reply (use cleanedText, never the raw retry.text).
+                let retryCalls = retry.toolCalls;
+                let retryText = retry.text;
+                if (retryCalls.length === 0 && retryText.trim().length > 0) {
+                    const s = salvageTextToolCalls(retryText);
+                    if (s.calls.length > 0) {
+                        retryCalls = s.calls;
+                        retryText = s.cleanedText;
+                    }
+                }
+                const retryValidated = validateToolCalls(retryCalls);
+                // Only the invalid-args branch had valid turn-1 calls to keep; the
+                // leak / failed-to-act branches produced none, so they replace.
+                validated = invalid.length > 0 ? [...firstValid, ...retryValidated] : retryValidated;
+                const retryLeaked = retryCalls.length === 0 && looksLikeLeakedToolCall(retryText);
+                replyText = retryLeaked ? "" : retryText;
             }
 
             const validCalls = validated.filter((entry) => entry.valid);
@@ -299,7 +343,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
             // is true, so it's kept.
             let outText = replyText;
             if (looksLikeLeakedToolCall(outText)) outText = "";
-            else if (validCalls.length === 0 && userImperative && !outText.includes("?") && !REFUSAL_RE.test(outText)) {
+            else if (
+                validCalls.length === 0 &&
+                userImperative &&
+                !outText.includes("?") &&
+                !REFUSAL_RE.test(outText) &&
+                AFFIRMATION_RE.test(outText)
+            ) {
                 outText = "";
             }
             if ((leakedAsText || failedToAct) && validCalls.length === 0 && outText.trim().length === 0) {

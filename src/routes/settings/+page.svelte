@@ -106,12 +106,20 @@
         }
     };
 
-    // Seed (and re-seed) the editable fields from the loaded server row — runs on
-    // mount and whenever `data` changes (e.g. after a save + invalidate, or a
-    // model-list refresh) so the inputs reflect the persisted values.
+    // Seed the editable fields from the loaded server row, but ONLY when the
+    // persisted values actually change — not on every `data` replacement. A
+    // "Refresh models" invalidateAll re-runs load without touching accountId/model,
+    // so reseeding unconditionally would clobber the user's unsaved edits; a save
+    // or disconnect genuinely changes them and still resyncs.
+    let lastAccountId = $state<string | undefined>(undefined);
+    let lastModel = $state<string | undefined>(undefined);
     $effect(() => {
-        accountId = data.accountId;
-        model = data.model;
+        if (data.accountId !== lastAccountId || data.model !== lastModel) {
+            lastAccountId = data.accountId;
+            lastModel = data.model;
+            accountId = data.accountId;
+            model = data.model;
+        }
     });
 
     // Picker options from the account's live chat models. Always surfaces the

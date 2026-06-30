@@ -9,12 +9,10 @@ export const normalizePhoneNumber = (phoneNumber: string): string => {
     if (!phoneNumber) return "";
 
     let cleaned = phoneNumber.replace(/[^\d+]/g, "");
-
-    if (cleaned.startsWith("+880")) {
-        cleaned = cleaned.substring(4);
-    }
-
-    cleaned = cleaned.replace(/^0+/, "");
+    cleaned = cleaned.replace(/^\+/, ""); // drop leading +
+    cleaned = cleaned.replace(/^0+/, ""); // drop 00 intl prefix / trunk leading zeros
+    cleaned = cleaned.replace(/^880/, ""); // drop BD country code
+    cleaned = cleaned.replace(/^0+/, ""); // drop trunk zero left after +880 0...
 
     return cleaned;
 };
