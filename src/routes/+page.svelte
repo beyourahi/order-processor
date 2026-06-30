@@ -2,6 +2,7 @@
     import { untrack, onMount } from "svelte";
     import { courierService, brandSettings } from "$lib/stores";
     import { copilot } from "$lib/stores/copilot.svelte";
+    import { cn } from "$lib/utils";
     import { Heading, OrderProcessor, Navbar, User, SignInButton, SteadFastSettings } from "$lib/components";
     import { reveal } from "$lib/motion";
     import type { PageData } from "./$types";
@@ -28,6 +29,9 @@
     // bind:editorOpen — true while output-editor replaces the dropzone.
     // Drives the outer layout: editor gets full width; settings stack on top.
     let editorOpen = $state(false);
+
+    // Slide the main column left when the copilot rail opens — same shift the profile row (Navbar) uses.
+    const copilotOpen = $derived(copilot.desktopOpen);
 </script>
 
 <!-- Invisible navbar: profile/settings/logout (or guest sign-in) in normal flow, content below. -->
@@ -41,7 +45,15 @@
 
 <!-- Left column of the layout; Copilot rail is mounted by +layout.svelte.
      `reveal` is GSAP-backed and respects prefers-reduced-motion. -->
-<div class="flex w-full grow flex-col px-[var(--content-x)] pt-10 pb-8 sm:pt-12">
+<div
+    class={cn(
+        "flex w-full grow flex-col px-[var(--content-x)] pt-10 pb-8 sm:pt-12",
+        "transition-[padding] duration-300 ease-[var(--ease)] motion-reduce:transition-none",
+        copilotOpen
+            ? "lg:pr-[calc(var(--copilot-rail-width)+1.5rem)] xl:pr-[calc(var(--copilot-rail-width-xl)+1.5rem)]"
+            : "lg:pr-[var(--content-x)]"
+    )}
+>
     <div class="m-auto flex w-full flex-col items-center gap-12 sm:gap-16 lg:items-stretch lg:gap-16">
         <div use:reveal={{ distance: "sm", delay: 0 }}>
             <Heading />
