@@ -282,7 +282,8 @@ src/
       client.ts                          -- typed api object (get/patch/delete) + debounceSync
     ai/                                  -- AI Copilot (client): types, schemas (Zod), tools-catalog, prompts, context,
                                             client (BYO Workers AI REST bridge), streaming, chat-client, executor,
-                                            safety, markdown, image-limits, embeddings + rag + knowledge (Vectorize RAG)
+                                            safety, salvage (recover plain-text-JSON tool calls), markdown, image-limits,
+                                            embeddings + rag + knowledge (Vectorize RAG)
     persistence/local.ts                 -- SSR-safe localStorage helpers for logged-out (guest) persistence
     server/
       auth.ts                            -- createAuth() factory (+ oneTap/passkey plugins; rpID/origin derived from BETTER_AUTH_URL)
@@ -515,7 +516,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 3. **Better Auth column names must be snake_case** -- The Drizzle adapter with `usePlural: true` expects `snake_case` column names in the schema. Deviation causes silent auth failures.
 
-4. **Phone number normalization is Bangladesh-specific** -- `normalizePhoneNumber()` in `$lib/utils/phone.ts` strips `+880`, removes leading zeros, and ensures numbers start with `1`. This is correct only for Bangladesh mobile numbers. `processOrders()` and the output editor's download path both call it.
+4. **Phone number normalization is Bangladesh-specific** -- `normalizePhoneNumber()` in `$lib/utils/phone.ts` strips non-digits, the leading `+`, the `880` country code, and trunk leading zeros, leaving a bare number (1-prefixed for valid BD mobiles). It is strip-only (idempotent, NOT a validator — pair with `validatePhone()`). Correct only for Bangladesh numbers. `processOrders()` and the output editor's download path both call it.
 
 5. **Shopify CSV column indexes are hardcoded** -- Column positions (34 for Shipping Name, 36/37/39 for address parts, 43 for phone, 44 for notes, 11 for total) are based on Shopify's current export format. If Shopify changes their export schema, these break silently.
 
@@ -545,7 +546,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 18. **Copilot AI undo is separate from the editor's Cmd+Z** -- `copilot.undoStack` holds full-editor snapshots; reverting an AI action restores the snapshot (and will also revert any manual edits made since). This is intentional — the editor's native `undoEntry` is untouched by Copilot mutations.
 
-19. **The chat models leak artifacts** -- the BYO Workers AI models intermittently emit reasoning text, stray code fences, and tool calls as plain chat text (and sometimes narrate an action without calling a tool). The Copilot defends in layers: `prompts.ts` hardens the system prompt; `chat/+server.ts` detects leaked tool-call JSON (`looksLikeLeakedToolCall`) and failed-to-act narrations (`looksImperative`/`REFUSAL_RE`) and runs ONE corrective retry; the message renderer downgrades stray code blocks to plain text; `chat-client.ts` maps every failure to a friendly message. Raw model output, raw errors, and internal tool names must never reach the user — do not strip these guards as redundant.
+19. **The chat models leak artifacts** -- the BYO Workers AI models intermittently emit reasoning text, stray code fences, and tool calls as plain chat text (and sometimes narrate an action without calling a tool). The Copilot defends in layers: `prompts.ts` hardens the system prompt; `salvage.ts` (`salvageTextToolCalls`) recovers tool calls the model wrote as plain-text JSON instead of structured frames; `chat/+server.ts` detects still-leaked tool-call JSON (`looksLikeLeakedToolCall`) and failed-to-act narrations (`looksImperative`/`REFUSAL_RE`) and runs ONE corrective retry; the message renderer downgrades stray code blocks to plain text; `chat-client.ts` maps every failure to a friendly message. Raw model output, raw errors, and internal tool names must never reach the user — do not strip these guards as redundant.
 
 20. **`E2E_BYPASS_AUTH` is a preview-only auth shortcut** -- when set to `"true"` in `.dev.vars`, `hooks.server.ts` synthesizes an `e2e-test-user` session and upserts it into the local D1, bypassing Google OAuth entirely. It exists for Wrangler preview / E2E runs. NEVER set it in `wrangler.jsonc`, GitHub Actions, or production secrets. The flag is declared optional on `App.Platform.env` in `app.d.ts` so it can stay absent everywhere else.
 
