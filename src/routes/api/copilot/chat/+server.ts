@@ -25,6 +25,14 @@ import { appendMessage } from "$lib/server/repositories/ai-messages";
 import { checkChatRateLimit } from "$lib/server/rate-limit";
 import type { ParsedToolCall } from "$lib/ai/types";
 
+/**
+ * Vision model for image-bearing turns — mistral-small-3.1 reads the screenshot AND
+ * still tool-calls (so a pasted order screenshot can drive addRows/editCells). Text-
+ * only turns stay on the user's chosen brain model. To fall back to the brain for
+ * vision, point this at the brain model or drop the `chatEnv.model` branch below.
+ */
+const VISION_MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
+
 const bodySchema = z.object({
     conversationId: z.string().nullable().optional(),
     messages: z
@@ -195,7 +203,7 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
     if (platform?.env?.VECTORIZE) {
         try {
             const knowledge = formatKnowledge(
-                await retrieveAppKnowledge(platform.env.VECTORIZE, resolved.creds, lastMessage.content)
+                await retrieveAppKnowledge(platform.env.VECTORIZE, platform.env.AI, resolved.creds, lastMessage.content)
             );
             if (knowledge.length > 0) {
                 userMessage = `${userMessage}\n\nAPP KNOWLEDGE:\n${knowledge}`;
@@ -205,7 +213,13 @@ export const POST: RequestHandler = async ({ locals, platform, request }) => {
         }
     }
 
-    const chatEnv: RunChatEnv = { creds: resolved.creds, model: resolved.model };
+    // Image-bearing turns route to VISION_MODEL (tools still attached — see the
+    // TOOLS_CATALOG passed on every runChatFrames call below); text-only turns keep
+    // the user's chosen brain model.
+    const chatEnv: RunChatEnv = {
+        creds: resolved.creds,
+        model: parsed.images && parsed.images.length > 0 ? VISION_MODEL : resolved.model
+    };
     const systemContext = buildSystemContext(parsed.contextText, TOOLS_CATALOG);
     const withFewShots = history.length === 0 ? [...FEW_SHOTS, ...history] : history;
     const turnId = crypto.randomUUID();

@@ -26,7 +26,7 @@
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
 
-    const DEFAULT_MODEL = "@cf/moonshotai/kimi-k2.6";
+    const DEFAULT_MODEL = "@cf/moonshotai/kimi-k2.7-code";
 
     let token = $state("");
     let accountId = $state("");
@@ -136,7 +136,7 @@
                     : `${m.label} · experimental${m.deprecated ? " (deprecated)" : ""}`
         }));
         if (!ids.has(DEFAULT_MODEL)) {
-            opts.unshift({ id: DEFAULT_MODEL, label: "moonshotai/kimi-k2.6 · recommended" });
+            opts.unshift({ id: DEFAULT_MODEL, label: "moonshotai/kimi-k2.7-code · recommended" });
         }
         if (model && model !== DEFAULT_MODEL && !ids.has(model)) {
             opts.push({ id: model, label: `${model.replace(/^@cf\//, "")} · experimental` });

@@ -18,7 +18,7 @@
 const CF_API = "https://api.cloudflare.com/client/v4";
 
 /** Default chat model a new user starts on before picking their own at /settings. */
-export const DEFAULT_MODEL = "@cf/moonshotai/kimi-k2.6";
+export const DEFAULT_MODEL = "@cf/moonshotai/kimi-k2.7-code";
 
 export interface CloudflareCreds {
     accountId: string;
@@ -74,6 +74,52 @@ export interface ChatRestResult {
 }
 
 /**
+ * Raw model envelope BEFORE normalization. Newer Workers AI models (kimi-k2.x,
+ * gpt-oss) return ONLY the OpenAI `choices` shape; older ones (llama, mistral)
+ * also expose the native top-level `response`/`tool_calls`.
+ */
+interface RawChatEnvelope {
+    response?: string;
+    tool_calls?: Array<{ id?: string; name?: string; arguments?: unknown }>;
+    choices?: Array<{
+        message?: {
+            content?: string | null;
+            tool_calls?: Array<{
+                id?: string;
+                name?: string;
+                arguments?: unknown;
+                function?: { name?: string; arguments?: unknown };
+            }>;
+        };
+    }>;
+    usage?: unknown;
+}
+
+/**
+ * Collapses either response envelope into the native `{ response, tool_calls, usage }`
+ * the chat parser (`$lib/ai/client.ts`) reads. Prefers the native top-level fields
+ * (llama/mistral); otherwise lifts them from `choices[0].message` (kimi & other
+ * OpenAI-only models), mapping OpenAI `tool_calls[].function` -> `{ name, arguments }`.
+ * Without this, kimi turns (choices-only) would surface no text and no tool calls.
+ */
+function normalizeChatResult(raw: RawChatEnvelope): ChatRestResult {
+    const message = raw.choices?.[0]?.message;
+    const response =
+        typeof raw.response === "string" ? raw.response : typeof message?.content === "string" ? message.content : "";
+    const nativeCalls = Array.isArray(raw.tool_calls) ? raw.tool_calls : undefined;
+    const openaiCalls =
+        message && Array.isArray(message.tool_calls)
+            ? message.tool_calls.map((tc) => ({
+                  name: tc.function?.name ?? tc.name ?? "",
+                  arguments: tc.function?.arguments ?? tc.arguments ?? {}
+              }))
+            : undefined;
+    const normalized: ChatRestResult = { response, tool_calls: nativeCalls ?? openaiCalls ?? [] };
+    if (raw.usage !== undefined) normalized.usage = raw.usage;
+    return normalized;
+}
+
+/**
  * Runs one buffered chat turn through the user's chosen model on the user's
  * account. Returns the unwrapped model output. Throws `CfInferenceError` on any
  * non-2xx so the consumer can map it to a user-facing error frame.
@@ -107,8 +153,9 @@ export async function runChatViaRest(
     }
 
     // Native Workers AI REST wraps the output: { success, result, errors }.
-    const json = (await res.json()) as { result?: ChatRestResult };
-    return json && typeof json === "object" && json.result ? json.result : ((json ?? {}) as ChatRestResult);
+    const json = (await res.json()) as { result?: RawChatEnvelope };
+    const raw = json && typeof json === "object" && json.result ? json.result : ((json ?? {}) as RawChatEnvelope);
+    return normalizeChatResult(raw);
 }
 
 // ── Embeddings ───────────────────────────────────────────────────────────────
@@ -175,6 +222,7 @@ interface RawModel {
  * text-generation model the account exposes. Includes the MODEL_CHAIN members.
  */
 const KNOWN_CHAT_IDS = new Set([
+    "@cf/moonshotai/kimi-k2.7-code",
     "@cf/moonshotai/kimi-k2.6",
     "@cf/google/gemma-4-26b-a4b-it",
     "@cf/meta/llama-4-scout-17b-16e-instruct",
@@ -251,7 +299,7 @@ export async function listChatModels(creds: CloudflareCreds): Promise<CfModel[]>
     if (!byId.has(DEFAULT_MODEL)) {
         byId.set(DEFAULT_MODEL, {
             id: DEFAULT_MODEL,
-            label: "moonshotai/kimi-k2.6",
+            label: "moonshotai/kimi-k2.7-code",
             task: "Text Generation",
             description: "Default Copilot model (function-calling).",
             deprecated: false,
