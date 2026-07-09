@@ -64,7 +64,12 @@
     out:rowMotion={{ animate: true }}
     class={cn("border-hair hover:bg-ink-2/60 border-b border-solid transition-colors", isSelected && "bg-ink-2/50")}
 >
-    <Table.Cell class="sticky left-0 z-10 w-14 bg-inherit p-0 align-middle">
+    <!-- Frozen columns must be OPAQUE, not `bg-inherit`: the row is transparent (and its
+         selected/hover tints are translucent), so an inherited background lets horizontally
+         scrolled cell text paint straight through. The app is pinned dark, where --card and
+         --ink-2 are the same ink-900, so bg-card matches every row state exactly.
+         ponytail: if a light theme ever lands, these need the opaque color-mix of the tint. -->
+    <Table.Cell class="bg-card sticky left-0 z-10 w-14 p-0 align-middle">
         <div class="flex items-center justify-center gap-1">
             <!-- Generous min-11 hit area wraps a ~17px custom DS checkbox box.
                  The native input is appearance-none + peer; the visible box and
@@ -127,7 +132,7 @@
         </Table.Cell>
     {/each}
 
-    <Table.Cell class="border-hair sticky right-0 z-10 w-20 border-l border-solid bg-inherit p-0 align-middle">
+    <Table.Cell class="border-hair bg-card sticky right-0 z-10 w-20 border-l border-solid p-0 align-middle">
         <div class="flex min-h-11 items-center justify-center gap-0.5 sm:min-h-10">
             <button
                 type="button"

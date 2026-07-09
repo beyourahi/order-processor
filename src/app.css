@@ -211,21 +211,46 @@
     }
 }
 
-.scrollbar-hide,
-.no-scrollbar,
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
+/* Scrollbars that stay put — for surfaces whose horizontal scroll is a primary
+   interaction (the editor grid), so a mouse user has a bar to drag instead of
+   needing Shift+wheel.
 
-.scrollbar-hide::-webkit-scrollbar,
-.no-scrollbar::-webkit-scrollbar,
-.hide-scrollbar::-webkit-scrollbar {
-    display: none;
-}
+   The DS themes scrollbars with `scrollbar-color` on html. That property inherits,
+   and Blink/WebKit ignore every ::-webkit-scrollbar rule on an element whose
+   scrollbar-color is not `auto` — falling back to macOS overlay scrollbars, which
+   reserve no layout space and fade out. Resetting the inherited value lets the
+   pseudo-elements apply again; `-webkit-appearance: none` opts out of overlay.
+   Firefox ignores these pseudo-elements, so the guard leaves it on DS theming.
 
-.no-scrollbar *::-webkit-scrollbar {
-    display: none;
+   Gated to `pointer: fine` — a mouse is the only pointer lacking a horizontal scroll
+   axis. Touch and trackpad scroll both axes natively, so a permanent bar there would
+   only steal vertical space. */
+@media (pointer: fine) {
+    @supports selector(::-webkit-scrollbar) {
+        .scrollbar-persistent {
+            scrollbar-color: auto;
+        }
+
+        .scrollbar-persistent::-webkit-scrollbar {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+        }
+
+        .scrollbar-persistent::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 8px;
+        }
+
+        .scrollbar-persistent::-webkit-scrollbar-thumb:hover {
+            background: oklch(0.556 0 0 / 0.65);
+        }
+
+        .scrollbar-persistent::-webkit-scrollbar-track,
+        .scrollbar-persistent::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+    }
 }
 
 input,

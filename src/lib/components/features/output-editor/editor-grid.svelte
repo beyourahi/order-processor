@@ -137,9 +137,12 @@
         `overflow-x-auto` container of its own; left visible, that inner container
         takes the x-axis and parks its scrollbar under the LAST row — off-screen
         until you scroll down. Neutralizing it moves the horizontal scrollbar to
-        this box's bottom edge, where it stays put and stays draggable.
+        this box's bottom edge. `scrollbar-persistent` (app.css) then keeps that bar
+        rendered and draggable instead of a fade-out macOS overlay bar.
     -->
-    <div class="max-h-[50vh] overflow-auto sm:max-h-[60vh] [&>[data-slot=table-container]]:overflow-visible">
+    <div
+        class="scrollbar-persistent max-h-[50vh] overflow-auto overscroll-x-contain sm:max-h-[60vh] [&>[data-slot=table-container]]:overflow-visible"
+    >
         <Table.Root class="w-full text-base">
             <Table.Header class="bg-ink-2 sticky top-0 z-20 backdrop-blur">
                 <Table.Row class="border-hair">
