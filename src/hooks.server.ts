@@ -71,10 +71,18 @@ export const handle: Handle = async ({ event, resolve }) => {
         return resolve(event);
     }
 
-    // E2E auth bypass for Wrangler preview / E2E runs only. Synthesizes a session
-    // and upserts the user into D1. Inert unless `.dev.vars` sets E2E_BYPASS_AUTH=true.
-    // NEVER set in wrangler.jsonc, CI secrets, or production.
-    if (event.platform?.env?.E2E_BYPASS_AUTH === "true") {
+    // Synthesizes event.locals to bypass Google OAuth for local dev / Wrangler preview only.
+    // DOUBLE-GATED (defense in depth):
+    //   (1) E2E_BYPASS_AUTH=true — lives in `.dev.vars` (gitignored); MUST NOT appear in
+    //       wrangler.jsonc/secrets. Cloudflare never uploads `.dev.vars`, so it can't reach prod
+    //       (this flag-absence is the PRIMARY safety).
+    //   (2) request host is localhost/127.0.0.1 — a SECOND factor, so even if the flag ever leaked
+    //       into a deployed env, the bypass stays inert on the prod domain (order-processor.dropoutstudio.co).
+    // NOT query-param-gated — a param is attacker-controlled; a bound env var + the request host are not.
+    // Synthesizes a session and upserts the e2e-test-user row so FK-bound app data has a real owner.
+    // MUST NEVER be enabled in production — it grants full unauthenticated access.
+    const isLocalDev = event.url.hostname === "localhost" || event.url.hostname === "127.0.0.1";
+    if (isLocalDev && event.platform?.env?.E2E_BYPASS_AUTH === "true") {
         const now = new Date();
         const userId = "e2e-test-user";
         const dz = drizzle(db);
