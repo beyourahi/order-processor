@@ -20,6 +20,7 @@
         "db:check": "drizzle-kit check",
         "db:migrate": "wrangler d1 migrations apply order_processor --remote",
         "db:migrate:local": "wrangler d1 migrations apply order_processor --local",
+        "seed": "wrangler d1 execute order_processor --local --file ./seed/seed.sql",
         "db:migrate:list": "wrangler d1 migrations list order_processor --local"
     },
     "devDependencies": {
