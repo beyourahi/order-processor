@@ -1,31 +1,5 @@
 # Order Processor
 
-## Always Do First
-
-**Invoke the `frontend-design` skill** before writing any frontend code, every session, no exceptions.
-
-## Parallel Workflow & Git Strategy -- READ FIRST
-
-**NEVER CREATE NEW BRANCHES.** Use git worktrees for parallel work:
-
-```bash
-# Create a worktree for a feature
-git worktree add ../order-processor-<feature> main
-
-# List active worktrees
-git worktree list
-
-# Remove a worktree when done
-git worktree remove ../order-processor-<feature>
-
-# Clean up stale worktree references
-git worktree prune
-```
-
-All commits go directly to `main`. No feature branches. No PRs for solo work. Worktrees allow parallel development without branch switching or stashing.
-
-**Always break large tasks into focused scopes** — run parallel agents with git worktrees, each with a narrow, well-defined goal.
-
 ## Project Overview
 
 SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. **Auth is optional**: logged-out guests get the full CSV→Excel app (settings persist to `localStorage`); signing in (Google OAuth / One Tap / passkey biometrics) adds D1 server storage, cross-device sync, and the AI Copilot — which additionally requires a connected **bring-your-own (BYO) Cloudflare account**. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions, brand settings, BYO-Cloudflare credentials, and Copilot conversation history.
@@ -47,7 +21,7 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 | Excel Export    | SheetJS (`xlsx`)                                                                                                                                |
 | Deployment      | Cloudflare Workers (adapter-cloudflare)                                                                                                         |
 | AI Copilot      | Bring-your-own Workers AI — inference runs on each user's OWN Cloudflare account via the REST API (single user-picked model), Zod tool schemas  |
-| AI RAG          | Cloudflare Vectorize (`order-processor-kb`, owner's index) + qwen3 query embeddings (`@cf/qwen/qwen3-embedding-0.6b`) run on the user's account |
+| AI RAG          | Cloudflare Vectorize (`order-processor-kb`, owner's index) + qwen3 query embeddings (`@cf/qwen/qwen3-embedding-0.6b`, user's account) + bge-reranker-base cross-encoder (owner's `env.AI`) |
 | Package Manager | Bun                                                                                                                                             |
 | Linting         | ESLint 10 flat config + Prettier                                                                                                                |
 
@@ -127,22 +101,27 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
 - **Model routing — BYO REST** (`$lib/ai/client.ts` → `$lib/server/ai/run-rest.ts`): chat runs the
   user's single chosen model on the user's account via `POST /accounts/{id}/ai/run/{model}` (buffered,
   not streamed; `client.ts` still emits the same `text`/`tool_call` Frame contract). There is NO runtime
-  fallback chain and no AI Gateway route — `DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.6`) lives in the
+  fallback chain and no AI Gateway route — `DEFAULT_MODEL` (`@cf/moonshotai/kimi-k2.7-code`) lives in the
   live BYO layer `$lib/server/ai/run-rest.ts`. The per-user token is AES-GCM
   encrypted in `user_settings` and decrypted per request with `TOKEN_ENCRYPTION_KEY`; connecting an
-  account + picking a model happens at `/settings`. Images ride as native multimodal `image_url` content
-  parts on the SAME model — no separate vision model; `buildUserContent` emits a plain string when there
-  are no images, else a `[text, ...image_url]` array. The chat endpoint caps uploads at `MAX_IMAGES` (3)
+  account + picking a model happens at `/settings`. **Image-bearing turns route to a dedicated vision
+  model** — `VISION_MODEL` (`@cf/mistralai/mistral-small-3.1-24b-instruct`) in `chat/+server.ts`, tools
+  still attached; text-only turns stay on the user's chosen brain model. Images ride as `image_url`
+  content parts (`buildUserContent` emits a plain string when there are no images, else a
+  `[text, ...image_url]` array). The chat endpoint caps uploads at `MAX_IMAGES` (3)
   × `MAX_IMAGE_DATA_URL_CHARS` (~8MB, `$lib/ai/image-limits.ts`) and enforces a per-user 20-req/60s budget
   (`checkChatRateLimit`). `stableConversationId` (SHA-256 of the first user message) is retained for
   session affinity without leaking content.
-- **RAG** (`$lib/ai/rag.ts` + `embeddings.ts` + `knowledge.ts`): a static `KNOWLEDGE_CORPUS` is embedded
-  with qwen3 (`@cf/qwen/qwen3-embedding-0.6b`, 1024 dims) into the owner's `VECTORIZE` index
-  `order-processor-kb`. Each turn embeds the query on the USER's own account (`runEmbeddingViaRest`),
-  retrieves top-4 passages (score ≥ 0.4) from the owner's index, and folds them into the user message as
-  "APP KNOWLEDGE". Best-effort — a Vectorize/AI failure degrades silently. The one-time owner seed
-  (`POST /api/copilot/seed`, guarded by `SEED_SECRET` + `x-seed-secret`) still embeds the corpus with the
-  owner's bound `env.AI`.
+- **RAG** (`$lib/ai/rag.ts` + `embeddings.ts` + `knowledge.ts`): retrieve-wide → rerank → narrow. A
+  static `KNOWLEDGE_CORPUS` is embedded with qwen3 (`@cf/qwen/qwen3-embedding-0.6b`, 1024 dims) into the
+  owner's `VECTORIZE` index `order-processor-kb`. Each turn embeds the query on the USER's own account
+  (`runEmbeddingViaRest`), pulls 12 candidates (`CANDIDATE_TOPK`, cosine floor `PRE_RERANK_COSINE_FLOOR`
+  0.3) from the owner's index, reranks them with the bge-reranker-base cross-encoder
+  (`@cf/baai/bge-reranker-base`) on the OWNER's bound `env.AI`, keeps the top-4 whose sigmoid-mapped score
+  clears `MIN_RERANK_SCORE` (0.3), and folds them into the user message as "APP KNOWLEDGE". Best-effort at
+  every stage — a Vectorize/AI/reranker failure fails open (falls back to cosine order or degrades
+  silently). The one-time owner seed (`POST /api/copilot/seed`, guarded by `SEED_SECRET` + `x-seed-secret`)
+  embeds the corpus with the owner's bound `env.AI`.
 - **D1 history** (`$lib/server/repositories/ai-conversations.ts` + `ai-messages.ts`):
   conversations + messages persist in the `ai_conversations` / `ai_messages` tables, so chats are
   resumable across reloads. `+page.server.ts` loads conversation summaries; messages load lazily on
@@ -167,12 +146,7 @@ copilot-sidebar.svelte --> chat-client.sendMessage()
 
 ### Design System
 
-**HARD RULE — the Dropout DS guidelines are binding.** Every UI/design change in this repo MUST obey **`~/Desktop/projects/dropout-design-system/GUIDELINES.md`** — the law for all UI: tokens, typography, layout shells, the shadcn-svelte primitive layer (pinned `components.json` preset + blessed kit), overlay/glass tokens, motion, a11y. Non-negotiable: theme via tokens, **never recolor a component**, components before custom markup. This applies automatically to every UI task whether or not the request mentions it. This project vendors `@dropout/ds` at `src/lib/ds/`.
-
-The frontend runs on the **vendored Dropout design system** (`@dropout/ds`). It is copied into
-`src/lib/ds/` (NOT an npm/`file:` dependency — that breaks Cloudflare auto-deploy) and refreshed
-via the global `dropout-ds-sync` tool. Consume it through the `$lib/ds` alias; the `@dropout/ds`
-specifier survives only in vendored doc-comments.
+**HARD RULE — binding UI law: `~/Desktop/projects/dropout-design-system/GUIDELINES.md`.** Applies automatically to every UI task: theme via tokens, **never recolor a component**, components before custom markup, plus the shadcn-svelte primitive layer (pinned `components.json` preset + blessed kit). Vendored at `src/lib/ds/`, consumed via the `$lib/ds` alias, refreshed with `bun run sync-ds` (never hand-edit); the `@dropout/ds` specifier survives only in vendored doc-comments.
 
 - **Exports** (`src/lib/ds/index.ts`): `cn` + components `Cta`/`IconButton`/`Heading`/`Eyebrow`/`Input`/`Tile`/`Select`/`StatusBadge`
   plus the `Settings*` set (`SettingsSection`/`SettingsRow`/`SettingsActions`/`SettingsSaveBar`)
@@ -428,28 +402,6 @@ No test framework is currently configured. When adding tests:
 - Place test files alongside source: `*.test.ts` or `*.spec.ts`
 - Priority test targets: `data-processing.ts` (CSV parsing), `courier-service.ts` `processOrders()` (format detection, phone normalization, field mapping)
 
-## Repository Etiquette
-
-### Conventional Commits
-
-This repo uses conventional commit prefixes (visible in git log):
-
-```
-feat:     new feature (e.g., "feat: Add editable brand settings")
-fix:      bug fix (e.g., "fix: Include city in SteadFast address")
-refactor: code restructuring without behavior change
-style:    visual/UI changes only
-chore:    tooling, config, dependencies
-docs:     documentation changes
-```
-
-### Commit Discipline
-
-- Atomic commits -- one logical change per commit
-- Never edit existing migration files -- always generate new ones
-- Commit migration SQL files alongside the schema.ts changes
-- Never commit `.env`, `.dev.vars`, or any file with secrets
-
 ## Development Environment
 
 ### Prerequisites
@@ -476,7 +428,7 @@ Configured in `wrangler.jsonc`:
 
 - **Custom domain**: served ONLY at `order-processor.dropoutstudio.co` — `workers_dev: false`, `preview_urls: false` (single known host for OAuth + CSRF)
 - **D1 Database**: binding `DB`, database `order_processor`
-- **Workers AI**: binding `AI` (`remote: true`) — the chat endpoint hard-checks it (503 if absent), but Copilot inference + RAG query embeddings are BYO (the user's account). `env.AI` is genuinely used only by the owner seed endpoint
+- **Workers AI**: binding `AI` (`remote: true`) — the chat endpoint hard-checks it (503 if absent). Copilot inference + RAG query embeddings are BYO (the user's account); `env.AI` is used at runtime by the RAG reranker (bge-reranker-base cross-encoder) and by the one-time owner seed endpoint
 - **Vectorize**: binding `VECTORIZE` (`remote: true`), index `order-processor-kb` — owner's Copilot RAG store (no local emulator; `remote` is required for `wrangler dev` to query it)
 - **Assets**: binding `ASSETS`, directory `.svelte-kit/cloudflare`
 - **Compatibility**: `nodejs_compat` flag, date `2025-05-29`
@@ -494,19 +446,6 @@ Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` i
 - `http://localhost:5173` (Vite dev)
 - `http://localhost:8787` (Wrangler preview)
 - `https://order-processor.dropoutstudio.co` (production)
-
-## Documentation References (Progressive Disclosure)
-
-### Critical Documentation Pattern
-
-When encountering unfamiliar patterns, check these sources in order:
-
-1. **SvelteKit docs** -- routing, hooks, adapters, `event.platform` for Cloudflare
-2. **Svelte 5 docs** -- runes (`$state`, `$derived`, `$props`, `$effect`), snippets
-3. **Better Auth docs** -- `svelteKitHandler`, Drizzle adapter config, `usePlural`, cookie settings, `oneTap` + `@better-auth/passkey` plugins
-4. **Drizzle ORM docs** -- D1 driver, schema definition, migration workflow
-5. **Cloudflare Workers docs** -- D1 bindings, `wrangler.jsonc` config, `nodejs_compat`
-6. **shadcn-svelte docs** -- component installation, `components.json` config, new-york style
 
 ## Project-Specific Warnings
 
@@ -540,7 +479,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 15. **Copilot grid tools require a mounted editor** -- `editCells`, `addRows`, `deleteRows`, etc. operate through `copilotBridge.editor`, which is null until `output-editor.svelte` mounts. The executor throws a friendly "upload a CSV first" error when nothing is registered. Never assume the bridge is populated.
 
-16. **The `AI` binding is still checked, but inference is BYO** -- `/api/copilot/chat` returns 503 if `env.AI` is absent, yet chat inference and the RAG query embedding run on the USER's own Cloudflare account (REST), not `env.AI`. `env.AI` is genuinely used only by the owner seed endpoint. The `VECTORIZE` binding (`order-processor-kb`) is still needed for RAG (skipped silently without it). After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
+16. **The `AI` binding is still checked, but chat inference is BYO** -- `/api/copilot/chat` returns 503 if `env.AI` is absent, yet chat inference and the RAG query embedding run on the USER's own Cloudflare account (REST), not `env.AI`. At runtime `env.AI` is used only by the RAG reranker (bge-reranker-base cross-encoder, `rag.ts`) and the owner seed endpoint. The `VECTORIZE` binding (`order-processor-kb`) is still needed for RAG (skipped silently without it). After editing `wrangler.jsonc`, rerun `bun run cf-typegen`.
 
 17. **Copilot tool execution is client-side** -- the chat endpoint only _decides_ tool calls; `executor.ts` _runs_ them in the browser against editor `$state`. The server is stateless — it never sees grid data except the rendered CURRENT STATE text the client ships each turn. Do not move mutation logic server-side.
 
@@ -556,7 +495,7 @@ When encountering unfamiliar patterns, check these sources in order:
 
 23. **Copilot chat is model-stateless but D1-persisted** -- the model never sees stored history; the client re-ships the full conversation + rendered CURRENT STATE every turn. Separately, `chat/+server.ts` writes each turn to `ai_conversations` / `ai_messages` so chats resume after reload. Persistence is best-effort and wrapped in try/catch — it must NEVER abort or block the live SSE stream. (This supersedes the old "in-memory only, no D1 tables" design.)
 
-24. **Vectorize index dims must match the embedding model** -- the `order-processor-kb` index is created for qwen3's 1024-dim output (`EMBEDDING_DIMS` in `embeddings.ts`). Changing the embedding model requires recreating the index at the new dimension and re-running `POST /api/copilot/seed`. RAG retrieval drops matches below `MIN_SCORE` (0.4) and is best-effort — chat still works if Vectorize is down.
+24. **Vectorize index dims must match the embedding model** -- the `order-processor-kb` index is created for qwen3's 1024-dim output (`EMBEDDING_DIMS` in `embeddings.ts`). Changing the embedding model requires recreating the index at the new dimension and re-running `POST /api/copilot/seed`. RAG retrieves 12 candidates above the cosine floor (0.3), reranks them, and keeps the top-4 above `MIN_RERANK_SCORE` (0.3); every stage is best-effort — chat still works if Vectorize/reranker are down.
 
 25. **`/api/copilot/seed` is gated by `SEED_SECRET`** -- it embeds and upserts the entire `KNOWLEDGE_CORPUS`, so it is protected by an `x-seed-secret` header compared against the `SEED_SECRET` env var (401 on mismatch, 503 if AI/Vectorize absent). Set the secret with `wrangler secret put SEED_SECRET`; never commit it. Re-seed after editing `knowledge.ts`.
 
@@ -583,82 +522,3 @@ When encountering unfamiliar patterns, check these sources in order:
 - **Seed app data:** `bun run db:migrate:local` (once) → `bun run seed`. Idempotent (`seed/seed.sql`, fixed ids + `INSERT OR IGNORE` the user, `INSERT OR REPLACE` the app rows). Order batches are **never persisted to D1** (CSV → xlsx is stateless / in-memory), so the seed populates the only user-owned app data the signed-in page reads: a realistic `brand_settings` merchant profile (contact, BD phone, SteadFast merchant id + courier) **plus** one copilot conversation whose `ai_messages.tool_calls` JSON blob carries a 6-order Shopify → SteadFast batch (Dhaka/Chittagong recipients, `01712-…` phones, COD in BDT). Timestamps are seconds (`unixepoch`), matching every `mode:"timestamp"` column.
 - **⚠️ NEVER enable in production.** `E2E_BYPASS_AUTH` must never appear in `wrangler.jsonc` `[vars]` or secrets — it grants full unauthenticated access. The real Google OAuth / passkey path is byte-for-byte unchanged; the bypass is an additive, localhost-gated branch.
 
----
-
-## Frontend UI Visual Verification (REQUIRED)
-
-**During any frontend UI or design work, you MUST use Playwright MCP to visually verify your changes.**
-
-### Workflow
-
-1. **Determine the active port** for this project before taking screenshots (see Port Detection below)
-2. **Take screenshots** via Playwright MCP targeting the correct `http://localhost:<port>`
-3. **Save to `tmp_screenshots/`** at the root of this repository
-4. **Analyze each screenshot** against the plan or requirements to verify accuracy
-5. **Iterate** — fix discrepancies, re-screenshot, re-analyze until requirements are met
-
-### Rules
-
-- **ALWAYS** take at least one screenshot per UI change before considering it done
-- **NEVER** mark frontend work as complete without visual verification
-- Screenshots go in `tmp_screenshots/` at the project root (create the directory if it doesn't exist)
-- Name screenshots descriptively: `tmp_screenshots/homepage-hero.png`, `tmp_screenshots/cart-drawer-open.png`
-- Take screenshots at multiple viewport sizes when responsive behavior matters (mobile + desktop)
-- After each batch of changes, compare the screenshots against the original requirements or design spec and explicitly state what matches and what still needs work
-- **MANDATORY CLEANUP**: After every successful task implementation, if the `tmp_screenshots/` directory was created during the work, it must be deleted before the task is considered complete. Do not skip this step — it is a hard requirement.
-- **MANDATORY CLEANUP**: After every successful task implementation, if the `.playwright-mcp/` directory exists in the project root, it must be deleted before the task is considered complete. This directory is created by the Playwright MCP server during browser automation and is a transient artifact that must not persist in the codebase. Do not skip this step — it is a hard requirement.
-
-### Port Detection
-
-Multiple dev servers may be running simultaneously across projects. **Always identify the correct port before screenshotting.**
-
-Detection order (use the first that works):
-
-1. **Check dev server output** — the terminal running `bun run dev` prints the active URL (e.g. `Local: http://localhost:4457`)
-2. **Check `vite.config.ts`** — look for an explicit `server.port` value
-3. **Check `package.json`** — some scripts hardcode a port via `--port` flag
-4. **Scan active ports** — run `lsof -i :3000-4999 | grep LISTEN` to see what's bound, then match the process to this project's directory
-
-**Never assume port 3000.** If multiple Vite/Hydrogen servers are running, confirm you're screenshotting the right one by checking the page title or a unique element.
-
-### Example Playwright MCP Usage
-
-```
-// First confirm the port (e.g. from dev server output: http://localhost:4457)
-navigate to http://localhost:4457
-take screenshot → tmp_screenshots/homepage-initial.png
-
-// After making changes, verify
-take screenshot → tmp_screenshots/homepage-after-fix.png
-// Analyze: does this match the requirement?
-```
-
-### What to Check in Screenshots
-
-- Layout matches the intended design/spec
-- Spacing, typography, and colors are correct
-- Interactive states (hover, focus, open/closed) render properly
-- No visible layout breaks or overflow issues
-- Responsive breakpoints behave as expected
-
-### Commit Message Rules
-
-- **Never include AI agent co-authors** — commit messages must not reference any AI agent (Claude, ChatGPT, Gemini, GitHub Copilot, or similar) in `Co-Authored-By` trailers or any other form.
-
-For Cloudflare work, prefer the installed Cloudflare skills and Code Mode MCP over your own knowledge.
-
----
-
-## ⚙️ Autonomy directive — do actionable work yourself, never hand it back (highest operational priority) <!-- AUTONOMY-DIRECTIVE-v2 -->
-
-**Default: do it, don't delegate it back to Rahi.** Any step you are technically able to perform, you perform — autonomously, in the same turn. Never tell Rahi to run something, and never end a turn asking him to do a step you could have done yourself.
-
-- **Database migrations specifically:** generate AND apply them yourself — local and remote. Run `bun run db:generate`, `bun run db:migrate:local`, and `bun run db:migrate` (remote) yourself. NEVER say "run the migration", "you'll need to migrate", or "say the word and I'll run it" — just run it.
-- **Any comparable actionable / setup / maintenance step:** dependency installs, type generation (`cf-typegen`), builds, `format`/`lint`/`check`, seeding, codegen, cache clears, config regeneration, dev-server starts for verification, etc. — do them yourself without asking.
-- **Only surface to Rahi when it is genuinely impossible for you:** it requires a credential/secret you don't hold, or a physical/external action you truly cannot perform (a login in his browser, a third-party dashboard toggle, a purchase). Even then, do everything you can first and hand him only the smallest irreducible remaining step.
-- **Never** finish by presenting a menu of actionable steps for Rahi to trigger ("say migrate / commit / both"). Get it done, then report what you did.
-- **Scripts — full standing authority.** Run ANY script or command yourself the moment it's useful — dev, build, lint, format, check, typecheck, test, codegen, installs, migrations, seeds, cache clears, dev-server starts, everything — autonomously, without asking or waiting for Rahi. Rahi does no manual work and is not a bottleneck. This **supersedes any older rule anywhere in this file** that says to ask permission before running scripts / `package.json` commands, or that tells Claude never to run scripts.
-- **Visual verification — full standing authority.** Run Playwright MCP yourself to verify UI — navigate, screenshot at mobile + desktop viewports, and interact with the affected flows — autonomously, without asking or waiting.
-- **Carve-out (this preserves an existing rule, it does not override it):** the git-safety protocol still stands — where a project requires explicit permission before `git commit` / `git push`, keep asking for that. Autonomy means doing the _work_; it does not mean publishing/committing on his behalf without the permission that project already requires.
-
-- **Deployment is the ONE carve-out to the directive above — you neither run it NOR hand it back.** This project auto-deploys on `git commit` + `git push` via **Cloudflare Workers Builds ↔ GitHub**. **The push IS the deploy** — no manual deploy needed. NEVER output manual-deploy steps and NEVER run a deploy command (the project's own documented one, e.g. `bun run deploy` / `wrangler deploy`) as a routine deploy step — it starts automatically once the push succeeds. (That command stays a documented manual escape hatch, not the normal path.) This does **not** loosen the git-safety carve-out above — auto-deploy after a push ≠ license to push; where commit/push needs explicit permission, keep asking.
