@@ -130,61 +130,70 @@
 <div
     bind:this={gridRef}
     aria-label="Editable orders table"
-    class="no-scrollbar border-hair bg-card max-h-[50vh] overflow-auto rounded-xl border border-solid sm:max-h-[60vh]"
+    class="border-hair bg-card overflow-hidden rounded-xl border border-solid"
 >
-    <Table.Root class="w-full text-base">
-        <Table.Header class="bg-ink-2 sticky top-0 z-20 backdrop-blur">
-            <Table.Row class="border-hair">
-                <Table.Head class="bg-ink-2 text-micro sticky left-0 z-30 w-14 text-center" aria-label="Select"
-                ></Table.Head>
-                <Table.Head
-                    class="text-ink-muted text-micro w-10 text-right font-mono tracking-[0.1em]"
-                    aria-label="Row number">#</Table.Head
-                >
-                {#each visibleColumns as column (column.key)}
+    <!--
+        Owns BOTH scroll axes. The Table primitive wraps its <table> in an
+        `overflow-x-auto` container of its own; left visible, that inner container
+        takes the x-axis and parks its scrollbar under the LAST row — off-screen
+        until you scroll down. Neutralizing it moves the horizontal scrollbar to
+        this box's bottom edge, where it stays put and stays draggable.
+    -->
+    <div class="max-h-[50vh] overflow-auto sm:max-h-[60vh] [&>[data-slot=table-container]]:overflow-visible">
+        <Table.Root class="w-full text-base">
+            <Table.Header class="bg-ink-2 sticky top-0 z-20 backdrop-blur">
+                <Table.Row class="border-hair">
+                    <Table.Head class="bg-ink-2 text-micro sticky left-0 z-30 w-14 text-center" aria-label="Select"
+                    ></Table.Head>
                     <Table.Head
-                        class={cn(
-                            "border-hair text-caption min-w-[10rem] border-l border-solid font-mono tracking-[0.18em] uppercase",
-                            column.kind === "batch-constant" ? "text-foreground" : "text-ink-muted"
-                        )}
+                        class="text-ink-muted text-micro w-10 text-right font-mono tracking-[0.1em]"
+                        aria-label="Row number">#</Table.Head
                     >
-                        {column.key}
-                        {#if column.required}
-                            <span class="text-destructive" aria-label="required">*</span>
-                        {/if}
-                    </Table.Head>
+                    {#each visibleColumns as column (column.key)}
+                        <Table.Head
+                            class={cn(
+                                "border-hair text-caption min-w-[10rem] border-l border-solid font-mono tracking-[0.18em] uppercase",
+                                column.kind === "batch-constant" ? "text-foreground" : "text-ink-muted"
+                            )}
+                        >
+                            {column.key}
+                            {#if column.required}
+                                <span class="text-destructive" aria-label="required">*</span>
+                            {/if}
+                        </Table.Head>
+                    {/each}
+                    <Table.Head class="bg-ink-2 sticky right-0 z-30 w-20 text-center" aria-label="Actions"></Table.Head>
+                </Table.Row>
+            </Table.Header>
+            <Table.Body>
+                {#each rows as row, rowIndex (rowIds[rowIndex])}
+                    <EditorRow
+                        {row}
+                        {rowIndex}
+                        columns={visibleColumns}
+                        {batchDefaults}
+                        animateEntry={mounted}
+                        warningMessages={warningsByRow.get(rowIndex) ?? EMPTY_WARNING_MAP}
+                        isSelected={selection.has(rowIndex)}
+                        onCellCommit={(column, value) => onCellCommit(rowIndex, column, value)}
+                        onCellNavigate={handleNavigate}
+                        onToggleSelect={(event) => onToggleSelect(rowIndex, event)}
+                        onDelete={() => onDeleteRow(rowIndex)}
+                        onDuplicate={() => onDuplicateRow(rowIndex)}
+                    />
+                {:else}
+                    <tr>
+                        <td
+                            colspan={visibleColumns.length + 3}
+                            class="text-ink-muted px-4 py-12 text-center text-sm text-pretty"
+                        >
+                            No orders yet — click Add row to create the first.
+                        </td>
+                    </tr>
                 {/each}
-                <Table.Head class="bg-ink-2 sticky right-0 z-30 w-20 text-center" aria-label="Actions"></Table.Head>
-            </Table.Row>
-        </Table.Header>
-        <Table.Body>
-            {#each rows as row, rowIndex (rowIds[rowIndex])}
-                <EditorRow
-                    {row}
-                    {rowIndex}
-                    columns={visibleColumns}
-                    {batchDefaults}
-                    animateEntry={mounted}
-                    warningMessages={warningsByRow.get(rowIndex) ?? EMPTY_WARNING_MAP}
-                    isSelected={selection.has(rowIndex)}
-                    onCellCommit={(column, value) => onCellCommit(rowIndex, column, value)}
-                    onCellNavigate={handleNavigate}
-                    onToggleSelect={(event) => onToggleSelect(rowIndex, event)}
-                    onDelete={() => onDeleteRow(rowIndex)}
-                    onDuplicate={() => onDuplicateRow(rowIndex)}
-                />
-            {:else}
-                <tr>
-                    <td
-                        colspan={visibleColumns.length + 3}
-                        class="text-ink-muted px-4 py-12 text-center text-sm text-pretty"
-                    >
-                        No orders yet — click Add row to create the first.
-                    </td>
-                </tr>
-            {/each}
-        </Table.Body>
-    </Table.Root>
+            </Table.Body>
+        </Table.Root>
+    </div>
 
     <button
         type="button"

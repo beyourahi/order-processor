@@ -8,22 +8,22 @@ SvelteKit application that converts Shopify order export CSVs into courier-ready
 
 ## Tech Stack
 
-| Layer           | Technology                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                                                                             |
-| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`)                                                          |
-| Styling         | Tailwind CSS 4.x (`@tailwindcss/vite`) + design tokens from vendored `@dropout/ds`                                                              |
-| Design System   | `@dropout/ds` vendored at `src/lib/ds/`, imported via `$lib/ds` (tokens + primitives)                                                           |
-| UI Components   | shadcn-svelte (new-york, zinc) + CVA in `src/lib/components/ui/` (coexists with the DS)                                                         |
-| Auth            | Better Auth (Drizzle adapter) — Google OAuth + Google One Tap + passkey/WebAuthn biometrics                                                     |
-| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                                                                          |
-| CSV Parsing     | PapaParse                                                                                                                                       |
-| Excel Export    | SheetJS (`xlsx`)                                                                                                                                |
-| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                                                                         |
-| AI Copilot      | Bring-your-own Workers AI — inference runs on each user's OWN Cloudflare account via the REST API (single user-picked model), Zod tool schemas  |
+| Layer           | Technology                                                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Framework       | SvelteKit 2.x (Svelte 5 with runes)                                                                                                                                                        |
+| Language        | TypeScript 6.x (strict mode, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`)                                                                                                     |
+| Styling         | Tailwind CSS 4.x (`@tailwindcss/vite`) + design tokens from vendored `@dropout/ds`                                                                                                         |
+| Design System   | `@dropout/ds` vendored at `src/lib/ds/`, imported via `$lib/ds` (tokens + primitives)                                                                                                      |
+| UI Components   | shadcn-svelte (new-york, zinc) + CVA in `src/lib/components/ui/` (coexists with the DS)                                                                                                    |
+| Auth            | Better Auth (Drizzle adapter) — Google OAuth + Google One Tap + passkey/WebAuthn biometrics                                                                                                |
+| Database        | Cloudflare D1 (SQLite) via Drizzle ORM                                                                                                                                                     |
+| CSV Parsing     | PapaParse                                                                                                                                                                                  |
+| Excel Export    | SheetJS (`xlsx`)                                                                                                                                                                           |
+| Deployment      | Cloudflare Workers (adapter-cloudflare)                                                                                                                                                    |
+| AI Copilot      | Bring-your-own Workers AI — inference runs on each user's OWN Cloudflare account via the REST API (single user-picked model), Zod tool schemas                                             |
 | AI RAG          | Cloudflare Vectorize (`order-processor-kb`, owner's index) + qwen3 query embeddings (`@cf/qwen/qwen3-embedding-0.6b`, user's account) + bge-reranker-base cross-encoder (owner's `env.AI`) |
-| Package Manager | Bun                                                                                                                                             |
-| Linting         | ESLint 10 flat config + Prettier                                                                                                                |
+| Package Manager | Bun                                                                                                                                                                                        |
+| Linting         | ESLint 10 flat config + Prettier                                                                                                                                                           |
 
 ## Core Architecture
 
@@ -511,6 +511,8 @@ Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` i
 
 31. **Google One Tap depends on `PUBLIC_GOOGLE_CLIENT_ID`** -- the browser-public client id is read via `$env/dynamic/public` in `auth-client.ts`; `/login` only fires the One Tap prompt when it's set (`oneTapConfigured`). It is NOT a secret (it appears in every OAuth redirect) — set it as a plain `var` in `wrangler.jsonc`/`.dev.vars`, never via `wrangler secret`. Empty → One Tap is simply off; the Google OAuth button and passkeys still work.
 
+32. **The editor grid must own both scroll axes** -- `Table.Root` (`ui/table/table.svelte`) wraps its `<table>` in its own `<div data-slot="table-container" class="overflow-x-auto">`. Left alone that inner div takes the x-axis and parks its horizontal scrollbar under the LAST row — off-screen until you scroll down, leaving mouse users stuck with Shift+wheel. `editor-grid.svelte` neutralizes it (`[&>[data-slot=table-container]]:overflow-visible`) so the outer `max-h` box scrolls both axes and pins the scrollbar to its bottom edge. That outer box must NOT carry `no-scrollbar` — the DS already themes scrollbars globally (`ds/styles/tokens.css`, `--scrollbar-thumb`). `Add row` sits OUTSIDE the scroll box so it can't scroll away horizontally.
+
 ---
 
 ## Test auth & mock data (dev only)
@@ -521,4 +523,3 @@ Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` i
 - **Activate:** already on — `.dev.vars` (gitignored) carries `E2E_BYPASS_AUTH=true`. The bypass is **double-gated (defense in depth)**: the flag **AND** a `localhost`/`127.0.0.1` request host, so it is inert on the prod domain even if the flag ever leaked. Primary safety is still flag-absence — Cloudflare never uploads `.dev.vars`. Works under `bun run dev` (5173) and `bun run preview` (8787). NOT query-param gated. The real Google OAuth / passkey path is unchanged.
 - **Seed app data:** `bun run db:migrate:local` (once) → `bun run seed`. Idempotent (`seed/seed.sql`, fixed ids + `INSERT OR IGNORE` the user, `INSERT OR REPLACE` the app rows). Order batches are **never persisted to D1** (CSV → xlsx is stateless / in-memory), so the seed populates the only user-owned app data the signed-in page reads: a realistic `brand_settings` merchant profile (contact, BD phone, SteadFast merchant id + courier) **plus** one copilot conversation whose `ai_messages.tool_calls` JSON blob carries a 6-order Shopify → SteadFast batch (Dhaka/Chittagong recipients, `01712-…` phones, COD in BDT). Timestamps are seconds (`unixepoch`), matching every `mode:"timestamp"` column.
 - **⚠️ NEVER enable in production.** `E2E_BYPASS_AUTH` must never appear in `wrangler.jsonc` `[vars]` or secrets — it grants full unauthenticated access. The real Google OAuth / passkey path is byte-for-byte unchanged; the bypass is an additive, localhost-gated branch.
-
