@@ -574,6 +574,17 @@ When encountering unfamiliar patterns, check these sources in order:
 
 ---
 
+## Test auth & mock data (dev only)
+
+**Reach the signed-in app locally without Google OAuth** — for manual, Playwright, and curl checks. (email/password is disabled, so there is no password to seed; the bypass injects a session directly.)
+
+- **Test user:** `e2e-test-user` / `e2e@test.local` — synthesized into `event.locals.{user,session,currentUser}` by `hooks.server.ts`.
+- **Activate:** already on — `.dev.vars` (gitignored) carries `E2E_BYPASS_AUTH=true`. The bypass is **double-gated (defense in depth)**: the flag **AND** a `localhost`/`127.0.0.1` request host, so it is inert on the prod domain even if the flag ever leaked. Primary safety is still flag-absence — Cloudflare never uploads `.dev.vars`. Works under `bun run dev` (5173) and `bun run preview` (8787). NOT query-param gated. The real Google OAuth / passkey path is unchanged.
+- **Seed app data:** `bun run db:migrate:local` (once) → `bun run seed`. Idempotent (`seed/seed.sql`, fixed ids + `INSERT OR IGNORE` the user, `INSERT OR REPLACE` the app rows). Order batches are **never persisted to D1** (CSV → xlsx is stateless / in-memory), so the seed populates the only user-owned app data the signed-in page reads: a realistic `brand_settings` merchant profile (contact, BD phone, SteadFast merchant id + courier) **plus** one copilot conversation whose `ai_messages.tool_calls` JSON blob carries a 6-order Shopify → SteadFast batch (Dhaka/Chittagong recipients, `01712-…` phones, COD in BDT). Timestamps are seconds (`unixepoch`), matching every `mode:"timestamp"` column.
+- **⚠️ NEVER enable in production.** `E2E_BYPASS_AUTH` must never appear in `wrangler.jsonc` `[vars]` or secrets — it grants full unauthenticated access. The real Google OAuth / passkey path is byte-for-byte unchanged; the bypass is an additive, localhost-gated branch.
+
+---
+
 ## Frontend UI Visual Verification (REQUIRED)
 
 **During any frontend UI or design work, you MUST use Playwright MCP to visually verify your changes.**
