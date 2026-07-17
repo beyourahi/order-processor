@@ -200,12 +200,13 @@
     };
 </script>
 
-<!-- Wrapper persists across the dropzone↔editor swap so `max-width` can
-     transition (~150ms) rather than snap. -->
+<!-- Wrapper persists across the dropzone↔editor swap. The upload keeps its
+     deliberate readable cap; the editor removes it so its grid can use all
+     available width while retaining its own internal scroll container. -->
 <div
     class={cn(
-        "w-full transition-[max-width] duration-150 ease-out",
-        isEditorOpen ? "max-w-2xl md:max-w-full" : "lg:max-w-md xl:max-w-lg"
+        "w-full min-w-0 transition-[max-width] duration-150 ease-out",
+        isEditorOpen ? "max-w-none" : "lg:max-w-md xl:max-w-lg"
     )}
 >
     {#if isEditorOpen && editorRows && editorDefaults}

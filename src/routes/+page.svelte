@@ -47,31 +47,44 @@
      `reveal` is GSAP-backed and respects prefers-reduced-motion. -->
 <div
     class={cn(
-        "flex w-full grow flex-col px-[var(--content-x)] pt-10 pb-8 sm:pt-12",
+        "flex w-full min-w-0 grow flex-col pt-10 pb-8 sm:pt-12",
         "transition-[padding] duration-300 ease-[var(--ease)] motion-reduce:transition-none",
+        // The editor owns its own horizontal scroll region, so it uses the viewport
+        // gutter instead of the app's centered content gutter at every breakpoint.
+        // The upload flow remains intentionally contained.
+        editorOpen ? "px-[var(--content-pad)]" : "px-[var(--content-x)]",
         copilotOpen
             ? "lg:pr-[calc(var(--copilot-rail-width)+1.5rem)] xl:pr-[calc(var(--copilot-rail-width-xl)+1.5rem)]"
-            : "lg:pr-[var(--content-x)]"
+            : editorOpen
+              ? "lg:pr-[var(--content-pad)]"
+              : "lg:pr-[var(--content-x)]"
     )}
 >
-    <div class="m-auto flex w-full flex-col items-center gap-12 sm:gap-16 lg:items-stretch lg:gap-16">
+    <div
+        class={cn(
+            "my-auto flex w-full min-w-0 flex-col gap-12 sm:gap-16 lg:gap-16",
+            editorOpen ? "items-stretch" : "items-center lg:items-stretch"
+        )}
+    >
         <div use:reveal={{ distance: "sm", delay: 0 }}>
             <Heading />
         </div>
 
         <div
-            class={[
-                "flex w-full max-w-md items-center justify-center gap-8 sm:max-w-xl sm:gap-10",
-                editorOpen ? "flex-col md:max-w-none" : "flex-col-reverse lg:max-w-none lg:flex-row lg:gap-12"
-            ]}
+            class={cn(
+                "flex w-full min-w-0 items-center justify-center gap-8 sm:gap-10",
+                editorOpen
+                    ? "max-w-none flex-col"
+                    : "max-w-md flex-col-reverse sm:max-w-xl lg:max-w-none lg:flex-row lg:gap-12"
+            )}
         >
-            <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full justify-center lg:block">
+            <div use:reveal={{ distance: "sm", delay: 0.1 }} class="flex w-full min-w-0 justify-center lg:block">
                 <OrderProcessor currentUser={data.currentUser} selectedCourier={courierService.value} bind:editorOpen />
             </div>
 
             <div
                 class={[
-                    "flex w-full flex-col items-center gap-6",
+                    "flex w-full min-w-0 flex-col items-center gap-6",
                     editorOpen && "lg:flex-row lg:items-start lg:justify-center lg:gap-8"
                 ]}
             >
