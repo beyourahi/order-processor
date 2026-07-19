@@ -313,7 +313,6 @@ All imports use `$lib/...` — the other aliases (`$src`, `$components`, `$confi
 bun run dev              # Vite dev server on :5173 (--open auto-opens a tab, --host exposes on LAN)
 bun run build            # Production build
 bun run preview          # Build + wrangler dev (local Cloudflare preview on :8787)
-bun run deploy           # Build + deploy to Cloudflare Workers
 
 # Type Checking & Linting
 bun run check            # svelte-kit sync + svelte-check
@@ -336,7 +335,10 @@ bun run db:push          # push schema directly (needs D1 credentials)
 bun run db:studio        # Drizzle Studio GUI (needs D1 credentials)
 bun run db:check         # validate migration state
 bun run db:pull          # pull remote schema
+bun run seed             # idempotent local D1 fixtures for e2e-test-user
 ```
+
+Pushes auto-deploy through Cloudflare Workers Builds; never run the package's manual deploy escape hatch as the routine path.
 
 ### Database Migration Workflow
 
@@ -489,7 +491,7 @@ Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` i
 
 20. **`E2E_BYPASS_AUTH` is a preview-only auth shortcut** -- when set to `"true"` in `.dev.vars`, `hooks.server.ts` synthesizes an `e2e-test-user` session and upserts it into the local D1, bypassing Google OAuth entirely. It exists for Wrangler preview / E2E runs. NEVER set it in `wrangler.jsonc`, GitHub Actions, or production secrets. The flag is declared optional on `App.Platform.env` in `app.d.ts` so it can stay absent everywhere else.
 
-21. **Copilot rail width is tokenized** -- `--copilot-rail-width` / `--copilot-rail-width-xl` in `app.css` define the right rail's size; the main column reserves space via `lg:pr-[calc(var(--copilot-rail-width)+1.5rem)]` in `+layout.svelte`. Change the tokens, not the hard-coded values.
+21. **Copilot rail width is tokenized** -- `--copilot-rail-width` / `--copilot-rail-width-xl` in `app.css` define the right rail's size; the main column reserves space via `lg:pr-[calc(var(--copilot-rail-width)+1.5rem)]` in `+page.svelte`. Change the tokens, not the hard-coded values.
 
 22. **Copilot inference is bring-your-own (BYO) over the Workers AI REST API** -- chat + RAG embedding run on the END USER's own Cloudflare account (`$lib/server/ai/run-rest.ts`, billed to them) with the user's single chosen model — NO runtime fallback chain and no AI Gateway route (`DEFAULT_MODEL` lives in `run-rest.ts`). Connecting an account + picking a model happens at `/settings`; the endpoint returns 412 (with `connect: "/settings"`) until a token + account id are saved.
 
@@ -511,7 +513,7 @@ Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` i
 
 31. **Google One Tap depends on `PUBLIC_GOOGLE_CLIENT_ID`** -- the browser-public client id is read via `$env/dynamic/public` in `auth-client.ts`; `/login` only fires the One Tap prompt when it's set (`oneTapConfigured`). It is NOT a secret (it appears in every OAuth redirect) — set it as a plain `var` in `wrangler.jsonc`/`.dev.vars`, never via `wrangler secret`. Empty → One Tap is simply off; the Google OAuth button and passkeys still work.
 
-32. **The editor grid must own both scroll axes** -- `Table.Root` (`ui/table/table.svelte`) wraps its `<table>` in its own `<div data-slot="table-container" class="overflow-x-auto">`. Left alone that inner div takes the x-axis and parks its horizontal scrollbar under the LAST row — off-screen until you scroll down, leaving mouse users stuck with Shift+wheel. `editor-grid.svelte` neutralizes it (`[&>[data-slot=table-container]]:overflow-visible`) so the outer `max-h` box scrolls both axes and pins the scrollbar to its bottom edge. `Add row` sits OUTSIDE the scroll box so it can't scroll away horizontally.
+32. **The editor grid must own both scroll axes and the available width** -- while `editorOpen`, `+page.svelte` switches from the centered `--content-x` gutter to the viewport `--content-pad` gutter and keeps the wrapper chain `min-w-0`; preserve that or the grid collapses back to upload-flow width. `Table.Root` (`ui/table/table.svelte`) wraps its `<table>` in its own `<div data-slot="table-container" class="overflow-x-auto">`. Left alone that inner div takes the x-axis and parks its horizontal scrollbar under the LAST row — off-screen until you scroll down, leaving mouse users stuck with Shift+wheel. `editor-grid.svelte` neutralizes it (`[&>[data-slot=table-container]]:overflow-visible`) so the outer `max-h` box scrolls both axes and pins the scrollbar to its bottom edge. `Add row` sits OUTSIDE the scroll box so it can't scroll away horizontally.
 
 33. **`scrollbar-color` silently disables `::-webkit-scrollbar`** -- the DS sets `scrollbar-color` on `html` (`ds/styles/tokens.css`). That property **inherits**, and Blink/WebKit ignore every `::-webkit-scrollbar` rule on an element whose `scrollbar-color` is not `auto`, falling back to macOS **overlay** scrollbars — which reserve no layout space (`offsetHeight - clientHeight === 0`) and fade out, leaving a mouse user nothing to drag. The editor grid's scroll box therefore carries `.scrollbar-persistent` (`app.css`), which resets `scrollbar-color: auto` and sets `-webkit-appearance: none` to opt out of overlay. It is wrapped in `@media (pointer: fine)` (a mouse is the only pointer without a horizontal scroll axis) and `@supports selector(::-webkit-scrollbar)` (so Firefox keeps DS theming). Verify with the layout gutter, not by eye. The old `.no-scrollbar`/`.scrollbar-hide`/`.hide-scrollbar` utilities were deleted — do not reintroduce them here.
 
