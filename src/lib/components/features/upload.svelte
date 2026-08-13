@@ -30,7 +30,7 @@
     />
     <div class="flex flex-col items-center gap-2 text-center sm:gap-2.5">
         <p
-            class="text-foreground font-mono text-micro tracking-[0.28em] text-balance uppercase sm:text-caption"
+            class="text-foreground text-micro sm:text-caption tracking-[0.28em] text-balance uppercase"
             class:text-ink-muted={disabled}
         >
             {title}

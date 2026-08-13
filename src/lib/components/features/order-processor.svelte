@@ -230,7 +230,7 @@
                 "ring-offset-background focus-visible:ring-ring focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 isDisabled
                     ? "border-hair cursor-not-allowed opacity-50"
-                    : "border-signal/40 bg-ink-2 cursor-pointer hover:border-signal/70 hover:bg-ink-800",
+                    : "border-signal/40 bg-ink-2 hover:border-signal/70 hover:bg-ink-800 cursor-pointer",
                 zoneHover && "bg-ink-2 border-signal/60",
                 error && "border-destructive/60"
             )}
@@ -257,7 +257,7 @@
                             e.stopPropagation();
                             error = null;
                         }}
-                        class="sleek text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring border-hair touch-manipulation cursor-pointer rounded-full border border-solid px-5 py-2 font-mono text-xs tracking-[0.12em] uppercase focus:outline-none focus-visible:ring-2 active:scale-95"
+                        class="sleek text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring border-hair cursor-pointer touch-manipulation rounded-full border border-solid px-5 py-2 text-xs tracking-[0.12em] uppercase focus:outline-none focus-visible:ring-2 active:scale-95"
                     >
                         Try again
                     </button>
@@ -265,7 +265,7 @@
             {:else if isProcessing}
                 <div class="flex flex-col items-center gap-3 sm:gap-4">
                     <LoadingSpinner size="lg" colorClass="border-t-foreground" />
-                    <p class="text-ink-muted font-mono text-micro tracking-[0.28em] uppercase">Processing</p>
+                    <p class="text-ink-muted text-micro tracking-[0.28em] uppercase">Processing</p>
                 </div>
             {:else}
                 <Upload disabled={isDisabled} {needsMerchantId} />

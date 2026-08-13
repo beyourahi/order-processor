@@ -149,13 +149,13 @@
                     <Table.Head class="bg-ink-2 text-micro sticky left-0 z-30 w-14 text-center" aria-label="Select"
                     ></Table.Head>
                     <Table.Head
-                        class="text-ink-muted text-micro w-10 text-right font-mono tracking-[0.1em]"
+                        class="text-ink-muted text-micro w-10 text-right  tracking-[0.1em]"
                         aria-label="Row number">#</Table.Head
                     >
                     {#each visibleColumns as column (column.key)}
                         <Table.Head
                             class={cn(
-                                "border-hair text-caption min-w-[10rem] border-l border-solid font-mono tracking-[0.18em] uppercase",
+                                "border-hair text-caption min-w-[10rem] border-l border-solid  tracking-[0.18em] uppercase",
                                 column.kind === "batch-constant" ? "text-foreground" : "text-ink-muted"
                             )}
                         >
@@ -201,7 +201,7 @@
     <button
         type="button"
         onclick={onAddRow}
-        class="border-hair text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring text-caption ease-[var(--ease)] flex min-h-11 w-full touch-manipulation cursor-pointer items-center justify-center gap-2 border-t border-dashed font-mono tracking-[0.18em] whitespace-nowrap uppercase transition-colors focus:outline-none focus-visible:ring-2"
+        class="border-hair text-ink-muted hover:bg-ink-2 hover:text-foreground focus-visible:ring-ring text-caption flex min-h-11 w-full cursor-pointer touch-manipulation items-center justify-center gap-2 border-t border-dashed tracking-[0.18em] whitespace-nowrap uppercase transition-colors ease-[var(--ease)] focus:outline-none focus-visible:ring-2"
         aria-label="Add row"
     >
         <Plus class="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden="true" />

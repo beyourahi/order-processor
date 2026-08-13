@@ -1,5 +1,9 @@
 # Order Processor
 
+## Branch Policy (Strict)
+
+**All work must be done on `main`. Never create a new branch unless Rahi explicitly instructs you to do so.**
+
 ## Project Overview
 
 SvelteKit application that converts Shopify order export CSVs into courier-ready Excel files for the SteadFast delivery service in Bangladesh. Upload CSV files, the app auto-detects Shopify format, extracts and normalizes order data (names, addresses, phone numbers), and produces downloadable `.xlsx` files matching SteadFast's import schema. **Auth is optional**: logged-out guests get the full CSV→Excel app (settings persist to `localStorage`); signing in (Google OAuth / One Tap / passkey biometrics) adds D1 server storage, cross-device sync, and the AI Copilot — which additionally requires a connected **bring-your-own (BYO) Cloudflare account**. Deployed on Cloudflare Workers with D1 (SQLite) for auth sessions, brand settings, BYO-Cloudflare credentials, and Copilot conversation history.
@@ -529,3 +533,9 @@ Trusted origins configured in `svelte.config.js` (mirrored in `trustedOrigins` i
 - **Activate:** already on — `.dev.vars` (gitignored) carries `E2E_BYPASS_AUTH=true`. The bypass is **double-gated (defense in depth)**: the flag **AND** a `localhost`/`127.0.0.1` request host, so it is inert on the prod domain even if the flag ever leaked. Primary safety is still flag-absence — Cloudflare never uploads `.dev.vars`. Works under `bun run dev` (5173) and `bun run preview` (8787). NOT query-param gated. The real Google OAuth / passkey path is unchanged.
 - **Seed app data:** `bun run db:migrate:local` (once) → `bun run seed`. Idempotent (`seed/seed.sql`, fixed ids + `INSERT OR IGNORE` the user, `INSERT OR REPLACE` the app rows). Order batches are **never persisted to D1** (CSV → xlsx is stateless / in-memory), so the seed populates the only user-owned app data the signed-in page reads: a realistic `brand_settings` merchant profile (contact, BD phone, SteadFast merchant id + courier) **plus** one copilot conversation whose `ai_messages.tool_calls` JSON blob carries a 6-order Shopify → SteadFast batch (Dhaka/Chittagong recipients, `01712-…` phones, COD in BDT). Timestamps are seconds (`unixepoch`), matching every `mode:"timestamp"` column.
 - **⚠️ NEVER enable in production.** `E2E_BYPASS_AUTH` must never appear in `wrangler.jsonc` `[vars]` or secrets — it grants full unauthenticated access. The real Google OAuth / passkey path is byte-for-byte unchanged; the bypass is an additive, localhost-gated branch.
+
+<!-- SWISS-DESIGN-GLOBAL -->
+
+## Swiss Design — mandatory for all frontend/UI work
+
+For every website and web application, **always apply Swiss International Style principles to all frontend UI and design work, without exception. This is the required structural baseline, not an optional aesthetic direction.** Before creating, editing, reviewing, or auditing UI, read and follow `/Users/beyourahi/.agents/skills/swiss-design/SKILL.md`; when the stack is not Tailwind, translate the implementation syntax while preserving the principles. Enforce its grid-first, mobile-first, typographic, whitespace, hierarchy, restrained-color, responsive, and accessibility rules. Express project and client branding inside this system; brand requirements do not waive the Swiss principles. This directive supersedes conflicting optional style defaults elsewhere.

@@ -26,10 +26,7 @@
             {@const overrides = overrideCountByColumn[fieldKey] ?? 0}
             <div class="flex flex-col">
                 <div class="mb-1.5 flex items-center gap-1.5">
-                    <label
-                        for="strip-{column.key}"
-                        class="text-ink-muted text-micro font-mono tracking-[0.12em] uppercase"
-                    >
+                    <label for="strip-{column.key}" class="text-ink-muted text-micro tracking-[0.12em] uppercase">
                         {column.key}
                     </label>
                     {#if overrides > 0}
@@ -52,7 +49,7 @@
                         type="button"
                         onclick={() => onResetOverrides(fieldKey)}
                         class={cn(
-                            "text-ink-muted hover:text-foreground text-micro mt-1 touch-manipulation cursor-pointer self-start py-2 font-mono tracking-[0.1em] whitespace-nowrap uppercase underline-offset-2 hover:underline sm:py-1",
+                            "text-ink-muted hover:text-foreground text-micro mt-1 cursor-pointer touch-manipulation self-start py-2  tracking-[0.1em] whitespace-nowrap uppercase underline-offset-2 hover:underline sm:py-1",
                             "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
                         )}
                     >

@@ -41,8 +41,7 @@
                 class="text-chat-text-primary font-semibold">{node.value}</strong
             >{:else if node.type === "italic"}<em class="text-chat-text-secondary opacity-80">{node.value}</em
             >{:else if node.type === "code"}<code
-                class="bg-chat-surface text-chat-text-primary rounded px-1 py-0.5 font-mono text-[0.85em]"
-                >{node.value}</code
+                class="bg-chat-surface text-chat-text-primary rounded px-1 py-0.5 text-[0.85em]">{node.value}</code
             >{:else if node.type === "link"}<a
                 href={node.href}
                 target="_blank"

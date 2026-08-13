@@ -483,13 +483,13 @@
         <AlertDialog.Footer class="mt-6 flex flex-row items-center justify-end gap-2">
             <AlertDialog.Cancel
                 onclick={cancelDiscard}
-                class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 hover:text-foreground inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full border border-solid px-5 font-mono text-xs font-normal tracking-[0.06em] uppercase transition-colors ease-[var(--ease)]"
+                class="border-hair bg-background text-foreground hover:border-signal hover:bg-ink-2 hover:text-foreground inline-flex h-9 cursor-pointer touch-manipulation items-center rounded-full border border-solid px-5  text-xs font-normal tracking-[0.06em] uppercase transition-colors ease-[var(--ease)]"
             >
                 Cancel
             </AlertDialog.Cancel>
             <AlertDialog.Action
                 onclick={confirmDiscard}
-                class="bg-destructive/10 text-destructive hover:bg-destructive/20 inline-flex h-9 touch-manipulation cursor-pointer items-center rounded-full px-5 font-mono text-xs font-medium tracking-[0.06em] uppercase transition-colors ease-[var(--ease)]"
+                class="bg-destructive/10 text-destructive hover:bg-destructive/20 inline-flex h-9 cursor-pointer touch-manipulation items-center rounded-full px-5  text-xs font-medium tracking-[0.06em] uppercase transition-colors ease-[var(--ease)]"
             >
                 Discard
             </AlertDialog.Action>

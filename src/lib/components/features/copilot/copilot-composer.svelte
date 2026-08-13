@@ -141,7 +141,7 @@
                 title={attachFull ? `Up to ${copilot.maxPendingImages} images` : "Attach an image"}
                 onclick={() => uploadRef?.triggerUpload()}
                 class={cn(
-                    "ease-[var(--ease)] relative touch-manipulation rounded-full p-2 transition-all duration-200",
+                    "relative touch-manipulation rounded-full p-2 transition-all duration-200 ease-[var(--ease)]",
                     hasImages
                         ? "bg-chat-accent-muted text-chat-text-primary"
                         : "text-chat-text-muted hover:text-chat-text-secondary",
@@ -156,7 +156,7 @@
                 disabled={!canSubmit}
                 aria-label={disabled ? "Generating response" : "Send message"}
                 class={cn(
-                    "ease-[var(--ease)] touch-manipulation rounded-full p-2 transition-all duration-200",
+                    "touch-manipulation rounded-full p-2 transition-all duration-200 ease-[var(--ease)]",
                     disabled
                         ? "bg-chat-accent-muted/40 text-chat-text-muted cursor-not-allowed"
                         : canSubmit
@@ -185,9 +185,7 @@
             </button>
         </div>
 
-        <span
-            class="text-chat-text-muted/60 text-micro absolute bottom-2.5 left-4 font-mono tracking-[0.1em] uppercase"
-        >
+        <span class="text-chat-text-muted/60 text-micro absolute bottom-2.5 left-4 tracking-[0.1em] uppercase">
             {#if disabled}
                 generating…
             {:else}

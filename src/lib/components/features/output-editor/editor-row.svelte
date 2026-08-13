@@ -75,7 +75,7 @@
                  The native input is appearance-none + peer; the visible box and
                  its check mark are siblings driven by peer-checked / peer-focus-visible. -->
             <label
-                class="flex min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-md sm:min-h-10 sm:min-w-10"
+                class="flex min-h-11 min-w-11 cursor-pointer touch-manipulation items-center justify-center rounded-md sm:min-h-10 sm:min-w-10"
             >
                 <span class="sr-only">Select row {rowIndex + 1}</span>
                 <input
@@ -93,7 +93,7 @@
                 <span
                     aria-hidden="true"
                     class={cn(
-                        "border-hair bg-ink-2 ease-[var(--ease)] relative flex size-[17px] shrink-0 items-center justify-center rounded-[5px] border border-solid transition-[background-color,border-color] duration-150",
+                        "border-hair bg-ink-2 relative flex size-[17px] shrink-0 items-center justify-center rounded-[5px] border border-solid transition-[background-color,border-color] duration-150 ease-[var(--ease)]",
                         "peer-hover:border-signal/60",
                         "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background peer-focus-visible:ring-2 peer-focus-visible:ring-offset-1",
                         isSelected && "border-signal bg-signal"
@@ -111,7 +111,7 @@
         </div>
     </Table.Cell>
 
-    <Table.Cell class="text-ink-muted w-10 px-2 font-mono text-xs tabular-nums">
+    <Table.Cell class="text-ink-muted w-10 px-2  text-xs tabular-nums">
         {rowIndex + 1}
     </Table.Cell>
 
@@ -138,7 +138,7 @@
                 type="button"
                 onclick={onDuplicate}
                 class={cn(
-                    "sleek text-ink-muted flex h-auto min-h-11 w-auto min-w-11 shrink-0 touch-manipulation cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek text-ink-muted flex h-auto min-h-11 w-auto min-w-11 shrink-0 cursor-pointer touch-manipulation items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     controlBase,
                     "hover:border-signal/50 hover:bg-ink-2 hover:text-foreground active:bg-ink-2",
                     "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
@@ -152,7 +152,7 @@
                 type="button"
                 onclick={onDelete}
                 class={cn(
-                    "sleek text-ink-muted flex h-auto min-h-11 w-auto min-w-11 shrink-0 touch-manipulation cursor-pointer items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
+                    "sleek text-ink-muted flex h-auto min-h-11 w-auto min-w-11 shrink-0 cursor-pointer touch-manipulation items-center justify-center rounded-md sm:h-9 sm:min-h-9 sm:w-9 sm:min-w-9",
                     controlBase,
                     "hover:bg-destructive/15 hover:border-destructive/30 hover:text-destructive active:bg-destructive/25",
                     "focus-visible:ring-ring focus:outline-none focus-visible:ring-2"
