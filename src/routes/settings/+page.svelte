@@ -17,11 +17,9 @@
         metaBase,
         SettingsSection,
         SettingsRow,
-        SettingsActions,
-        isPlatformAuthenticatorAvailable,
-        detectPlatform,
-        biometricLabel
+        SettingsActions
     } from "$lib/ds";
+    import { isPlatformAuthenticatorAvailable, detectPlatform, biometricLabel } from "$lib/ds/adapters";
     import type { PageData, ActionData } from "./$types";
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
